@@ -399,6 +399,28 @@ const OrderTrackingPage = () => {
     return new Date(dateString).toLocaleTimeString([], options);
   };
 
+  // Move current order items into cart and navigate to checkout
+  const handleOrderForCheckout = () => {
+    if (!orderDetails || !orderDetails.items || orderDetails.items.length === 0) return;
+    // Clear existing cart and add items from this order
+    cartService.clearCart();
+    orderDetails.items.forEach((it) => {
+      const cartItem = {
+        id: it.id,
+        name: it.name,
+        price: it.price || (it.totalAmount / (it.quantity || 1)) || 0,
+        image: it.image,
+        specialInstructions: it.specialInstructions,
+        // map menuItemSizeId to selectedSize expected by cartService
+        selectedSize: it.menuItemSizeId ? { MenuItemSizeId: it.menuItemSizeId } : undefined,
+      };
+      cartService.addToCart(cartItem, it.quantity || 1);
+    });
+    // Persist order id in session so checkout can reference it if needed
+    if (orderDetails.id) sessionManager.saveOrder(orderDetails.id);
+    navigate('/checkout');
+  };
+
   const getStatusColor = () => {
     switch (orderStatus.toLowerCase()) {
       case "pending":
@@ -633,7 +655,15 @@ const OrderTrackingPage = () => {
                       <span className="text-xl font-bold text-white">Total Amount</span>
                       <span className="text-3xl sm:text-4xl font-bold text-white">{formatPrice(orderInfo?.totalAmount || orderDetails.total)}</span>
                     </div>
-                    <p className="text-blue-100 text-sm mt-2">≈ ${( (orderInfo?.totalAmount || orderDetails.total) / 300 ).toFixed(2)} USD</p>
+                    
+                  </div>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={handleOrderForCheckout}
+                      className="w-full sm:w-auto px-6 py-3 bg-white text-[#18749b] font-semibold rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-150"
+                    >
+                      Order for Checkout
+                    </button>
                   </div>
                 </div>
               </div>
