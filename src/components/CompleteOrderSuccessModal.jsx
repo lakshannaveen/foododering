@@ -8,8 +8,8 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center">
         <div className="flex items-center justify-center mb-4">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="w-16 h-16 rounded-full bg-[#E6F5FB] flex items-center justify-center">
+            <CheckCircle className="w-10 h-10" style={{ color: '#18749B' }} />
           </div>
         </div>
 
@@ -27,7 +27,7 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
         <div className="flex justify-center">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+            className="px-6 py-3 bg-[#18749B] text-white rounded-lg font-semibold hover:bg-[#156285] transition-colors"
           >
             Go to Home
           </button>
