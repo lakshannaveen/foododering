@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { sessionManager } from '../utils/sessionManager';
 import { orderService } from '../services/order_user';
 import { cartService } from '../services/cartService';
-import { CreditCard, Clock, Receipt, CheckCircle, ShoppingBag, ArrowLeft, ExternalLink } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, ShoppingBag, ArrowLeft, ExternalLink } from 'lucide-react';
+import { FaMoneyBillWave } from 'react-icons/fa';
 import Header from '../components/Header';
 import Cart from '../components/Cart';
 import CompleteOrderSuccessModal from '../components/CompleteOrderSuccessModal';
@@ -177,8 +178,8 @@ const CheckoutPage = () => {
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
           <div className="mb-6 flex justify-between items-center">
             <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center">
-              <Receipt className="w-7 h-7 mr-3" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center">
+              <FaMoneyBillWave className="w-7 h-7 mr-3 text-[#18749b]" />
             Order Summary
           </h2>
             <div className="w-16 h-1 bg-gradient-to-r from-[#18749b] to-teal-600 rounded-full"></div>
@@ -280,7 +281,7 @@ const CheckoutPage = () => {
           ) : (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <Receipt className="w-10 h-10 text-gray-400" />
+                <FaMoneyBillWave className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">No Orders Yet</h3>
               <p className="text-gray-600 font-medium mb-6">Add items to your cart to proceed with checkout.</p>
