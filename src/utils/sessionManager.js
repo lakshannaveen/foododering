@@ -2,6 +2,7 @@
 const ORDER_ID_KEY = 'active_order_id';
 const TABLE_ID_KEY = 'id'; // Reuse existing localStorage key
 const PAYMENT_SUCCESS_KEY = 'payment_success_order';
+const CHECKOUT_INIT_KEY = 'checkout_initiated_order';
 
 export const sessionManager = {
   // Save active order info
@@ -41,6 +42,29 @@ export const sessionManager = {
   markPaymentSuccess(orderId) {
     if (!orderId) return;
     sessionStorage.setItem(PAYMENT_SUCCESS_KEY, orderId.toString());
+  },
+
+  // Mark that the checkout flow has been initiated for an order
+  markCheckoutInitiated(orderId) {
+    if (!orderId) return;
+    sessionStorage.setItem(CHECKOUT_INIT_KEY, orderId.toString());
+  },
+
+  // Check whether checkout was initiated for the given order
+  isCheckoutInitiated(orderId) {
+    if (!orderId) return false;
+    const v = sessionStorage.getItem(CHECKOUT_INIT_KEY);
+    if (!v) return false;
+    return parseInt(v, 10) === parseInt(orderId, 10);
+  },
+
+  // Consume the checkout-initiated flag (read and remove)
+  consumeCheckoutInitiated(orderId) {
+    const v = sessionStorage.getItem(CHECKOUT_INIT_KEY);
+    if (!v) return false;
+    const matches = parseInt(v, 10) === parseInt(orderId, 10);
+    try { sessionStorage.removeItem(CHECKOUT_INIT_KEY); } catch (e) {}
+    return matches;
   },
 
   // Consume the payment success flag (read and remove)

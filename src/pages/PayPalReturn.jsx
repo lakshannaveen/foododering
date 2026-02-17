@@ -33,6 +33,12 @@ export default function PayPalReturn() {
         const res = await paypalService.capturePayment(token, orderId);
 
         if (res?.StatusCode === 200) {
+          // Ensure the user went through checkout before allowing completion
+          if (!sessionManager.isCheckoutInitiated(orderId)) {
+            setMessage('Checkout flow not initiated. Please complete checkout first.');
+            return;
+          }
+
           // Complete the order (marks it Complete and sets CompletedAt)
           await orderService.completeOrder(orderId);
 

@@ -93,6 +93,10 @@ const CheckoutPage = () => {
       const orderId = sessionManager.getOrderId();
       if (!orderId) throw new Error('Order ID not found');
 
+      // Mark that the user has entered the checkout completion flow
+      // This helps prevent other flows from completing orders without checkout
+      try { sessionManager.markCheckoutInitiated(orderId); } catch (e) {}
+
       const response = await orderService.completeOrder(parseInt(orderId));
       console.log('Complete order response:', response);
 
@@ -104,7 +108,15 @@ const CheckoutPage = () => {
           const snap = sessionStorage.getItem('restaurant-cart-snapshot');
           const raw = snap || sessionStorage.getItem('restaurant-cart') || localStorage.getItem('restaurant-cart');
           try {
-            itemsSnapshot = raw ? JSON.parse(raw) : [];
+            const parsed = raw ? JSON.parse(raw) : [];
+            // Support legacy array snapshot and new object snapshot { items, paymentMethod }
+            if (parsed && Array.isArray(parsed)) {
+              itemsSnapshot = parsed;
+            } else if (parsed && parsed.items && Array.isArray(parsed.items)) {
+              itemsSnapshot = parsed.items;
+            } else {
+              itemsSnapshot = [];
+            }
           } catch (e) {
             itemsSnapshot = [];
           }
@@ -120,6 +132,8 @@ const CheckoutPage = () => {
         // clear the temporary snapshot now that we've captured it
         try { sessionStorage.removeItem('restaurant-cart-snapshot'); } catch(e){}
         // Clear order + table id from storage now that checkout is complete
+        // Consume/clear the checkout flag and then clear order data
+        try { sessionManager.consumeCheckoutInitiated(orderId); } catch(e) {}
         try { sessionManager.clearAll(); } catch(e) { sessionManager.clearOrder(); }
         setSuccessAmount(order?.TotalAmount || null);
         setSuccessOrderId(order?.OrderId || orderId);

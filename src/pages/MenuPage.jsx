@@ -26,7 +26,7 @@ import Header from "../components/Header";
 import ItemModal from "../components/ItemModal";
 import Cart from "../components/Cart";
 import OrderSuccessModal from "../components/OrderSuccessModal";
-import PaymentSuccessModal from "../components/PaymentSuccessModal";
+import CompleteOrderSuccessModal from "../components/CompleteOrderSuccessModal";
 import { sessionManager } from "../utils/sessionManager";
 import foodVideo from "../assets/large.mp4";
 import { cartService } from "../services/cartService";
@@ -55,13 +55,24 @@ const MenuPage = () => {
   // Order success modal state
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  // Complete order success (detailed) state
+  const [showCompleteSuccess, setShowCompleteSuccess] = useState(false);
+  const [completePayload, setCompletePayload] = useState(null);
   // Payment success modal state (shown when returning from PayPal)
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [paidOrderId, setPaidOrderId] = useState(null);
 
   // Called by Cart when order and all items are added successfully
-  const handleOrderSuccess = (orderId) => {
-    setOrderId(orderId);
+  // Accepts either an orderId (legacy) or a payload { orderId, items, total, tableId, paymentMethod }
+  const handleOrderSuccess = (payload) => {
+    if (payload && typeof payload === 'object' && payload.orderId) {
+      setCompletePayload(payload);
+      setShowCompleteSuccess(true);
+      return;
+    }
+
+    // Legacy numeric id
+    setOrderId(payload);
     setShowOrderSuccess(true);
   };
 
@@ -114,8 +125,9 @@ const MenuPage = () => {
     try {
       const paidId = sessionManager.consumePaymentSuccess();
       if (paidId) {
-        setPaidOrderId(paidId);
-        setShowPaymentSuccess(true);
+        // Show the complete order modal (may not have items snapshot available)
+        setCompletePayload({ orderId: paidId, items: [], total: null });
+        setShowCompleteSuccess(true);
       }
     } catch (err) {
       console.error('Error checking payment success flag:', err);
@@ -299,12 +311,16 @@ const MenuPage = () => {
         isOpen={showOrderSuccess}
         onClose={() => setShowOrderSuccess(false)}
         prepTime="15-20 min"
-          orderId={orderId}
-        />
-      <PaymentSuccessModal
-        isOpen={showPaymentSuccess}
-        onClose={() => setShowPaymentSuccess(false)}
-        orderId={paidOrderId}
+        orderId={orderId}
+      />
+      <CompleteOrderSuccessModal
+        isOpen={showCompleteSuccess}
+        onClose={() => setShowCompleteSuccess(false)}
+        amount={completePayload?.total}
+        orderId={completePayload?.orderId}
+        totalFoods={completePayload?.items?.length || 0}
+        tableNumber={completePayload?.tableId}
+        items={completePayload?.items || []}
       />
       <Header
         cartItemsCount={cartItemsCount}

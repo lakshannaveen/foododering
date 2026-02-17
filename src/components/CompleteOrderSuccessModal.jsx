@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // PDF download removed per request
 
 export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, orderId, totalFoods, tableNumber, items = [] }) {
@@ -52,7 +53,10 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
 
         <div className="flex justify-center">
           <button
-            onClick={onClose}
+            onClick={() => {
+              try { onClose && onClose(); } catch (e) {}
+              try { navigate('/'); } catch (e) {}
+            }}
             className="px-6 py-3 bg-[#18749B] text-white rounded-lg font-semibold hover:bg-[#156285] transition-colors"
           >
             Go to Home

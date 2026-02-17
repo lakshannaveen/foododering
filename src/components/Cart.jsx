@@ -27,6 +27,13 @@ const Cart = ({
   const [loading, setLoading] = useState(false);
   const [imageErrors, setImageErrors] = useState(new Set());
   const [userError, setUserError] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(() => {
+    try {
+      return sessionStorage.getItem('restaurant-payment-method') || 'cash';
+    } catch (e) {
+      return 'cash';
+    }
+  });
 
 
   const menuIds = JSON.parse(localStorage.getItem("menuIds") || "[]");
@@ -225,7 +232,8 @@ const Cart = ({
 
         // store snapshot so checkout/receipt can still access selected items after clearing
         try {
-          sessionStorage.setItem('restaurant-cart-snapshot', JSON.stringify(cartItems));
+          const snapshot = { items: cartItems, paymentMethod };
+          sessionStorage.setItem('restaurant-cart-snapshot', JSON.stringify(snapshot));
         } catch (e) {
           console.warn('Failed to store cart snapshot', e);
         }
@@ -236,8 +244,15 @@ const Cart = ({
 
         if (typeof onCartUpdated === "function") onCartUpdated();
         if (typeof onOrderSuccess === "function") {
-          console.log("Calling onOrderSuccess with orderId:", orderId, "(type:", typeof orderId, ")");
-          onOrderSuccess(orderId);
+          console.log("Calling onOrderSuccess with order payload for orderId:", orderId);
+          const payload = {
+            orderId,
+            items: cartItems,
+            total: calculateTotal(),
+            tableId: tableId,
+            paymentMethod: sessionStorage.getItem('restaurant-payment-method') || 'cash',
+          };
+          onOrderSuccess(payload);
         }
         onClose();
       }
@@ -498,6 +513,34 @@ const Cart = ({
                       </div>
                     </div>
                   </div>
+
+                    {/* Payment method selector */}
+                    <div className="flex items-center justify-between px-2 sm:px-4">
+                      <div className="flex items-center gap-4">
+                        <label className="inline-flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="cash"
+                            checked={paymentMethod === 'cash'}
+                            onChange={() => { setPaymentMethod('cash'); try { sessionStorage.setItem('restaurant-payment-method','cash'); } catch(e){} }}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700">Cash</span>
+                        </label>
+                        <label className="inline-flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="card"
+                            checked={paymentMethod === 'card'}
+                            onChange={() => { setPaymentMethod('card'); try { sessionStorage.setItem('restaurant-payment-method','card'); } catch(e){} }}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700">Card</span>
+                        </label>
+                      </div>
+                    </div>
 
                   {/* Validation warnings */}
                   {validateCartItems().length > 0 && (
