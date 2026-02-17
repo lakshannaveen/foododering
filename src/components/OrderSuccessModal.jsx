@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Clock, Sparkles } from "lucide-react";
+import { Clock, Sparkles } from "lucide-react";
 
 
 const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId }) => {
@@ -15,11 +15,6 @@ const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId })
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const handleTrackOrder = () => {
-    onClose?.();
-    navigate("/track-order");
-  };
 
   const handleCheckout = () => {
     onClose?.();
@@ -74,12 +69,6 @@ const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId })
               onClick={handleCheckout}
             >
               Checkout
-            </button>
-            <button
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-base shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400/30 active:scale-95"
-              onClick={handleTrackOrder}
-            >
-              Track Order
             </button>
           </div>
         </div>
