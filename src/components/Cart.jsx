@@ -195,38 +195,45 @@ const Cart = ({
         }
       }
 
-      // Check results
+      // Check results and act accordingly
       if (failedItems.length > 0) {
         console.error("❌ Some items failed to add:", failedItems);
 
-        if (successfulItems.length > 0) {
-          
-        } else {
+        // If none succeeded, throw and show error
+        if (successfulItems.length === 0) {
           throw new Error(
             `No items were added to the order. Issues: ${failedItems
               .map((item) => `${item.name}: ${item.error}`)
               .join("; ")}`
           );
         }
+
+        // Partial success: preserve local cart so user can retry or retry specific items
+        const msg = `Some items were added but some failed:\n${failedItems
+          .map((it) => `• ${it.name}: ${it.error}`)
+          .join("\n")}\nYour cart has been preserved so you can try again.`;
+        setUserError(msg);
+        console.warn(msg);
       } else {
+        // All items added successfully -> update total and clear storage
         console.log("✅ All items added successfully!");
-        
-      }
 
-      // Update order total after adding all items
-      console.log("💰 Updating order total...");
-      await orderService.updateOrderTotal(orderId);
-      console.log("✅ Order total updated");
+        // Update order total after adding all items
+        console.log("💰 Updating order total...");
+        await orderService.updateOrderTotal(orderId);
+        console.log("✅ Order total updated");
 
-      // Clear cart only if at least some items were added successfully
-      if (successfulItems.length > 0) {
         // store snapshot so checkout/receipt can still access selected items after clearing
         try {
           sessionStorage.setItem('restaurant-cart-snapshot', JSON.stringify(cartItems));
         } catch (e) {
           console.warn('Failed to store cart snapshot', e);
         }
+
+        // Clear cart and clear table info since order is complete
         cartService.clearCart();
+        try { sessionManager.clearAll(); } catch (e) { console.warn('Failed to clear session/table', e); }
+
         if (typeof onCartUpdated === "function") onCartUpdated();
         if (typeof onOrderSuccess === "function") {
           console.log("Calling onOrderSuccess with orderId:", orderId, "(type:", typeof orderId, ")");

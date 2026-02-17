@@ -119,7 +119,8 @@ const CheckoutPage = () => {
         cartService.clearCart();
         // clear the temporary snapshot now that we've captured it
         try { sessionStorage.removeItem('restaurant-cart-snapshot'); } catch(e){}
-        sessionManager.clearOrder();
+        // Clear order + table id from storage now that checkout is complete
+        try { sessionManager.clearAll(); } catch(e) { sessionManager.clearOrder(); }
         setSuccessAmount(order?.TotalAmount || null);
         setSuccessOrderId(order?.OrderId || orderId);
         setSuccessTotalFoods(totalFoodsCount);
