@@ -255,31 +255,18 @@ const QRLandingPage = () => {
         />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-            <div className="flex flex-col items-center justify-center py-8">
-              <QrCode className="w-16 h-16 text-gray-400 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No QR Code Scanned</h2>
-              <p className="text-gray-600 text-center mb-4">
-                Please scan a valid QR code at your table to get started.
-              </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{error || 'Error'}</h2>
+              <p className="text-gray-600 text-center mb-4">Please try scanning the QR code again or enter your table number manually.</p>
 
-              <div className="w-full text-left text-xs text-gray-500 bg-gray-50 p-3 rounded mb-4">
-                <div className="mb-2 font-medium">Debug info</div>
-                <div className="break-words mb-1"><strong>URL:</strong> {window.location.href}</div>
+              <div className="w-full mb-4 text-sm text-gray-700">
                 <div className="mb-1"><strong>Detected id:</strong> {detectedId ?? "(none)"}</div>
-                <div className="text-xs text-gray-400">Parser checks: query, hash-query, /table/:id, numeric tail, fallback id=</div>
-              </div>
-
-              <div className="w-full mb-4">
-                <label className="block text-xs text-gray-600 mb-1">Manual table id (for testing)</label>
-                <div className="flex space-x-2">
-                  <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="e.g. 12" className="w-full px-3 py-2 border rounded" />
-                  <button onClick={() => initWithTableId(manualId)} className="px-4 py-2 bg-[#18749b] text-white rounded">Use</button>
-                </div>
               </div>
 
               <div className="flex space-x-3">
-                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all">Try Again</button>
-                <button onClick={() => { localStorage.removeItem('id'); window.location.href = '/'; }} className="px-6 py-2 bg-white border rounded">Reset</button>
+                <button onClick={() => { setError(null); setNeedAction(true); setManualId(''); setDetectedId(null); }} className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all">Try Again</button>
+                <button onClick={() => { localStorage.removeItem('id'); setError(null); setNeedAction(true); setDetectedId(null); }} className="px-6 py-2 bg-white border rounded">Reset</button>
               </div>
             </div>
           </div>
