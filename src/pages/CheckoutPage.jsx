@@ -6,6 +6,7 @@ import { cartService } from '../services/cartService';
 import { CreditCard, Clock, Receipt, CheckCircle, ShoppingBag, ArrowLeft, ExternalLink } from 'lucide-react';
 import Header from '../components/Header';
 import Cart from '../components/Cart';
+import CompleteOrderSuccessModal from '../components/CompleteOrderSuccessModal';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successAmount, setSuccessAmount] = useState(null);
+  const [successOrderId, setSuccessOrderId] = useState(null);
   
   // Cart state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -89,10 +93,12 @@ const CheckoutPage = () => {
       console.log('Complete order response:', response);
 
       if (response && response.StatusCode === 200) {
-        // Clear local cart and session, then navigate to tracking
+        // Clear local cart and session, then show success modal and redirect on close
         cartService.clearCart();
         sessionManager.clearOrder();
-        navigate('/track-order');
+        setSuccessAmount(order?.TotalAmount || null);
+        setSuccessOrderId(order?.OrderId || orderId);
+        setShowSuccessModal(true);
       } else {
         throw new Error(response?.Message || 'Failed to complete order');
       }
@@ -325,6 +331,15 @@ const CheckoutPage = () => {
           visibility: visible !important;
         }
       `}</style>
+      <CompleteOrderSuccessModal
+        isOpen={showSuccessModal}
+        amount={successAmount}
+        orderId={successOrderId}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate('/');
+        }}
+      />
     </div>
   );
 };
