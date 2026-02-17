@@ -11,6 +11,12 @@ const QRLandingPage = () => {
   const [status, setStatus] = useState("Initializing...");
   const [manualId, setManualId] = useState("");
   const [detectedId, setDetectedId] = useState(null);
+  const [needAction, setNeedAction] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState(null);
+  const videoRef = React.createRef();
+  let scanInterval = null;
 
   // Expose URL parsing so we can show/debug detected id in UI
   const getTableIdFromUrl = () => {
@@ -51,9 +57,26 @@ const QRLandingPage = () => {
   };
 
   useEffect(() => {
-    initOrder();
-    // compute detected id for debug UI
-    try { setDetectedId(getTableIdFromUrl()); } catch (e) { setDetectedId(null); }
+    // compute detected id for debug UI and decide action
+    let id = null;
+    try {
+      id = getTableIdFromUrl();
+      setDetectedId(id);
+    } catch (e) {
+      setDetectedId(null);
+    }
+
+    if (id) {
+      // auto-init when id present
+      initWithTableId(id);
+    } else {
+      // show UI to let user scan or enter table number
+      setNeedAction(true);
+    }
+
+    return () => {
+      stopScanner();
+    };
   }, []);
 
   const initOrder = async () => {
@@ -158,6 +181,70 @@ const QRLandingPage = () => {
     }
   };
 
+  // Scanner helpers using BarcodeDetector when available
+  const startScanner = async () => {
+    setScanMessage(null);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setScanMessage("Camera not available on this device.");
+      return;
+    }
+
+    const video = videoRef.current;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream;
+      await video.play();
+      setShowScanner(true);
+      setScanning(true);
+
+      // Use native BarcodeDetector if available
+      const hasDetector = typeof window.BarcodeDetector !== 'undefined';
+      if (!hasDetector) {
+        setScanMessage('Camera scanning not supported in this browser. Please enter table number manually or scan QR with your phone.');
+        return;
+      }
+
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+
+      scanInterval = setInterval(async () => {
+        try {
+          const barcodes = await detector.detect(video);
+          if (barcodes && barcodes.length > 0) {
+            const code = barcodes[0].rawValue;
+            stopScanner();
+            setStatus('QR scanned. Initializing...');
+            initWithTableId(code);
+          }
+        } catch (dErr) {
+          console.error('Barcode detect error:', dErr);
+        }
+      }, 500);
+
+    } catch (err) {
+      console.error('Failed to start camera:', err);
+      setScanMessage('Failed to access camera. Please allow camera permission or enter table number manually.');
+    }
+  };
+
+  const stopScanner = () => {
+    try {
+      const video = videoRef.current;
+      if (video && video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach((t) => t.stop());
+        video.srcObject = null;
+      }
+      if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
+      }
+      setScanning(false);
+      setShowScanner(false);
+    } catch (e) {
+      // ignore
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50">
@@ -193,6 +280,50 @@ const QRLandingPage = () => {
               <div className="flex space-x-3">
                 <button onClick={() => window.location.reload()} className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all">Try Again</button>
                 <button onClick={() => { localStorage.removeItem('id'); window.location.href = '/'; }} className="px-6 py-2 bg-white border rounded">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (needAction && !error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50">
+        <Header cartItemsCount={0} onCartClick={() => {}} onMenuToggle={() => {}} />
+
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full">
+            <div className="text-center mb-6">
+              <QrCode className="w-14 h-14 text-gray-400 mx-auto mb-2" />
+              <h2 className="text-xl font-semibold text-gray-900">Scan QR or Enter Table Number</h2>
+              <p className="text-sm text-gray-600 mt-1">Start your order by scanning the table QR or entering the table number.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg border">
+                <h3 className="font-medium mb-2">Scan QR Code</h3>
+                {showScanner ? (
+                  <div>
+                    <video ref={videoRef} className="w-full h-56 bg-black rounded mb-2" />
+                    {scanMessage && <div className="text-sm text-red-600 mb-2">{scanMessage}</div>}
+                    <button onClick={stopScanner} className="w-full px-4 py-2 bg-gray-100 rounded">Stop Scan</button>
+                  </div>
+                ) : (
+                  <div>
+                    {scanMessage && <div className="text-sm text-red-600 mb-2">{scanMessage}</div>}
+                    <button onClick={startScanner} className="w-full px-4 py-2 bg-[#18749b] text-white rounded">Start Scan</button>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 rounded-lg border">
+                <h3 className="font-medium mb-2">Enter Table Number</h3>
+                <div className="flex gap-2">
+                  <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="e.g. 4" className="flex-1 px-3 py-2 border rounded" />
+                  <button onClick={() => initWithTableId(manualId)} className="px-4 py-2 bg-[#18749b] text-white rounded">Enter</button>
+                </div>
               </div>
             </div>
           </div>
