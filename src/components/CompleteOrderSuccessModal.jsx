@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // PDF download removed per request
 
 export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, orderId, totalFoods, tableNumber, items = [] }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const t = setTimeout(() => {
+      try { onClose && onClose(); } catch (e) {}
+      try { navigate('/'); } catch (e) {}
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // PDF generation removed — download button removed as requested
