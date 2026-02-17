@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sessionManager } from '../utils/sessionManager';
 import { orderService } from '../services/order_user';
-import { paypalService } from '../services/paypalService';
 import { cartService } from '../services/cartService';
 import { CreditCard, Clock, Receipt, CheckCircle, ShoppingBag, ArrowLeft, ExternalLink } from 'lucide-react';
 import Header from '../components/Header';
@@ -78,47 +77,28 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePayPalCheckout = async () => {
+  const handleCompleteOrder = async () => {
     try {
       setPaymentProcessing(true);
       setPaymentError(null);
 
       const orderId = sessionManager.getOrderId();
-      const amountLKR = order?.TotalAmount || 0;
-      
-      if (!orderId) {
-        throw new Error('Order ID not found');
-      }
+      if (!orderId) throw new Error('Order ID not found');
 
-      if (!amountLKR || amountLKR <= 0) {
-        throw new Error('Invalid order amount');
-      }
+      const response = await orderService.completeOrder(parseInt(orderId));
+      console.log('Complete order response:', response);
 
-      // Convert LKR to USD (approximate rate: 1 USD = 300 LKR)
-      const LKR_TO_USD_RATE = 300;
-      const amountUSD = (amountLKR / LKR_TO_USD_RATE).toFixed(2);
-
-      console.log(`💵 Converting ${amountLKR} LKR to ${amountUSD} USD`);
-      console.log(`Creating PayPal order for Order: ${orderId}, Amount: ${amountUSD} USD`);
-
-      // Call backend to create PayPal order
-      const response = await paypalService.createOrder(parseInt(orderId), parseFloat(amountUSD));
-
-      console.log('PayPal order creation response:', response);
-
-      if (response.StatusCode === 200) {
-        // Prefer the approval URL from response; fallback builds checkoutnow url
-        const approvalUrl = paypalService.extractApprovalUrl(response);
-        if (!approvalUrl) {
-          throw new Error('Approval URL missing from backend/PayPal response');
-        }
-        window.location.href = approvalUrl;
+      if (response && response.StatusCode === 200) {
+        // Clear local cart and session, then navigate to tracking
+        cartService.clearCart();
+        sessionManager.clearOrder();
+        navigate('/track-order');
       } else {
-        throw new Error(response.Message || 'Failed to create PayPal order');
+        throw new Error(response?.Message || 'Failed to complete order');
       }
     } catch (error) {
-      console.error('❌ PayPal checkout error:', error);
-      setPaymentError(error.message || 'Failed to process payment. Please try again.');
+      console.error('Complete order error:', error);
+      setPaymentError(error.message || 'Failed to complete order. Please try again.');
     } finally {
       setPaymentProcessing(false);
     }
@@ -250,9 +230,8 @@ const CheckoutPage = () => {
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-5 mb-4">
                 <p className="text-sm text-blue-900 leading-relaxed">
                   <span className="text-2xl mr-2">💡</span>
-                  <strong className="text-base">Secure Payment</strong><br />
-                  You'll be redirected to PayPal for secure payment processing.
-                  Your order will be confirmed immediately after payment.
+                  <strong className="text-base">Complete Order</strong><br />
+                  Tap the button below to complete your order. Your order will be confirmed immediately.
                 </p>
               </div>
 
@@ -269,7 +248,7 @@ const CheckoutPage = () => {
               )}
 
               <button
-                onClick={handlePayPalCheckout}
+                onClick={handleCompleteOrder}
                 disabled={paymentProcessing}
                 className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
               >
@@ -283,15 +262,14 @@ const CheckoutPage = () => {
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 4.002-.025.15a.806.806 0 01-.794.68h-1.914a.56.56 0 01-.556-.645l2.368-15.01a.806.806 0 01.794-.68h3.077c3.118 0 5.538.752 6.488 2.756z"/>
                     </svg>
-                    Pay with PayPal
+                    Complete Order
                   </>
                 )}
               </button>
 
               <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 mt-6">
                 <p className="text-xs text-gray-600 text-center leading-relaxed">
-                  🔒 By completing this payment, you agree to our terms of service and privacy policy.
-                  You will be redirected to PayPal to complete your payment securely.
+                  🔒 By completing this order, you agree to our terms of service and privacy policy.
                 </p>
               </div>
             </div>
