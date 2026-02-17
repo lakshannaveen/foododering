@@ -28,7 +28,7 @@ const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md transition-all duration-500 p-4 animate-fadeIn">
-      <div className="absolute inset-0" onClick={onClose}></div>
+      <div className="absolute inset-0" />
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
