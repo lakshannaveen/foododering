@@ -21,6 +21,11 @@ const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId })
     navigate("/track-order");
   };
 
+  const handleCheckout = () => {
+    onClose?.();
+    navigate("/checkout");
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md transition-all duration-500 p-4 animate-fadeIn">
       <div className="absolute inset-0" onClick={onClose}></div>
@@ -66,9 +71,9 @@ const OrderSuccessModal = ({ isOpen, onClose, prepTime = "15-20 min", orderId })
           <div className="flex flex-col w-full gap-3">
             <button
               className="w-full bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-base shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#18749b]/30 active:scale-95"
-              onClick={onClose}
+              onClick={handleCheckout}
             >
-              Continue Ordering
+              Checkout
             </button>
             <button
               className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-base shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400/30 active:scale-95"
