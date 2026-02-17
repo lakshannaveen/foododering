@@ -18,6 +18,9 @@ const CheckoutPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successAmount, setSuccessAmount] = useState(null);
   const [successOrderId, setSuccessOrderId] = useState(null);
+  const [successTotalFoods, setSuccessTotalFoods] = useState(null);
+  const [successTableNumber, setSuccessTableNumber] = useState(null);
+  const [successItems, setSuccessItems] = useState([]);
   
   // Cart state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -95,10 +98,33 @@ const CheckoutPage = () => {
 
       if (response && response.StatusCode === 200) {
         // Clear local cart and session, then show success modal and redirect on close
+        let itemsSnapshot = cartService.getCart();
+        // Fallback: try snapshot saved by Cart, then session/local storage
+        if ((!itemsSnapshot || itemsSnapshot.length === 0)) {
+          const snap = sessionStorage.getItem('restaurant-cart-snapshot');
+          const raw = snap || sessionStorage.getItem('restaurant-cart') || localStorage.getItem('restaurant-cart');
+          try {
+            itemsSnapshot = raw ? JSON.parse(raw) : [];
+          } catch (e) {
+            itemsSnapshot = [];
+          }
+        }
+        // Fallback to in-memory cart state (loaded on page) if still empty
+        if ((!itemsSnapshot || itemsSnapshot.length === 0) && cartItems && cartItems.length > 0) {
+          itemsSnapshot = cartItems.slice();
+        }
+        const totalFoodsCount = (itemsSnapshot && itemsSnapshot.length > 0)
+          ? itemsSnapshot.reduce((s, it) => s + (Number(it.quantity ?? it.Qty ?? it.qty ?? 0) || 0), 0)
+          : cartService.getCartItemsCount();
         cartService.clearCart();
+        // clear the temporary snapshot now that we've captured it
+        try { sessionStorage.removeItem('restaurant-cart-snapshot'); } catch(e){}
         sessionManager.clearOrder();
         setSuccessAmount(order?.TotalAmount || null);
         setSuccessOrderId(order?.OrderId || orderId);
+        setSuccessTotalFoods(totalFoodsCount);
+        setSuccessTableNumber(order?.TableId || null);
+        setSuccessItems(itemsSnapshot || []);
         setShowSuccessModal(true);
       } else {
         throw new Error(response?.Message || 'Failed to complete order');
@@ -335,6 +361,9 @@ const CheckoutPage = () => {
         isOpen={showSuccessModal}
         amount={successAmount}
         orderId={successOrderId}
+        totalFoods={successTotalFoods}
+        tableNumber={successTableNumber}
+        items={successItems}
         onClose={() => {
           setShowSuccessModal(false);
           navigate('/');

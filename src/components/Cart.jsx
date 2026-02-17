@@ -220,6 +220,12 @@ const Cart = ({
 
       // Clear cart only if at least some items were added successfully
       if (successfulItems.length > 0) {
+        // store snapshot so checkout/receipt can still access selected items after clearing
+        try {
+          sessionStorage.setItem('restaurant-cart-snapshot', JSON.stringify(cartItems));
+        } catch (e) {
+          console.warn('Failed to store cart snapshot', e);
+        }
         cartService.clearCart();
         if (typeof onCartUpdated === "function") onCartUpdated();
         if (typeof onOrderSuccess === "function") {

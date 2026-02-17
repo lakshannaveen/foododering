@@ -93,17 +93,7 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
               </span>
             </button>
 
-            {/* Checkout button - Desktop */}
-            <button
-              onClick={handleCheckoutClick}
-              className="hidden md:flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 lg:px-4 py-2 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold focus:outline-none focus:ring-2 focus:ring-green-500/30"
-              aria-label="Checkout"
-            >
-              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                Checkout
-              </span>
-            </button>
+            {/* Checkout button removed */}
 
             {/* Cart button */}
             <button
@@ -143,14 +133,7 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
                 </div>
               </button>
 
-              {/* Mobile Checkout Button */}
-              <button
-                onClick={handleCheckoutClick}
-                className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md transition-all duration-200 transform active:scale-95 rounded-xl transition-all duration-200 font-bold active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/30"
-              >
-                <CreditCard className="w-5 h-5" />
-                <span className="text-base">Checkout & Pay</span>
-              </button>
+              {/* Mobile Checkout removed */}
 
 
 

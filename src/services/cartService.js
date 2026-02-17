@@ -1,7 +1,8 @@
 export const cartService = {
   getCart: () => {
-    const cart = localStorage.getItem("restaurant-cart");
-    return cart ? JSON.parse(cart) : [];
+    // Prefer localStorage, fall back to sessionStorage for compatibility
+    const raw = localStorage.getItem("restaurant-cart") || sessionStorage.getItem("restaurant-cart");
+    return raw ? JSON.parse(raw) : [];
   },
   // Use composite key: id + sizeId
   getCartKey: (item) => {
@@ -15,7 +16,9 @@ export const cartService = {
   const existingItem = cart.find((cartItem) => cartService.getCartKey(cartItem) === key);
     if (existingItem) existingItem.quantity = (existingItem.quantity || 1) + quantity;
     else cart.push({ ...item, quantity });
-    localStorage.setItem("restaurant-cart", JSON.stringify(cart));
+    const payload = JSON.stringify(cart);
+    localStorage.setItem("restaurant-cart", payload);
+    sessionStorage.setItem("restaurant-cart", payload);
     return cart;
   },
   updateQuantity: (itemId, quantity, sizeId) => {
@@ -26,18 +29,23 @@ export const cartService = {
       if (quantity <= 0) cart.splice(itemIndex, 1);
       else cart[itemIndex].quantity = quantity;
     }
-    localStorage.setItem("restaurant-cart", JSON.stringify(cart));
+    const payload = JSON.stringify(cart);
+    localStorage.setItem("restaurant-cart", payload);
+    sessionStorage.setItem("restaurant-cart", payload);
     return cart;
   },
   removeFromCart: (itemId, sizeId) => {
     const cart = cartService.getCart();
     const key = sizeId ? `${itemId}_${sizeId}` : `${itemId}`;
     const updatedCart = cart.filter((item) => cartService.getCartKey(item) !== key);
-    localStorage.setItem("restaurant-cart", JSON.stringify(updatedCart));
+    const payload = JSON.stringify(updatedCart);
+    localStorage.setItem("restaurant-cart", payload);
+    sessionStorage.setItem("restaurant-cart", payload);
     return updatedCart;
   },
   clearCart: () => {
     localStorage.removeItem("restaurant-cart");
+    sessionStorage.removeItem("restaurant-cart");
     return [];
   },
   getCartTotal: () => {
