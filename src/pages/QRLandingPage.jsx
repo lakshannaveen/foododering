@@ -9,16 +9,94 @@ const QRLandingPage = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [status, setStatus] = useState("Initializing...");
+  const [manualId, setManualId] = useState("");
+  const [detectedId, setDetectedId] = useState(null);
+
+  // Expose URL parsing so we can show/debug detected id in UI
+  const getTableIdFromUrl = () => {
+    const href = window.location.href || "";
+
+    // 1) standard search params
+    const searchParams = new URLSearchParams(window.location.search);
+    let t = searchParams.get("id") || searchParams.get("tableId") || searchParams.get("table");
+    if (t) return t;
+
+    // 2) hash-based routing where query is after '#'
+    const hash = window.location.hash || "";
+    const qm = hash.indexOf("?");
+    if (qm !== -1) {
+      const hashQuery = hash.substring(qm);
+      const hashParams = new URLSearchParams(hashQuery);
+      t = hashParams.get("id") || hashParams.get("tableId") || hashParams.get("table");
+      if (t) return t;
+    }
+
+    // 3) common path patterns: /table/123 or /t/123 or /tables/123
+    const pathPatterns = [
+      /\/table\/(\d+)/i,
+      /\/t\/(\d+)/i,
+      /\/tables?\/(\d+)/i,
+      /\/(\d+)(?:$|[?#])/,
+    ];
+    for (const p of pathPatterns) {
+      const m = href.match(p);
+      if (m) return m[1];
+    }
+
+    // 4) fallback: search the whole href for id= param (non-numeric allowed)
+    const hrefMatch = href.match(/[?&]id=([^&#]+)/);
+    if (hrefMatch) return hrefMatch[1];
+
+    return null;
+  };
 
   useEffect(() => {
     initOrder();
+    // compute detected id for debug UI
+    try { setDetectedId(getTableIdFromUrl()); } catch (e) { setDetectedId(null); }
   }, []);
 
   const initOrder = async () => {
     try {
-      // Get tableId from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const tableId = urlParams.get("id");
+      // Get tableId from URL. Support many formats used by QR generators and hash routers
+      const getTableIdFromUrl = () => {
+        const href = window.location.href || "";
+
+        // 1) standard search params
+        const searchParams = new URLSearchParams(window.location.search);
+        let t = searchParams.get("id") || searchParams.get("tableId") || searchParams.get("table") ;
+        if (t) return t;
+
+        // 2) hash-based routing where query is after '#'
+        const hash = window.location.hash || "";
+        const qm = hash.indexOf("?");
+        if (qm !== -1) {
+          const hashQuery = hash.substring(qm);
+          const hashParams = new URLSearchParams(hashQuery);
+          t = hashParams.get("id") || hashParams.get("tableId") || hashParams.get("table");
+          if (t) return t;
+        }
+
+        // 3) common path patterns: /table/123 or /t/123 or /tables/123
+        const pathPatterns = [
+          /\/table\/(\d+)/i,
+          /\/t\/(\d+)/i,
+          /\/tables?\/(\d+)/i,
+          /\/(\d+)(?:$|[?#])/,
+        ];
+        for (const p of pathPatterns) {
+          const m = href.match(p);
+          if (m) return m[1];
+        }
+
+        // 4) fallback: search the whole href for id= param (non-numeric allowed)
+        const hrefMatch = href.match(/[?&]id=([^&#]+)/);
+        if (hrefMatch) return hrefMatch[1];
+
+        return null;
+      };
+
+      const tableId = getTableIdFromUrl();
 
       if (!tableId) {
         setError("No table ID provided. Please scan a valid QR code.");
@@ -59,6 +137,27 @@ const QRLandingPage = () => {
     }
   };
 
+  // Allow manual init when debugging: attempt to start using a provided id
+  const initWithTableId = async (manualId) => {
+    setError(null);
+    try {
+      if (!manualId) return setError("Please enter a table id to continue.");
+      localStorage.setItem("id", manualId);
+      setStatus("Loading your order...");
+      const orderData = await orderService.getOrCreateActiveOrder(parseInt(manualId));
+      if (orderData && orderData.OrderId) {
+        sessionManager.saveOrder(orderData.OrderId);
+        setStatus("Order ready! Redirecting to menu...");
+        setTimeout(() => navigate("/menu"), 500);
+      } else {
+        setError("Failed to initialize order. Please try again.");
+      }
+    } catch (err) {
+      console.error("Manual init error:", err);
+      setError("Failed to initialize order. Please try again.");
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50">
@@ -72,15 +171,29 @@ const QRLandingPage = () => {
             <div className="flex flex-col items-center justify-center py-8">
               <QrCode className="w-16 h-16 text-gray-400 mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">No QR Code Scanned</h2>
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-gray-600 text-center mb-4">
                 Please scan a valid QR code at your table to get started.
               </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all"
-              >
-                Try Again
-              </button>
+
+              <div className="w-full text-left text-xs text-gray-500 bg-gray-50 p-3 rounded mb-4">
+                <div className="mb-2 font-medium">Debug info</div>
+                <div className="break-words mb-1"><strong>URL:</strong> {window.location.href}</div>
+                <div className="mb-1"><strong>Detected id:</strong> {detectedId ?? "(none)"}</div>
+                <div className="text-xs text-gray-400">Parser checks: query, hash-query, /table/:id, numeric tail, fallback id=</div>
+              </div>
+
+              <div className="w-full mb-4">
+                <label className="block text-xs text-gray-600 mb-1">Manual table id (for testing)</label>
+                <div className="flex space-x-2">
+                  <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="e.g. 12" className="w-full px-3 py-2 border rounded" />
+                  <button onClick={() => initWithTableId(manualId)} className="px-4 py-2 bg-[#18749b] text-white rounded">Use</button>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all">Try Again</button>
+                <button onClick={() => { localStorage.removeItem('id'); window.location.href = '/'; }} className="px-6 py-2 bg-white border rounded">Reset</button>
+              </div>
             </div>
           </div>
         </div>

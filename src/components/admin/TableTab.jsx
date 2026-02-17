@@ -40,7 +40,9 @@ function TableTab() {
   const pageSize = 10;
  
   const backendBaseUrl = api.defaults.baseURL;
-  const frontendBaseUrl = import.meta.env.VITE_FRONTEND_BASE_URL || window.location.origin;
+  const envFrontend = import.meta.env.VITE_FRONTEND_BASE_URL;
+  const isLocalHost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const frontendBaseUrl = isLocalHost ? window.location.origin : (envFrontend || window.location.origin);
 
   // Fetch tables and menu items on mount
   useEffect(() => {
