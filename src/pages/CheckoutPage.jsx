@@ -229,9 +229,6 @@ const CheckoutPage = () => {
                   {formatPrice(order.TotalAmount)}
                 </span>
               </div>
-              <p className="text-blue-100 text-sm mt-2">
-                ≈ ${(order.TotalAmount / 300).toFixed(2)} USD
-              </p>
             </div>
           </div>
         </div>
@@ -261,7 +258,7 @@ const CheckoutPage = () => {
 
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Amount:</strong> {formatPrice(order.TotalAmount)} (≈ ${(order.TotalAmount / 300).toFixed(2)} USD)
+                  <strong>Amount:</strong> {formatPrice(order.TotalAmount)}
                 </p>
               </div>
 
