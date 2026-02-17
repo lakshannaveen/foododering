@@ -250,7 +250,7 @@ const CheckoutPage = () => {
               <button
                 onClick={handleCompleteOrder}
                 disabled={paymentProcessing}
-                className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                className="w-full py-4 px-6 bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#18749b]/30"
               >
                 {paymentProcessing ? (
                   <>
@@ -259,9 +259,7 @@ const CheckoutPage = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 4.002-.025.15a.806.806 0 01-.794.68h-1.914a.56.56 0 01-.556-.645l2.368-15.01a.806.806 0 01.794-.68h3.077c3.118 0 5.538.752 6.488 2.756z"/>
-                    </svg>
+                    <CheckCircle className="w-6 h-6" />
                     Complete Order
                   </>
                 )}
