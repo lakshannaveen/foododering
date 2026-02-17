@@ -660,7 +660,7 @@ const OrderTrackingPage = () => {
                   <div className="mt-4 flex justify-center">
                     <button
                       onClick={handleOrderForCheckout}
-                      className="w-full sm:w-auto px-6 py-3 bg-white text-[#18749b] font-semibold rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-150"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 shadow-lg transform transition-all duration-150"
                     >
                       Order for Checkout
                     </button>
