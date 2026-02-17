@@ -233,51 +233,50 @@ const CheckoutPage = () => {
           </div>
           
           {order.TotalAmount > 0 ? (
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-5 mb-4">
-                <p className="text-sm text-blue-900 leading-relaxed">
-                  <span className="text-2xl mr-2">💡</span>
-                  <strong className="text-base">Complete Order</strong><br />
-                  Tap the button below to complete your order. Your order will be confirmed immediately.
-                </p>
-              </div>
+              <div className="space-y-4">
+                <div className="bg-white border border-[color:var(--border-lite,#E6EEF5)] rounded-2xl shadow-lg p-5">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">Complete Order</h3>
+                      <p className="text-sm text-gray-600 mt-1">Tap the button below to complete your order. Your order will be confirmed immediately.</p>
+                    </div>
 
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Amount:</strong> {formatPrice(order.TotalAmount)}
-                </p>
-              </div>
+                    <div className="w-full sm:w-auto flex flex-col items-stretch sm:items-end gap-3">
+                      <div className="text-sm text-gray-500">Amount</div>
+                      <div className="text-2xl font-extrabold text-gray-900">{formatPrice(order.TotalAmount)}</div>
 
-              {paymentError && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-                  <p className="text-red-700 font-semibold text-sm">{paymentError}</p>
+                      <button
+                        onClick={handleCompleteOrder}
+                        disabled={paymentProcessing}
+                        aria-label="Complete Order"
+                        className="mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-white font-semibold bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-md focus:outline-none focus:ring-4 focus:ring-[#18749b]/25 transition-colors"
+                      >
+                        {paymentProcessing ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-5 h-5" />
+                            Complete Order
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {paymentError && (
+                    <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                      <p className="text-sm text-red-700">{paymentError}</p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 text-xs text-gray-500">
+                    🔒 By completing this order, you agree to our terms of service and privacy policy.
+                  </div>
                 </div>
-              )}
-
-              <button
-                onClick={handleCompleteOrder}
-                disabled={paymentProcessing}
-                className="w-full py-4 px-6 bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#18749b]/30"
-              >
-                {paymentProcessing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-6 h-6" />
-                    Complete Order
-                  </>
-                )}
-              </button>
-
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 mt-6">
-                <p className="text-xs text-gray-600 text-center leading-relaxed">
-                  🔒 By completing this order, you agree to our terms of service and privacy policy.
-                </p>
               </div>
-            </div>
           ) : (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
