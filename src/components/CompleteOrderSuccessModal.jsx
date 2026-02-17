@@ -1,59 +1,11 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// PDF download removed per request
 
 export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, orderId, totalFoods, tableNumber, items = [] }) {
   if (!isOpen) return null;
 
-  const generatePDF = () => {
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-    // Header background
-    doc.setFillColor(24, 116, 155); // teal-ish
-    doc.rect(0, 0, 595, 70, 'F');
-
-    // Header text
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.text('Food Ordering Receipt', 40, 42);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(11);
-    const dateStr = new Date().toLocaleString();
-    doc.text(`Order ID: #${orderId || ''}`, 40, 95);
-    doc.text(`Table: #${tableNumber ?? ''}`, 220, 95);
-    doc.text(`Date: ${dateStr}`, 360, 95);
-
-    // Items table
-    const tableBody = items.map((it, idx) => {
-      const name = it.MenuItemName || it.name || it.title || 'Item';
-      const qty = it.quantity ?? it.Qty ?? it.qty ?? 1;
-      const price = it.Price ?? it.price ?? it.pricePerUnit ?? it.unitPrice ?? 0;
-      const total = (Number(qty) * Number(price)) || 0;
-      return [String(idx + 1), name, String(qty), formatCurrency(price), formatCurrency(total)];
-    });
-
-    // Add autoTable
-    doc.autoTable({
-      startY: 115,
-      head: [['#', 'Item', 'Qty', 'Price', 'Total']],
-      body: tableBody,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [24, 116, 155], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 247, 250] },
-    });
-
-    // Totals
-    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 300;
-    doc.setFontSize(12);
-    doc.text(`Total Items: ${totalFoods ?? items.length}`, 40, finalY + 10);
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Amount: ${formatCurrency(amount)}`, 360, finalY + 10);
-
-    doc.save(`receipt_${orderId || 'order'}.pdf`);
-  };
+  // PDF generation removed — download button removed as requested
 
   const formatCurrency = (val) => {
     try {
@@ -98,14 +50,7 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
 
         <div className="text-lg text-gray-900 font-bold mb-4">Amount: {formatCurrency(amount)}</div>
 
-        <div className="flex justify-center gap-3">
-          <button
-            onClick={generatePDF}
-            className="px-5 py-3 bg-white border border-gray-200 text-gray-800 rounded-lg font-semibold hover:shadow-sm transition-colors"
-          >
-            Download PDF Receipt
-          </button>
-
+        <div className="flex justify-center">
           <button
             onClick={onClose}
             className="px-6 py-3 bg-[#18749B] text-white rounded-lg font-semibold hover:bg-[#156285] transition-colors"
