@@ -178,54 +178,57 @@ const OrderTab = () => {
     [expandedOrders, orderItems]
   );
 
-  const filteredOrders = useMemo(() => {
-    if (!Array.isArray(orders)) return [];
 
-    let filtered = orders;
+const filteredOrders = useMemo(() => {
+  if (!Array.isArray(orders)) return [];
 
-    // Search
-    if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(
-        (order) =>
-          (order.OrderId && order.OrderId.toString().includes(query)) ||
-          (order.TableId && order.TableId.toString().includes(query)) ||
-          (order.OrderStatus && order.OrderStatus.toLowerCase().includes(query))
-      );
-    }
+  let filtered = orders;
 
-    // Filters
-    if (filters.status) {
-      filtered = filtered.filter((order) => order.Status === filters.status);
-    }
-    if (filters.orderStatus) {
-      filtered = filtered.filter(
-        (order) =>
-          order.OrderStatus?.toLowerCase() === filters.orderStatus.toLowerCase()
-      );
-    }
-    if (filters.tableNumber) {
-      filtered = filtered.filter(
-        (order) =>
-          order.TableId &&
-          order.TableId.toString().includes(filters.tableNumber)
-      );
-    }
-    if (filters.dateFrom) {
-      filtered = filtered.filter(
-        (order) => new Date(order.CreatedAt) >= new Date(filters.dateFrom)
-      );
-    }
-    if (filters.dateTo) {
-      filtered = filtered.filter(
-        (order) =>
-          new Date(order.CreatedAt) <= new Date(filters.dateTo + "T23:59:59")
-      );
-    }
+  // Search
+  if (searchQuery && searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(
+      (order) =>
+        (order.OrderId && order.OrderId.toString().includes(query)) ||
+        (order.TableId && order.TableId.toString().includes(query)) ||
+        (order.OrderStatus && order.OrderStatus.toLowerCase().includes(query))
+    );
+  }
 
-    return filtered;
-  }, [orders, filters, searchQuery]);
+  // Filters
+  if (filters.status) {
+    filtered = filtered.filter((order) => order.Status === filters.status);
+  }
+  if (filters.orderStatus) {
+    filtered = filtered.filter(
+      (order) =>
+        order.OrderStatus?.toLowerCase() === filters.orderStatus.toLowerCase()
+    );
+  }
+  if (filters.tableNumber) {
+    filtered = filtered.filter(
+      (order) =>
+        order.TableId &&
+        order.TableId.toString().includes(filters.tableNumber)
+    );
+  }
+  if (filters.dateFrom) {
+    filtered = filtered.filter(
+      (order) => new Date(order.CreatedAt) >= new Date(filters.dateFrom)
+    );
+  }
+  if (filters.dateTo) {
+    filtered = filtered.filter(
+      (order) =>
+        new Date(order.CreatedAt) <= new Date(filters.dateTo + "T23:59:59")
+    );
+  }
 
+  // Filter out orders with no items or price = 0
+  filtered = filtered.filter(order => parseFloat(order.TotalAmount || 0) > 0);
+
+  return filtered;
+}, [orders, filters, searchQuery]);
   const reversedOrders = useMemo(() => {
     return [...filteredOrders].reverse();
   }, [filteredOrders]);
