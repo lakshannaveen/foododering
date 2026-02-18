@@ -18,6 +18,7 @@ const QRLandingPage = () => {
   const [scanMessage, setScanMessage] = useState(null);
   const videoRef = useRef(null);
   const scanInterval = useRef(null);
+  const [facingMode, setFacingMode] = useState('environment');
 
   // Expose URL parsing so we can show/debug detected id in UI
   const getTableIdFromUrl = () => {
@@ -191,7 +192,7 @@ const QRLandingPage = () => {
     }
     try {
       // Request stream first
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
 
       // Ensure video element is rendered and mounted
       setShowScanner(true);
@@ -290,6 +291,19 @@ const QRLandingPage = () => {
     }
   };
 
+  const toggleFacingMode = async () => {
+    const next = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(next);
+    // If currently scanning, restart scanner with new facingMode
+    if (scanning) {
+      stopScanner();
+      // small delay to ensure tracks are stopped
+      setTimeout(() => {
+        startScanner();
+      }, 200);
+    }
+  };
+
   const stopScanner = () => {
     try {
       const video = videoRef.current;
@@ -359,12 +373,18 @@ const QRLandingPage = () => {
                   <div>
                     <video ref={videoRef} className="w-full h-56 bg-black rounded mb-2" />
                     {scanMessage && <div className="text-sm text-red-600 mb-2">{scanMessage}</div>}
-                    <button onClick={stopScanner} className="w-full px-4 py-2 bg-gray-100 rounded">Stop Scan</button>
+                    <div className="flex gap-2">
+                      <button onClick={stopScanner} className="flex-1 px-4 py-2 bg-gray-100 rounded">Stop Scan</button>
+                      <button onClick={toggleFacingMode} className="flex-1 px-4 py-2 bg-gray-100 rounded">Switch Camera</button>
+                    </div>
                   </div>
                 ) : (
                   <div>
                     {scanMessage && <div className="text-sm text-red-600 mb-2">{scanMessage}</div>}
-                    <button onClick={startScanner} className="w-full px-4 py-2 bg-[#18749b] text-white rounded">Start Scan</button>
+                    <div className="flex gap-2">
+                      <button onClick={startScanner} className="flex-1 px-4 py-2 bg-[#18749b] text-white rounded">Start Scan</button>
+                      <button onClick={() => setFacingMode(facingMode === 'environment' ? 'user' : 'environment')} className="flex-1 px-4 py-2 bg-gray-100 rounded">Use {facingMode === 'environment' ? 'Front' : 'Back'}</button>
+                    </div>
                   </div>
                 )}
               </div>
