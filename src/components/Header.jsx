@@ -89,7 +89,7 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
             <button
               onClick={handleTrackOrderClick}
               className="hidden md:flex relative group px-2 sm:px-3 lg:px-4 py-2 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
@@ -99,6 +99,16 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
                 <span className="hidden lg:inline">Order </span>Tracking
               </span>
             </button>
+
+            {location.pathname === '/track-order' && (
+              <button
+                onClick={() => { setIsMenuOpen(false); navigate('/'); }}
+                className="hidden md:flex ml-2 relative group px-2 sm:px-3 lg:px-4 py-2 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-sm transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
+                aria-label="Scan QR"
+              >
+                <span className="text-xs sm:text-sm lg:text-base whitespace-nowrap">Scan QR</span>
+              </button>
+            )}
 
             {showCart && (
               <button
@@ -144,6 +154,17 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
                   <span className="text-base">Track Your Orders</span>
                 </div>
               </button>
+
+              {location.pathname === '/track-order' && (
+                <button
+                  onClick={() => { setIsMenuOpen(false); navigate('/'); }}
+                  className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 mt-2 text-[black] bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 rounded-xl transition-all duration-200 font-semibold active:scale-95 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-base">Scan QR</span>
+                  </div>
+                </button>
+              )}
 
               {showCart && (
                 <button
