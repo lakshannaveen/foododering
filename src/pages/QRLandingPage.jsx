@@ -11,6 +11,7 @@ const QRLandingPage = () => {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState("Initializing...");
   const [manualId, setManualId] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
   const [detectedId, setDetectedId] = useState(null);
   const [needAction, setNeedAction] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -180,6 +181,19 @@ const QRLandingPage = () => {
     } catch (err) {
       console.error("Manual init error:", err);
       setError("Failed to initialize order. Please try again.");
+    }
+  };
+
+  // Wrapper for manual enter to prevent duplicate submissions and show spinner
+  const handleManualEnter = async (id) => {
+    if (manualLoading) return; // prevent duplicate submissions
+    setError(null);
+    if (!id || String(id).trim() === "") return setError("Please enter a table id to continue.");
+    try {
+      setManualLoading(true);
+      await initWithTableId(id);
+    } finally {
+      setManualLoading(false);
     }
   };
 
@@ -392,9 +406,32 @@ const QRLandingPage = () => {
 
               <div className="p-4 rounded-lg border">
                 <h3 className="font-medium mb-2">Enter Table Number</h3>
-                <div className="flex gap-2">
-                  <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="e.g. 4" className="flex-1 px-3 py-2 border rounded" />
-                  <button onClick={() => initWithTableId(manualId)} className="px-4 py-2 bg-[#18749b] text-white rounded">Enter</button>
+                <div className="flex gap-2 items-center min-w-0">
+                  <input
+                    value={manualId}
+                    onChange={(e) => setManualId(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleManualEnter(manualId); } }}
+                    placeholder="e.g. 4"
+                    disabled={manualLoading}
+                    className={`flex-1 min-w-0 px-3 py-2 border rounded ${manualLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  />
+                  <button
+                    onClick={() => handleManualEnter(manualId)}
+                    disabled={manualLoading}
+                    className={`flex-shrink-0 whitespace-nowrap px-4 md:px-6 py-2 bg-[#18749b] text-white rounded flex items-center justify-center ${manualLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    {manualLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        Entering...
+                      </>
+                    ) : (
+                      'Enter'
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
