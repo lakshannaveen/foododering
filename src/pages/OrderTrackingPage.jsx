@@ -353,6 +353,9 @@ const OrderTrackingPage = () => {
     switch (orderStatus.toLowerCase()) {
       case "pending":
         return 10;
+      case "canceled":
+      case "cancelled":
+        return 0;
       case "preparing":
         return 40;
       case "ready":
@@ -365,7 +368,9 @@ const OrderTrackingPage = () => {
   };
 
   const getStatusMessage = () => {
-    switch (orderStatus.toLowerCase()) {
+    const st = orderStatus.toLowerCase();
+    if (st === "canceled" || st === "cancelled") return "Order canceled";
+    switch (st) {
       case "pending":
         return "Order pending";
       case "preparing":
@@ -380,7 +385,9 @@ const OrderTrackingPage = () => {
   };
 
   const getStatusIcon = () => {
-    switch (orderStatus.toLowerCase()) {
+    const st = orderStatus.toLowerCase();
+    if (st === "canceled" || st === "cancelled") return <AlertCircle className="w-5 h-5 text-white" />;
+    switch (st) {
       case "pending":
         return <Package className="w-5 h-5" />;
       case "preparing":
@@ -422,7 +429,9 @@ const OrderTrackingPage = () => {
   };
 
   const getStatusColor = () => {
-    switch (orderStatus.toLowerCase()) {
+    const st = orderStatus.toLowerCase();
+    if (st === "canceled" || st === "cancelled") return "bg-red-500";
+    switch (st) {
       case "pending":
         return "bg-[#18749b]";
       case "preparing":
@@ -438,7 +447,8 @@ const OrderTrackingPage = () => {
 
   // Prepare status ordering for step indicators
   const STATUS_STEPS = ["pending", "preparing", "ready", "served"];
-  const currentStatusIndex = Math.max(0, STATUS_STEPS.indexOf(orderStatus?.toLowerCase()));
+  const idx = STATUS_STEPS.indexOf(orderStatus?.toLowerCase());
+  const currentStatusIndex = idx >= 0 ? idx : -1;
 
   return (
 
@@ -518,6 +528,19 @@ const OrderTrackingPage = () => {
               </div>
 
               {/* Status Progress */}
+              {orderStatus && (orderStatus.toLowerCase().includes('cancel')) && (
+                <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <AlertCircle className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-red-700">Order Canceled</h3>
+                      <p className="text-sm text-red-600">This order was canceled. If you believe this is an error, please contact support or place a new order.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="mb-8 sm:mb-10 bg-gradient-to-br from-gray-50 to-white p-5 sm:p-6 rounded-2xl border-2 border-gray-200">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center space-x-3 sm:space-x-4">
