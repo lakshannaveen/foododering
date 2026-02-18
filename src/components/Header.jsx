@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingCart, MapPin, Clock, Phone, CreditCard } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, ShoppingCart, Clock } from "lucide-react";
 import { sessionManager } from "../utils/sessionManager";
 
 // Import logo from assets
@@ -10,6 +10,7 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeOrders, setActiveOrders] = useState(2); // Mock active orders count
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -39,6 +40,19 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
       navigate('/checkout');
     
   };
+
+  const handleLogout = () => {
+    setIsMenuOpen(false);
+    const ok = window.confirm("Are you sure you want to logout?");
+    if (!ok) return;
+    try { sessionManager.clearAll(); } catch (e) {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+    navigate('/');
+  };
+
+  // Hide logout on certain routes (QR landing is '/'). Add more paths if needed.
+  const hideLogoutRoutes = ['/', '/qr'];
+  const showLogout = !hideLogoutRoutes.includes(location.pathname);
 
   return (
   <header className="bg-gradient-to-r from-white/70 via-teal-50/80 to-white/70 backdrop-blur-xl shadow-2xl sticky top-0 z-50 w-full border-b border-blue-100/60 ">
@@ -109,6 +123,15 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
               )}
 
             </button>
+            {/* Logout button */}
+            {showLogout && (
+              <button
+                onClick={handleLogout}
+                className="hidden md:inline-flex items-center px-3 py-2 rounded-xl bg-white/70 hover:bg-red-50 border border-red-100 text-red-600 font-semibold shadow-sm transition-all duration-200 ml-2"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -156,6 +179,18 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
                   </span>
                 )}
               </button>
+
+              {/* Mobile Logout */}
+              {showLogout && (
+                <button
+                  onClick={() => { setIsMenuOpen(false); handleLogout(); }}
+                  className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 bg-white/70 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-200 font-semibold active:scale-95 shadow-md focus:outline-none focus:ring-2 focus:ring-red-200 border border-red-100"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-base">Logout</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
