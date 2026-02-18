@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import {
   X,
@@ -39,6 +39,15 @@ const Cart = ({
   const menuIds = JSON.parse(localStorage.getItem("menuIds") || "[]");
 
   const navigate = useNavigate();
+
+  const [orderIdDisplay, setOrderIdDisplay] = useState(() => sessionManager.getOrderId());
+  const [tableIdDisplay, setTableIdDisplay] = useState(() => sessionManager.getTableId());
+
+  useEffect(() => {
+    // Refresh displayed order/table when cart opens or items change
+    setOrderIdDisplay(sessionManager.getOrderId());
+    setTableIdDisplay(sessionManager.getTableId());
+  }, [isOpen, cartItems]);
 
   const handleExploreMenu = () => {
     // Close the cart and navigate to the menu page
@@ -304,10 +313,23 @@ const Cart = ({
                     </div>
                     <div>
                       <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Your Cart</h2>
-                      <p className="text-blue-100 text-sm sm:text-base font-medium mt-0.5">
-                        {calculateItemCount()}{" "}
-                        {calculateItemCount() === 1 ? "item" : "items"}
-                      </p>
+                      <div className="flex items-center gap-4 mt-1">
+                        <p className="text-blue-100 text-sm sm:text-base font-medium">
+                          {calculateItemCount()} {calculateItemCount() === 1 ? "item" : "items"}
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm">
+                            <span className="text-xs text-white/80">Order</span>
+                            <span className="font-semibold">{orderIdDisplay ?? '—'}</span>
+                          </span>
+
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm">
+                            <span className="text-xs text-white/80">Table</span>
+                            <span className="font-semibold">{tableIdDisplay ?? '—'}</span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <button
