@@ -95,7 +95,7 @@ const MenuTab = () => {
     await dispatch(createMenuItem(itemData, imageFile));
 
     setNewItem({
-      MenuItemName: "",
+      Name: "",
       CategoryId: "",
       SubCategoryId: "",
       Description: "",
@@ -146,8 +146,15 @@ const MenuTab = () => {
   const handleEditItem = (item) => {
     const itemWithSizes = {
       ...item,
+      // keep both name keys to be safe for API and UI
+      MenuItemName: item.MenuItemName || item.Name || "",
       Name: item.Name || item.MenuItemName || "",
-      CategoryId: String(item.CategoryId || (item.Category && item.Category.CategoryId) || ""),
+      CategoryId: String(
+        item.CategoryId || (item.Category && item.Category.CategoryId) || ""
+      ),
+      SubCategoryId: String(item.SubCategoryId || item.SubCategoryId || ""),
+      Description: item.Description || item.Description || "",
+      Status: item.Status ?? item.status ?? "A",
       Sizes:
         item.Sizes && item.Sizes.length > 0
           ? item.Sizes
@@ -344,23 +351,24 @@ const MenuTab = () => {
                 </div>
 
                 {/* Status */}
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={editingItem ? editingItem.Status : newItem.Status}
-                    onChange={(e) =>
-                      editingItem
-                        ? setEditingItem({ ...editingItem, Status: e.target.value })
-                        : setNewItem({ ...newItem, Status: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                  >
-                    <option value="A">Active</option>
-                    <option value="I">Inactive</option>
-                  </select>
-                </div>
+                {/* Status (only shown when adding a new item) */}
+                {!editingItem && (
+                  <div className="sm:col-span-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={newItem.Status}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, Status: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
+                    >
+                      <option value="A">Active</option>
+                      <option value="I">Inactive</option>
+                    </select>
+                  </div>
+                )}
 
                 {/* Category */}
                 <div className="sm:col-span-3">
@@ -581,7 +589,7 @@ const MenuTab = () => {
                   <button
                     onClick={handleUpdateItem}
                     disabled={
-                      !editingItem.MenuItemName ||
+                      !editingItem.Name ||
                       !editingItem.CategoryId ||
                       !editingItem.SubCategoryId ||
                       !editingItem.Sizes.some((size) => {
