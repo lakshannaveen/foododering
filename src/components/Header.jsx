@@ -2,17 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingCart, Clock } from "lucide-react";
 import { sessionManager } from "../utils/sessionManager";
-
-// Import logo from assets
 import logoImage from "../assets/hj.png";
 
-const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = true }) => {
+const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = true, hideLogout = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeOrders, setActiveOrders] = useState(2); // Mock active orders count
+  const [activeOrders, setActiveOrders] = useState(2);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -29,16 +26,14 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
   const handleTrackOrderClick = () => {
     setIsMenuOpen(false);
     navigate("/track-order");
-    // Also call the prop function if provided
     if (onOrderTrackingClick) {
       onOrderTrackingClick();
     }
   };
 
   const handleCheckoutClick = () => {
-      setIsMenuOpen(false);
-      navigate('/checkout');
-    
+    setIsMenuOpen(false);
+    navigate('/checkout');
   };
 
   const handleLogout = () => {
@@ -47,8 +42,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
     if (!ok) return;
     try { sessionManager.clearAll(); } catch (e) {}
     try {
-      // Only remove keys related to the customer session - avoid wiping admin/session-wide data
-      // Do not remove `userInfo` here: admin uses this key. Removing it logs out admin users.
       localStorage.removeItem("restaurant-cart");
       localStorage.removeItem("id");
       sessionStorage.removeItem("restaurant-cart");
@@ -56,17 +49,14 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
     navigate('/');
   };
 
-  // Hide logout on certain routes (QR landing is '/'). Add more paths if needed.
   const hideLogoutRoutes = ['/', '/qr'];
-  const showLogout = !hideLogoutRoutes.includes(location.pathname);
+  const showLogout = !hideLogout && !hideLogoutRoutes.includes(location.pathname);
 
   return (
   <header className="bg-gradient-to-r from-white/70 via-teal-50/80 to-white/70 backdrop-blur-xl shadow-2xl sticky top-0 z-50 w-full border-b border-blue-100/60 ">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
-          {/* Left section - Mobile menu + Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
-            {/* Mobile menu button */}
             <button
               className="mobile-menu-button md:hidden p-2 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -79,7 +69,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
               )}
             </button>
 
-            {/* Enhanced Logo and Brand - clickable */}
             <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 cursor-pointer select-none" onClick={() => navigate('/menu')} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate('/menu'); }}>
               <div className="relative group flex-shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#18749b] to-teal-400 rounded-full opacity-20 group-hover:opacity-30 transition-opacity duration-200 blur-md"></div>
@@ -100,9 +89,7 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
             </div>
           </div>
 
-          {/* Right section - Order Tracking, Cart, and Status */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
-            {/* Order Tracking - Desktop (visible on medium screens and up) */}
             <button
               onClick={handleTrackOrderClick}
               className="hidden md:flex relative group px-2 sm:px-3 lg:px-4 py-2 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 font-semibold focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
@@ -113,9 +100,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
               </span>
             </button>
 
-            {/* Checkout button removed */}
-
-            {/* Cart button (hideable per-page) */}
             {showCart && (
               <button
                 onClick={onCartClick}
@@ -128,10 +112,9 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
                     {cartItemsCount > 99 ? "99+" : cartItemsCount}
                   </span>
                 )}
-
               </button>
             )}
-            {/* Logout button */}
+
             {showLogout && (
               <button
                 onClick={handleLogout}
@@ -144,7 +127,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
         </div>
       </div>
 
-      {/* Enhanced Mobile menu overlay */}
       {isMenuOpen && (
         <div className="mobile-menu-container md:hidden">
           <div
@@ -153,7 +135,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
           ></div>
           <div className="relative bg-gradient-to-br from-white/80 to-teal-50/90 backdrop-blur-xl border-t border-blue-100/60 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
             <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8 space-y-3 sm:space-y-4">
-              {/* Mobile Order Tracking */}
               <button
                 onClick={handleTrackOrderClick}
                 className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 text-[black] bg-white/70 hover:bg-[lightgreen]/10 border border-[#18749b]/20 rounded-xl transition-all duration-200 font-semibold active:scale-95 shadow-md focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
@@ -164,12 +145,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
                 </div>
               </button>
 
-              {/* Mobile Checkout removed */}
-
-
-
-
-              {/* Mobile Cart Summary (hideable per-page) */}
               {showCart && (
                 <button
                   onClick={() => {
@@ -190,7 +165,6 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = 
                 </button>
               )}
 
-              {/* Mobile Logout */}
               {showLogout && (
                 <button
                   onClick={() => { setIsMenuOpen(false); handleLogout(); }}
