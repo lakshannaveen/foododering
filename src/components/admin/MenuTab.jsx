@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import {
   FaPlus,
@@ -329,20 +330,13 @@ const MenuTab = () => {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-6">
                 {/* Name */}
                 <div className="sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Item Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Item Name *</label>
                   <input
                     type="text"
-                    value={
-                      editingItem ? editingItem.Name : newItem.Name
-                    }
+                    value={editingItem ? editingItem.Name : newItem.Name}
                     onChange={(e) =>
                       editingItem
-                        ? setEditingItem({
-                            ...editingItem,
-                            Name: e.target.value,
-                          })
+                        ? setEditingItem({ ...editingItem, Name: e.target.value })
                         : setNewItem({ ...newItem, Name: e.target.value })
                     }
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
@@ -350,18 +344,13 @@ const MenuTab = () => {
                   />
                 </div>
 
-                {/* Status */}
-                {/* Status (only shown when adding a new item) */}
+                {/* Status (only when adding) */}
                 {!editingItem && (
                   <div className="sm:col-span-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
                       value={newItem.Status}
-                      onChange={(e) =>
-                        setNewItem({ ...newItem, Status: e.target.value })
-                      }
+                      onChange={(e) => setNewItem({ ...newItem, Status: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
                     >
                       <option value="A">Active</option>
@@ -370,92 +359,65 @@ const MenuTab = () => {
                   </div>
                 )}
 
-                {/* Category */}
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    value={
-                      editingItem ? editingItem.CategoryId : newItem.CategoryId
-                    }
-                    onChange={(e) =>
-                      editingItem
-                        ? setEditingItem({
-                            ...editingItem,
-                            CategoryId: e.target.value,
-                          })
-                        : setNewItem({ ...newItem, CategoryId: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                  >
-                    <option value="">Select Category</option>
-                    {(editingItem
-                      ? categories
-                      : categories?.filter((c) => String(c.Status) === "A"))
-                      ?.map((cat) => (
-                        <option key={cat.CategoryId} value={cat.CategoryId}>
-                          {cat.Name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
+                {/* Category & Subcategory (only when adding) */}
+                {!editingItem && (
+                  <>
+                    <div className="sm:col-span-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                      <select
+                        value={newItem.CategoryId}
+                        onChange={(e) => setNewItem({ ...newItem, CategoryId: e.target.value, SubCategoryId: "" })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
+                      >
+                        <option value="">Select Category</option>
+                        {categories?.filter((c) => String(c.Status) === "A").map((cat) => {
+                          const rawId = cat.CategoryId ?? cat.id;
+                          const id = String(rawId ?? "");
+                          return (
+                            <option key={id} value={id}>
+                              {cat.Name}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
 
-                {/* SubCategory */}
-                <div className="sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subcategory *
-                  </label>
-                  <select
-                    value={
-                      editingItem
-                        ? editingItem.SubCategoryId
-                        : newItem.SubCategoryId
-                    }
-                    onChange={(e) =>
-                      editingItem
-                        ? setEditingItem({
-                            ...editingItem,
-                            SubCategoryId: e.target.value,
+                    <div className="sm:col-span-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory *</label>
+                      <select
+                        value={newItem.SubCategoryId}
+                        onChange={(e) => setNewItem({ ...newItem, SubCategoryId: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
+                      >
+                        <option value="">Select Subcategory</option>
+                        {subcategories
+                          ?.filter((sub) => {
+                            const subCatId = sub.CategoryId ?? sub.Category?.CategoryId;
+                            return String(subCatId) === String(newItem.CategoryId) && String(sub.Status) === "A";
                           })
-                        : setNewItem({ ...newItem, SubCategoryId: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                  >
-                    <option value="">Select Subcategory</option>
-                    {(editingItem
-                      ? subcategories?.filter(
-                          (sub) => String(sub.CategoryId) === String(editingItem.CategoryId)
-                        )
-                      : subcategories?.filter(
-                          (sub) =>
-                            String(sub.CategoryId) === String(newItem.CategoryId) &&
-                            String(sub.Status) === "A"
-                        )
-                    )?.map((sub) => (
-                      <option key={sub.SubCategoryId} value={sub.SubCategoryId}>
-                        {sub.Name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                          .map((sub) => {
+                            const rawId = sub.SubCategoryId ?? sub.id;
+                            const id = String(rawId ?? "");
+                            return (
+                              <option key={id} value={id}>
+                                {sub.Name}
+                              </option>
+                            );
+                          })}
+                      </select>
+                    </div>
+                  </>
+                )}
 
                 {/* Description */}
                 <div className="sm:col-span-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <textarea
                     rows={3}
-                    value={
-                      editingItem ? editingItem.Description : newItem.Description
-                    }
+                    value={editingItem ? editingItem.Description : newItem.Description}
                     onChange={(e) =>
                       editingItem
-                        ? setEditingItem({
-                            ...editingItem,
-                            Description: e.target.value,
-                          })
+                        ? setEditingItem({ ...editingItem, Description: e.target.value })
                         : setNewItem({ ...newItem, Description: e.target.value })
                     }
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
@@ -463,115 +425,49 @@ const MenuTab = () => {
                   />
                 </div>
 
-                {/* Sizes Section */}
+                {/* Sizes & Prices */}
                 <div className="sm:col-span-6">
                   <div className="flex items-center justify-between mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Sizes & Prices *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => addSize(!!editingItem)}
-                      className="inline-flex items-center space-x-2 px-3 py-2 text-sm bg-[#18749b] text-white rounded-lg hover:bg-[#2c5a97] transition-colors"
-                    >
+                    <label className="block text-sm font-medium text-gray-700">Sizes & Prices *</label>
+                    <button type="button" onClick={() => addSize(!!editingItem)} className="inline-flex items-center space-x-2 px-3 py-2 text-sm bg-[#18749b] text-white rounded-lg hover:bg-[#2c5a97] transition-colors">
                       <FaPlus className="w-3 h-3" />
                       <span>Add Size</span>
                     </button>
                   </div>
 
                   <div className="space-y-3">
-                    {(editingItem ? editingItem.Sizes : newItem.Sizes).map(
-                      (sizeObj, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Size
-                            </label>
-                            <select
-                              value={sizeObj.Size}
-                              onChange={(e) =>
-                                updateSize(
-                                  index,
-                                  "Size",
-                                  e.target.value,
-                                  !!editingItem
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                            >
-                              <option value="">Select Size</option>
-                              <option value="Small">Small</option>
-                              <option value="Medium">Medium</option>
-                              <option value="Large">Large</option>
-                            </select>
-                          </div>
-                          <div className="flex-1">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Price
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0.01"
-                              placeholder="0.00"
-                              value={sizeObj.Price}
-                              onChange={(e) =>
-                                updateSize(
-                                  index,
-                                  "Price",
-                                  e.target.value,
-                                  !!editingItem
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                            />
-                          </div>
-                          {(editingItem ? editingItem.Sizes : newItem.Sizes)
-                            .length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeSize(index, !!editingItem)}
-                              className="flex items-center justify-center p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Remove size"
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </button>
-                          )}
+                    {(editingItem ? editingItem.Sizes : newItem.Sizes).map((sizeObj, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Size</label>
+                          <select value={sizeObj.Size} onChange={(e) => updateSize(index, "Size", e.target.value, !!editingItem)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors">
+                            <option value="">Select Size</option>
+                            <option value="Small">Small</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Large">Large</option>
+                          </select>
                         </div>
-                      )
-                    )}
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+                          <input type="number" step="0.01" min="0.01" placeholder="0.00" value={sizeObj.Price} onChange={(e) => updateSize(index, "Price", e.target.value, !!editingItem)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors" />
+                        </div>
+                        {(editingItem ? editingItem.Sizes : newItem.Sizes).length > 1 && (
+                          <button type="button" onClick={() => removeSize(index, !!editingItem)} className="flex items-center justify-center p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Remove size">
+                            <FaTrash className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Image Upload */}
                 <div className="sm:col-span-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files[0])}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+                  <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors" />
                   {(editingItem?.ImageUrl || imageFile) && (
                     <div className="mt-4">
-                      <img
-                        src={
-                          imageFile
-                            ? URL.createObjectURL(imageFile)
-                            : toImageSrc(editingItem.ImageUrl)
-                        }
-                        alt="Menu Item"
-                        className="h-32 w-32 object-cover rounded-lg border"
-                        onError={(ev) => {
-                          err("image failed to load:", ev.currentTarget.src);
-                          ev.currentTarget.style.display = "none";
-                        }}
-                      />
+                      <img src={imageFile ? URL.createObjectURL(imageFile) : toImageSrc(editingItem.ImageUrl)} alt="Menu Item" className="h-32 w-32 object-cover rounded-lg border" onError={(ev) => { err("image failed to load:", ev.currentTarget.src); ev.currentTarget.style.display = "none"; }} />
                     </div>
                   )}
                 </div>
