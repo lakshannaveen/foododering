@@ -6,7 +6,7 @@ import { sessionManager } from "../utils/sessionManager";
 // Import logo from assets
 import logoImage from "../assets/hj.png";
 
-const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
+const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick, showCart = true }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeOrders, setActiveOrders] = useState(2); // Mock active orders count
   const navigate = useNavigate();
@@ -115,20 +115,22 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
 
             {/* Checkout button removed */}
 
-            {/* Cart button */}
-            <button
-              onClick={onCartClick}
-              className="relative group p-2 sm:p-3 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-200" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full shadow-lg border border-white/60">
-                  {cartItemsCount > 99 ? "99+" : cartItemsCount}
-                </span>
-              )}
+            {/* Cart button (hideable per-page) */}
+            {showCart && (
+              <button
+                onClick={onCartClick}
+                className="relative group p-2 sm:p-3 rounded-xl bg-white/70 hover:bg-[#18749b]/10 border border-[#18749b]/20 shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#18749b]/30"
+                aria-label="Shopping cart"
+              >
+                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform duration-200" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full shadow-lg border border-white/60">
+                    {cartItemsCount > 99 ? "99+" : cartItemsCount}
+                  </span>
+                )}
 
-            </button>
+              </button>
+            )}
             {/* Logout button */}
             {showLogout && (
               <button
@@ -167,24 +169,26 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
 
 
 
-              {/* Mobile Cart Summary */}
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onCartClick?.();
-                }}
-                className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/20"
-              >
-                <div className="flex items-center space-x-3">
-                  <ShoppingCart className="w-5 h-5" />
-                  <span className="text-base">View Cart</span>
-                </div>
-                {cartItemsCount > 0 && (
-                  <span className="bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full">
-                    {cartItemsCount} {cartItemsCount === 1 ? "item" : "items"}
-                  </span>
-                )}
-              </button>
+              {/* Mobile Cart Summary (hideable per-page) */}
+              {showCart && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onCartClick?.();
+                  }}
+                  className="w-full flex items-center justify-center space-x-3 px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/20"
+                >
+                  <div className="flex items-center space-x-3">
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="text-base">View Cart</span>
+                  </div>
+                  {cartItemsCount > 0 && (
+                    <span className="bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full">
+                      {cartItemsCount} {cartItemsCount === 1 ? "item" : "items"}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Mobile Logout */}
               {showLogout && (

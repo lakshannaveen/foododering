@@ -330,6 +330,7 @@ const QRLandingPage = () => {
           cartItemsCount={0}
           onCartClick={() => {}}
           onMenuToggle={() => {}}
+          showCart={false}
         />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
@@ -356,7 +357,7 @@ const QRLandingPage = () => {
   if (needAction && !error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50">
-        <Header cartItemsCount={0} onCartClick={() => {}} onMenuToggle={() => {}} />
+        <Header cartItemsCount={0} onCartClick={() => {}} onMenuToggle={() => {}} showCart={false} />
 
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full">
@@ -409,6 +410,7 @@ const QRLandingPage = () => {
         cartItemsCount={0}
         onCartClick={() => {}}
         onMenuToggle={() => {}}
+        showCart={false}
       />
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
         <div className="text-center max-w-md p-8">
