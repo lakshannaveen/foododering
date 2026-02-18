@@ -578,6 +578,14 @@ const Cart = ({
                     </div>
                   )}
 
+                  {/* Mobile: continue adding items (visible only on small screens) */}
+                  <button
+                    onClick={handleExploreMenu}
+                    className="w-full md:hidden mb-3 bg-white text-[#18749b] border border-[#18749b]/20 font-semibold py-3 rounded-2xl transition-all duration-150 hover:bg-[#f8feff]"
+                  >
+                    Continue adding items
+                  </button>
+
                   <button
                     className="w-full bg-gradient-to-r from-[#18749b] to-teal-600 hover:from-[#156285] hover:to-teal-700 text-white py-4 sm:py-5 rounded-2xl font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl touch-manipulation text-base sm:text-lg"
                     onClick={handleCheckout}
