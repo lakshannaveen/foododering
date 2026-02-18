@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import jsQR from "jsqr";
 import { useNavigate } from "react-router-dom";
 import { QrCode, AlertCircle } from "lucide-react";
 import { sessionManager } from "../utils/sessionManager";
@@ -15,8 +16,8 @@ const QRLandingPage = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState(null);
-  const videoRef = React.createRef();
-  let scanInterval = null;
+  const videoRef = useRef(null);
+  const scanInterval = useRef(null);
 
   // Expose URL parsing so we can show/debug detected id in UI
   const getTableIdFromUrl = () => {
@@ -188,32 +189,87 @@ const QRLandingPage = () => {
       setScanMessage("Camera not available on this device.");
       return;
     }
-
-    const video = videoRef.current;
     try {
+      // Request stream first
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      video.srcObject = stream;
-      await video.play();
-      setShowScanner(true);
-      setScanning(true);
 
-      // Use native BarcodeDetector if available
-      const hasDetector = typeof window.BarcodeDetector !== 'undefined';
-      if (!hasDetector) {
-        setScanMessage('Camera scanning not supported in this browser. Please enter table number manually or scan QR with your phone.');
-        return;
+      // Ensure video element is rendered and mounted
+      setShowScanner(true);
+
+      // wait for the video element to mount (with a small timeout)
+      const waitForVideo = async () => {
+        for (let i = 0; i < 20; i++) {
+          if (videoRef.current) return true;
+          // wait 50ms
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 50));
+        }
+        return false;
+      };
+
+      const mounted = await waitForVideo();
+      if (!mounted) {
+        console.warn('Video element did not mount in time');
       }
 
-      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-
-      scanInterval = setInterval(async () => {
+      const video = videoRef.current;
+      if (video) {
         try {
-          const barcodes = await detector.detect(video);
-          if (barcodes && barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
-            stopScanner();
-            setStatus('QR scanned. Initializing...');
-            initWithTableId(code);
+          video.srcObject = stream;
+          // attempt to play; this may be blocked if browser denies autoplay
+          // eslint-disable-next-line no-await-in-loop
+          await video.play();
+        } catch (playErr) {
+          console.warn('Video play failed:', playErr);
+        }
+      }
+
+      setScanning(true);
+
+      // Use native BarcodeDetector if available, otherwise use jsQR fallback
+      const hasDetector = typeof window.BarcodeDetector !== 'undefined';
+
+      let detector = null;
+      try {
+        if (hasDetector) detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      } catch (detErr) {
+        console.warn('BarcodeDetector initialization failed:', detErr);
+      }
+
+      // prepare a canvas for fallback decoding
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext && canvas.getContext('2d');
+
+      scanInterval.current = setInterval(async () => {
+        try {
+          const videoEl = videoRef.current;
+          if (!videoEl) return;
+
+          if (detector) {
+            const barcodes = await detector.detect(videoEl);
+            if (barcodes && barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              stopScanner();
+              setStatus('QR scanned. Initializing...');
+              initWithTableId(code);
+              return;
+            }
+          } else if (ctx) {
+            // jsQR fallback: draw current frame and scan
+            const w = videoEl.videoWidth || videoEl.clientWidth;
+            const h = videoEl.videoHeight || videoEl.clientHeight;
+            if (w === 0 || h === 0) return; // not ready yet
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(videoEl, 0, 0, w, h);
+            const imageData = ctx.getImageData(0, 0, w, h);
+            const code = jsQR(imageData.data, w, h);
+            if (code && code.data) {
+              stopScanner();
+              setStatus('QR scanned. Initializing...');
+              initWithTableId(code.data);
+              return;
+            }
           }
         } catch (dErr) {
           console.error('Barcode detect error:', dErr);
@@ -222,7 +278,15 @@ const QRLandingPage = () => {
 
     } catch (err) {
       console.error('Failed to start camera:', err);
-      setScanMessage('Failed to access camera. Please allow camera permission or enter table number manually.');
+      // Provide more specific message based on error name
+      const name = err && err.name ? err.name : 'UnknownError';
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setScanMessage('Camera permission denied. Please allow camera access in your browser settings.');
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        setScanMessage('No camera found on this device.');
+      } else {
+        setScanMessage('Failed to access camera. Please allow camera permission or enter table number manually.');
+      }
     }
   };
 
@@ -234,9 +298,9 @@ const QRLandingPage = () => {
         tracks.forEach((t) => t.stop());
         video.srcObject = null;
       }
-      if (scanInterval) {
-        clearInterval(scanInterval);
-        scanInterval = null;
+      if (scanInterval.current) {
+        clearInterval(scanInterval.current);
+        scanInterval.current = null;
       }
       setScanning(false);
       setShowScanner(false);
