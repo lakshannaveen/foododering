@@ -78,9 +78,10 @@ const MenuTab = () => {
   };
 
   const handleAddItem = async () => {
-    const validSizes = newItem.Sizes.filter(
-      (size) => size.Size.trim() && size.Price
-    );
+    const validSizes = newItem.Sizes.filter((size) => {
+      const price = parseFloat(size.Price);
+      return size.Size.trim() && !isNaN(price) && price > 0;
+    });
 
     if (validSizes.length === 0) {
       return;
@@ -106,12 +107,13 @@ const MenuTab = () => {
   };
 
   const handleUpdateItem = async () => {
-    const validSizes = editingItem.Sizes.filter(
-      (size) => size.Size.trim() && size.Price
-    );
+    const validSizes = editingItem.Sizes.filter((size) => {
+      const price = parseFloat(size.Price);
+      return size.Size.trim() && !isNaN(price) && price > 0;
+    });
 
     if (validSizes.length === 0) {
-      toast.error("Please add at least one size with price");
+      toast.error("Please add at least one size with a positive price");
       return;
     }
 
@@ -380,11 +382,14 @@ const MenuTab = () => {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors"
                   >
                     <option value="">Select Category</option>
-                    {categories?.map((cat) => (
-                      <option key={cat.CategoryId} value={cat.CategoryId}>
-                        {cat.Name}
-                      </option>
-                    ))}
+                    {(editingItem
+                      ? categories
+                      : categories?.filter((c) => String(c.Status) === "A"))
+                      ?.map((cat) => (
+                        <option key={cat.CategoryId} value={cat.CategoryId}>
+                          {cat.Name}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -415,9 +420,11 @@ const MenuTab = () => {
                           (sub) => String(sub.CategoryId) === String(editingItem.CategoryId)
                         )
                       : subcategories?.filter(
-                          (sub) => String(sub.CategoryId) === String(newItem.CategoryId)
+                          (sub) =>
+                            String(sub.CategoryId) === String(newItem.CategoryId) &&
+                            String(sub.Status) === "A"
                         )
-                    ).map((sub) => (
+                    )?.map((sub) => (
                       <option key={sub.SubCategoryId} value={sub.SubCategoryId}>
                         {sub.Name}
                       </option>
@@ -500,6 +507,7 @@ const MenuTab = () => {
                             <input
                               type="number"
                               step="0.01"
+                              min="0.01"
                               placeholder="0.00"
                               value={sizeObj.Price}
                               onChange={(e) =>
@@ -576,9 +584,10 @@ const MenuTab = () => {
                       !editingItem.MenuItemName ||
                       !editingItem.CategoryId ||
                       !editingItem.SubCategoryId ||
-                      !editingItem.Sizes.some(
-                        (size) => size.Size.trim() && size.Price
-                      )
+                      !editingItem.Sizes.some((size) => {
+                        const price = parseFloat(size.Price);
+                        return size.Size.trim() && !isNaN(price) && price > 0;
+                      })
                     }
                     className="px-4 py-2.5 text-sm font-medium text-white bg-[#18749b] border border-transparent rounded-lg hover:bg-[#2c5a97] focus:ring-2 focus:ring-[#18749b] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -588,10 +597,13 @@ const MenuTab = () => {
                   <button
                     onClick={handleAddItem}
                     disabled={
-                      !newItem.Name ||
-                      !newItem.CategoryId ||
-                      !newItem.SubCategoryId ||
-                      !newItem.Sizes.some((size) => size.Size.trim() && size.Price)
+                        !newItem.Name ||
+                        !newItem.CategoryId ||
+                        !newItem.SubCategoryId ||
+                        !newItem.Sizes.some((size) => {
+                          const price = parseFloat(size.Price);
+                          return size.Size.trim() && !isNaN(price) && price > 0;
+                        })
                     }
                     className="px-4 py-2.5 text-sm font-medium text-white bg-[#18749b] border border-transparent rounded-lg hover:bg-[#2c5a97] focus:ring-2 focus:ring-[#18749b] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
