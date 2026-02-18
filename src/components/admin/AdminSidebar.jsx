@@ -12,6 +12,7 @@ import {
   FaCog,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { sessionManager } from "../../utils/sessionManager";
 
 const AdminSidebar = ({
   activeTab,
@@ -56,12 +57,17 @@ const AdminSidebar = ({
     { id: "users", name: "Users", icon: <FaUsers className="text-lg" /> },
   ];
 
-  // Handle logout
+  // Handle logout with confirmation
   const handleLogout = () => {
-    // Remove userInfo from localStorage
-    localStorage.removeItem("userInfo");
-    // Only clear session keys related to the user's cart/session
-    sessionStorage.removeItem("restaurant-cart");
+    const ok = window.confirm("Are you sure you want to logout?");
+    if (!ok) return;
+    try { sessionManager.clearAll(); } catch (e) {}
+    try {
+      // Remove admin/user related keys
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("restaurant-cart");
+      sessionStorage.removeItem("restaurant-cart");
+    } catch (e) {}
     navigate("/login");
   };
 
