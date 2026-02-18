@@ -46,7 +46,13 @@ const Header = ({ cartItemsCount, onCartClick, onOrderTrackingClick }) => {
     const ok = window.confirm("Are you sure you want to logout?");
     if (!ok) return;
     try { sessionManager.clearAll(); } catch (e) {}
-    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+    try {
+      // Only remove keys related to the customer session - avoid wiping admin/session-wide data
+      // Do not remove `userInfo` here: admin uses this key. Removing it logs out admin users.
+      localStorage.removeItem("restaurant-cart");
+      localStorage.removeItem("id");
+      sessionStorage.removeItem("restaurant-cart");
+    } catch (e) {}
     navigate('/');
   };
 

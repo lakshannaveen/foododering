@@ -60,7 +60,8 @@ const AdminSidebar = ({
   const handleLogout = () => {
     // Remove userInfo from localStorage
     localStorage.removeItem("userInfo");
-    sessionStorage.clear();
+    // Only clear session keys related to the user's cart/session
+    sessionStorage.removeItem("restaurant-cart");
     navigate("/login");
   };
 

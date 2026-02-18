@@ -10,7 +10,12 @@ const AdminHeader = ({ title }) => {
     const ok = window.confirm("Are you sure you want to logout?");
     if (!ok) return;
     try { sessionManager.clearAll(); } catch (e) {}
-    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+    try {
+      // Remove only admin-related keys to avoid side-effects on other users/sessions
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("restaurant-cart");
+      sessionStorage.removeItem("restaurant-cart");
+    } catch (e) {}
     navigate('/');
   };
 
