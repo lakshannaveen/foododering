@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Clock,
   CheckCircle,
@@ -21,8 +21,21 @@ const OrderTrackingPage = () => {
   const [error, setError] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [hasPlayedReadySound, setHasPlayedReadySound] = useState(false);
-  const [promptVisible, setPromptVisible] = useState(true);
+  const [promptVisible, setPromptVisible] = useState(!urlOrderId);
+  const navigate = useNavigate();
 
+  // If a OrderId is present in the URL, auto-fetch that order on mount/param change
+  useEffect(() => {
+    if (urlOrderId) {
+      setOrderId(urlOrderId);
+      // hide prompt while loading
+      setPromptVisible(false);
+      // attempt to fetch but do not restore the prompt on failure; keep status view
+      fetchOrderItems(urlOrderId).catch((err) => {
+        console.error("Auto-fetch failed for OrderId:", urlOrderId, err);
+      });
+    }
+  }, [urlOrderId]);
   const API_BASE_URL = api?.defaults?.baseURL || "";
 
   const formatPrice = (price) =>
@@ -126,6 +139,7 @@ const OrderTrackingPage = () => {
     try {
       setLoading(true);
       setError(null);
+      setPromptVisible(false);
 
       const response = await fetch(
         `${API_BASE_URL}/OrderItem/getOrderItems?OrderId=${orderIdToFetch}`
@@ -167,18 +181,37 @@ const OrderTrackingPage = () => {
     } catch (err) {
       setError("Order not found. Please check your Order ID.");
       setOrderDetails(null);
+      // if there's an OrderId in the URL, keep the prompt hidden so the status page remains
+      if (!urlOrderId) {
+        setPromptVisible(true);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleSearch = () => {
-    if (orderId.trim()) {
-      fetchOrderItems(orderId.trim());
+    const id = orderId.trim();
+    if (id) {
+      // navigate to the tracking URL so the OrderId is preserved on refresh
+      try {
+        navigate(`/track-order/${id}`);
+      } catch (e) {
+        // fallback to direct fetch if navigation fails
+        fetchOrderItems(id).catch(() => {});
+      }
+      setPromptVisible(false);
     }
   };
 
   const handleBack = () => {
+    // navigate to the base tracking route (removes OrderId param)
+    try {
+      navigate("/track-order");
+    } catch (e) {
+      // ignore navigation errors and fallback to local reset
+    }
+
     setOrderDetails(null);
     setOrderId("");
     setOrderStatus("pending");
