@@ -58,11 +58,13 @@ const AdminSidebar = ({
 
   // Handle logout
   const handleLogout = () => {
-    // Remove userInfo from localStorage
-    localStorage.removeItem("userInfo");
-    // Only clear session keys related to the user's cart/session
-    sessionStorage.removeItem("restaurant-cart");
-    navigate("/login");
+    const ok = window.confirm("Are you sure you want to logout?");
+    if (!ok) return;
+    try {
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("restaurant-cart");
+    } catch (e) {}
+    navigate('/login');
   };
 
   // Set default tab to subcategories on page load/refresh
