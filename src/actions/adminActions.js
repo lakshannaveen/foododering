@@ -45,6 +45,7 @@ export const addAdmin = (adminData) => async (dispatch) => {
       const list = await getAllAdmins();
       if (list.StatusCode === 200 && Array.isArray(list.ResultSet)) {
         dispatch({ type: GET_ADMINS_SUCCESS, payload: list.ResultSet });
+        toast.success("User added successfully");
       } else {
         dispatch({ type: GET_ADMINS_FAIL, payload: list.Result || "Failed to refresh" });
       }
