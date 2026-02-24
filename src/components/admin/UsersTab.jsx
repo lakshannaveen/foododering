@@ -8,7 +8,7 @@ import {
   FaSync,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAdmins } from "../../actions/adminActions";
+import { fetchAdmins, addAdmin } from "../../actions/adminActions";
 
 const UsersTab = () => {
   const dispatch = useDispatch();
@@ -88,10 +88,17 @@ const UsersTab = () => {
               </div>
 
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  // TODO: Add admin user API call
-                  console.log("Adding user:", newUser);
+                  try {
+                    await dispatch(addAdmin({
+                      Name: newUser.Name,
+                      Email: newUser.email,
+                      Password: newUser.password,
+                    }));
+                  } catch (err) {
+                    console.error("Add user error:", err);
+                  }
                   setIsAdding(false);
                   setNewUser({ Name: "", email: "", password: "" });
                 }}
