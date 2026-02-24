@@ -86,7 +86,7 @@ export const updateMenuItem = async (menuItem, imageFile) => {
       formData.append(k, v ?? "");
     }
   });
-  if (imageFile) formData.append("imageFile", imageFile.name, imageFile);
+  if (imageFile) formData.append("imageFile", imageFile, imageFile.name);
 
   const fdPreview = {};
   for (const [k, v] of formData.entries()) {
