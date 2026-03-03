@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { QrCode, AlertCircle } from "lucide-react";
 import { sessionManager } from "../utils/sessionManager";
 import { orderService } from "../services/order_user";
+import { orderService as adminOrdersService } from "../services/orderService";
 import Header from "../components/Header";
 
 const QRLandingPage = () => {
@@ -147,25 +148,33 @@ const QRLandingPage = () => {
 
       setStatus("Loading your order...");
 
-      // Create new order for this table (unique order ID)
-      const sessionId = `table-${tableId}-${Date.now()}`;
-      const orderData = await orderService.addOrder({ TableId: parseInt(tableId), SessionId: sessionId });
+      // Check whether table already has a non-released order
+      try {
+        const allOrders = await adminOrdersService.getAllOrders();
+        const tableOrders = (allOrders || []).filter((o) => String(o.TableId) === String(tableId));
+        const activeOrder = tableOrders.find((o) => {
+          const s = (o.OrderStatus || o.Status || o.status || "").toString().toLowerCase();
+          return s && s !== "served" && s !== "cancelled" && s !== "complete" && s !== "completed";
+        });
+        if (activeOrder) {
+          setError("Table is not available. There is an ongoing order.");
+          setStatus("");
+          return;
+        }
+      } catch (chkErr) {
+        console.warn("Could not verify table availability:", chkErr);
+      }
 
-      if (orderData && orderData.OrderId) {
-        // Save order ID to sessionStorage
-        sessionManager.saveOrder(orderData.OrderId);
+      // Get or create an active order for this table (ensures proper pending status)
+      const orderData = await orderService.getOrCreateActiveOrder(tableId);
 
-        console.log(
-          `✅ Order created:`,
-          `OrderId: ${orderData.OrderId}`
-        );
-
+      if (orderData && (orderData.OrderId || orderData.OrderID || orderData.orderId)) {
+        // Normalize OrderId property
+        const orderId = orderData.OrderId || orderData.OrderID || orderData.orderId;
+        sessionManager.saveOrder(orderId);
+        console.log(`✅ Active order ready: OrderId: ${orderId}`, orderData);
         setStatus("Order ready! Redirecting to menu...");
-
-        // Navigate to menu after brief delay
-        setTimeout(() => {
-          navigate("/menu");
-        }, 500);
+        setTimeout(() => navigate("/menu"), 500);
       } else {
         setError("Failed to initialize order. Please try again.");
       }
@@ -181,10 +190,27 @@ const QRLandingPage = () => {
     try {
       if (!manualId) return setError("Please enter a table id to continue.");
       localStorage.setItem("id", manualId);
-      const sessionId = `table-${manualId}-${Date.now()}`;
-      const orderData = await orderService.addOrder({ TableId: parseInt(manualId), SessionId: sessionId });
-      if (orderData && orderData.OrderId) {
-        sessionManager.saveOrder(orderData.OrderId);
+      // Check whether table already has a non-released order
+      try {
+        const allOrders = await adminOrdersService.getAllOrders();
+        const tableOrders = (allOrders || []).filter((o) => String(o.TableId) === String(manualId));
+        const activeOrder = tableOrders.find((o) => {
+          const s = (o.OrderStatus || o.Status || o.status || "").toString().toLowerCase();
+          return s && s !== "served" && s !== "cancelled" && s !== "complete" && s !== "completed";
+        });
+        if (activeOrder) {
+          setError("Table is not available. There is an ongoing order.");
+          setStatus("");
+          return;
+        }
+      } catch (chkErr) {
+        console.warn("Could not verify table availability:", chkErr);
+      }
+
+      const orderData = await orderService.getOrCreateActiveOrder(manualId);
+      if (orderData && (orderData.OrderId || orderData.OrderID || orderData.orderId)) {
+        const orderId = orderData.OrderId || orderData.OrderID || orderData.orderId;
+        sessionManager.saveOrder(orderId);
         setStatus("Order ready! Redirecting to menu...");
         setTimeout(() => navigate("/menu"), 500);
       } else {
