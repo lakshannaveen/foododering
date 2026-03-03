@@ -227,6 +227,29 @@ const filteredOrders = useMemo(() => {
   // Filter out orders with no items or price = 0
   filtered = filtered.filter(order => parseFloat(order.TotalAmount || 0) > 0);
 
+  // Deduplicate by OrderId keeping the most recent by CreatedAt if duplicates exist
+  try {
+    const byId = new Map();
+    for (const o of filtered) {
+      const key = o.OrderId ?? o.OrderId === 0 ? o.OrderId : null;
+      if (key == null) continue;
+      const existing = byId.get(key);
+      if (!existing) {
+        byId.set(key, o);
+        continue;
+      }
+      const a = new Date(existing.CreatedAt || 0).getTime() || 0;
+      const b = new Date(o.CreatedAt || 0).getTime() || 0;
+      if (b >= a) {
+        byId.set(key, o);
+      }
+    }
+    filtered = Array.from(byId.values());
+  } catch (e) {
+    // If dedupe fails, fall back to original filtered array
+    console.warn('OrderTab: dedupe failed', e);
+  }
+
   return filtered;
 }, [orders, filters, searchQuery]);
   const reversedOrders = useMemo(() => {

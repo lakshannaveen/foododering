@@ -47,8 +47,60 @@ const Cart = ({
 
   useEffect(() => {
     // Refresh displayed order/table when cart opens or items change
-    setOrderIdDisplay(sessionManager.getOrderId());
-    setTableIdDisplay(sessionManager.getTableId());
+    // Validate active order state and clear it if it's cancelled/completed/served
+    const validateActiveOrder = async () => {
+      const oid = sessionManager.getOrderId();
+      setOrderIdDisplay(oid);
+      setTableIdDisplay(sessionManager.getTableId());
+      const tableId = sessionManager.getTableId();
+
+      // If there's no stored order, or if the stored order is final, create/get a fresh one
+      let shouldCreate = false;
+      if (!oid) shouldCreate = true;
+
+      try {
+        if (!shouldCreate) {
+          const resp = await orderService.getOrderDetails(oid);
+          if (resp && resp.StatusCode === 200 && resp.ResultSet && resp.ResultSet.length > 0) {
+            const orderData = resp.ResultSet[0];
+            const st = (orderData.OrderStatus || orderData.Status || "").toString().toLowerCase();
+            if (st.includes("cancel") || st.includes("complete") || st.includes("served")) {
+              console.log('Cart: active order is in final state', st, '- clearing stored order so next order uses a new id');
+              try { sessionManager.clearOrder(); } catch (e) {}
+              setOrderIdDisplay(null);
+              shouldCreate = true;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Cart: failed to validate active order', e);
+        // If validation failed, allow creating a fresh order to avoid blocking users
+        shouldCreate = shouldCreate || !!tableId;
+      }
+
+      if (shouldCreate && tableId) {
+        try {
+          console.log('Cart: creating a fresh order for table', tableId);
+          const addResp = await orderService.addOrder({ TableId: parseInt(tableId), SessionId: 0 });
+
+          // Normalize response shapes
+          let newOrderId = null;
+          if (addResp) {
+            newOrderId = addResp.OrderId || addResp.Result || addResp.orderId || (addResp.result && addResp.result.OrderId);
+          }
+
+          if (newOrderId) {
+            try { sessionManager.saveOrder(newOrderId); } catch (e) {}
+            setOrderIdDisplay(newOrderId);
+            console.log('Cart: new active order saved', newOrderId);
+          }
+        } catch (e) {
+          console.warn('Cart: failed to create new order', e);
+        }
+      }
+    };
+
+    validateActiveOrder();
   }, [isOpen, cartItems]);
 
   const handleExploreMenu = () => {
@@ -138,18 +190,19 @@ const Cart = ({
     // If no orderId, get or create active order for this table
     if (!orderId) {
       try {
-        console.log("No orderId in storage, getting/creating active order for table:", tableId);
-        const orderResponse = await orderService.getOrCreateActiveOrder(tableId);
-        
-        if (orderResponse.StatusCode === 200 && orderResponse.ResultSet) {
-          orderId = orderResponse.ResultSet.OrderId;
+        console.log("No orderId in storage, creating a fresh order for table:", tableId);
+        const addResp = await orderService.addOrder({ TableId: parseInt(tableId), SessionId: 0 });
+        let newOrderId = null;
+        if (addResp) newOrderId = addResp.OrderId || addResp.Result || addResp.orderId || (addResp.result && addResp.result.OrderId);
+        if (newOrderId) {
+          orderId = newOrderId;
           sessionManager.saveOrder(orderId); // Save it to sessionStorage
-          console.log("✅ Got/created active order:", orderId);
+          console.log("✅ Created active order:", orderId);
         } else {
-          throw new Error("Failed to get or create order");
+          throw new Error("Failed to create order");
         }
       } catch (error) {
-        console.error("Failed to get/create order:", error);
+        console.error("Failed to create order:", error);
         setUserError("Could not create order. Please try scanning the QR code again.");
         return;
       }

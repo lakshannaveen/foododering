@@ -74,11 +74,11 @@ export const orderService = {
     try {
       console.log("🔵 orderService.addOrder called with:", { TableId, SessionId });
       
-      // Validate parameters
-      if (!TableId) {
+      // Validate parameters (allow SessionId = 0)
+      if (TableId === undefined || TableId === null) {
         throw new Error("TableId is required");
       }
-      if (!SessionId) {
+      if (SessionId === undefined || SessionId === null) {
         throw new Error("SessionId is required");
       }
 

@@ -66,7 +66,20 @@ const CheckoutPage = () => {
       if (orderResponse.StatusCode === 200 && orderResponse.ResultSet && orderResponse.ResultSet.length > 0) {
         // ResultSet is an array, extract the first element
         const orderData = orderResponse.ResultSet[0];
-        
+
+        // If backend reports the order was cancelled, clear local session and redirect
+        try {
+          const st = (orderData.OrderStatus || orderData.Status || "").toString().toLowerCase();
+          if (st.includes('cancel')) {
+            console.log('CheckoutPage: order is cancelled — clearing session and redirecting to menu');
+            try { sessionManager.clearOrder(); } catch (e) {}
+            navigate('/menu');
+            return;
+          }
+        } catch (e) {
+          // ignore
+        }
+
         // Convert string values to proper types
         setOrder({
           OrderId: parseInt(orderData.OrderId),

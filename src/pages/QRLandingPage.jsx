@@ -148,35 +148,28 @@ const QRLandingPage = () => {
 
       setStatus("Loading your order...");
 
-      // Check whether table already has a non-released order
+      // Always create a fresh order for this table to ensure unique OrderIds
       try {
-        const allOrders = await adminOrdersService.getAllOrders();
-        const tableOrders = (allOrders || []).filter((o) => String(o.TableId) === String(tableId));
-        const activeOrder = tableOrders.find((o) => {
-          const s = (o.OrderStatus || o.Status || o.status || "").toString().toLowerCase();
-          return s && s !== "served" && s !== "cancelled" && s !== "complete" && s !== "completed";
-        });
-        if (activeOrder) {
-          setError("Table is not available. There is an ongoing order.");
-          setStatus("");
-          return;
+        const addResp = await orderService.addOrder({ TableId: parseInt(tableId), SessionId: 0 });
+        let orderId = null;
+        if (addResp) {
+          orderId = addResp.OrderId || addResp.Result || addResp.orderId || (addResp.result && addResp.result.OrderId);
         }
-      } catch (chkErr) {
-        console.warn("Could not verify table availability:", chkErr);
-      }
-
-      // Get or create an active order for this table (ensures proper pending status)
-      const orderData = await orderService.getOrCreateActiveOrder(tableId);
-
-      if (orderData && (orderData.OrderId || orderData.OrderID || orderData.orderId)) {
-        // Normalize OrderId property
-        const orderId = orderData.OrderId || orderData.OrderID || orderData.orderId;
-        sessionManager.saveOrder(orderId);
-        console.log(`✅ Active order ready: OrderId: ${orderId}`, orderData);
-        setStatus("Order ready! Redirecting to menu...");
-        setTimeout(() => navigate("/menu"), 500);
-      } else {
-        setError("Failed to initialize order. Please try again.");
+        if (!orderId && addResp && typeof addResp === 'object' && addResp.status && addResp.OrderId) {
+          orderId = addResp.OrderId;
+        }
+        if (orderId) {
+          sessionManager.saveOrder(orderId);
+          console.log(`✅ New order created: OrderId: ${orderId}`, addResp);
+          setStatus("Order ready! Redirecting to menu...");
+          setTimeout(() => navigate("/menu"), 500);
+        } else {
+          console.error('Failed to create new order, response:', addResp);
+          setError("Failed to initialize order. Please try again.");
+        }
+      } catch (err) {
+        console.error('Failed to create order:', err);
+        setError("Failed to initialize order. Please try scanning the QR code again.");
       }
     } catch (err) {
       console.error("Order init error:", err);
@@ -190,30 +183,23 @@ const QRLandingPage = () => {
     try {
       if (!manualId) return setError("Please enter a table id to continue.");
       localStorage.setItem("id", manualId);
-      // Check whether table already has a non-released order
+      // Always create a fresh order for the manually entered table id
       try {
-        const allOrders = await adminOrdersService.getAllOrders();
-        const tableOrders = (allOrders || []).filter((o) => String(o.TableId) === String(manualId));
-        const activeOrder = tableOrders.find((o) => {
-          const s = (o.OrderStatus || o.Status || o.status || "").toString().toLowerCase();
-          return s && s !== "served" && s !== "cancelled" && s !== "complete" && s !== "completed";
-        });
-        if (activeOrder) {
-          setError("Table is not available. There is an ongoing order.");
-          setStatus("");
-          return;
+        const addResp = await orderService.addOrder({ TableId: parseInt(manualId), SessionId: 0 });
+        let orderId = null;
+        if (addResp) {
+          orderId = addResp.OrderId || addResp.Result || addResp.orderId || (addResp.result && addResp.result.OrderId);
         }
-      } catch (chkErr) {
-        console.warn("Could not verify table availability:", chkErr);
-      }
-
-      const orderData = await orderService.getOrCreateActiveOrder(manualId);
-      if (orderData && (orderData.OrderId || orderData.OrderID || orderData.orderId)) {
-        const orderId = orderData.OrderId || orderData.OrderID || orderData.orderId;
-        sessionManager.saveOrder(orderId);
-        setStatus("Order ready! Redirecting to menu...");
-        setTimeout(() => navigate("/menu"), 500);
-      } else {
+        if (orderId) {
+          sessionManager.saveOrder(orderId);
+          setStatus("Order ready! Redirecting to menu...");
+          setTimeout(() => navigate("/menu"), 500);
+        } else {
+          console.error('Failed to create new order (manual), response:', addResp);
+          setError("Failed to initialize order. Please try again.");
+        }
+      } catch (err) {
+        console.error('Manual init create order failed:', err);
         setError("Failed to initialize order. Please try again.");
       }
     } catch (err) {

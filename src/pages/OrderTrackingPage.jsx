@@ -11,6 +11,7 @@ import {
 import Header from "../components/Header";
 import api from "../index";
 import { orderService } from "../services/order_user";
+import { sessionManager } from "../utils/sessionManager";
 
 const OrderTrackingPage = () => {
   const { OrderId: urlOrderId } = useParams();
@@ -121,6 +122,17 @@ const OrderTrackingPage = () => {
           orderData.status ||
           "pending";
         setOrderStatus(status);
+
+        // If order was cancelled, remove the active order from session so a new order ID will be used next time
+        try {
+          if (status.toString().toLowerCase().includes('cancel')) {
+            console.log('OrderTracking: order is cancelled — clearing active order from session');
+            sessionManager.clearOrder();
+            setError('This order has been cancelled. Your active order session has been cleared.');
+          }
+        } catch (e) {
+          console.warn('Failed to clear session on cancelled order', e);
+        }
 
         if (status.toLowerCase() === "ready" && !hasPlayedReadySound) {
           playReadyNotification();
