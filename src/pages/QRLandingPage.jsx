@@ -401,9 +401,7 @@ const QRLandingPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">{error || 'Error'}</h2>
               <p className="text-gray-600 text-center mb-4">Please try scanning the QR code again or enter your table number manually.</p>
 
-              <div className="w-full mb-4 text-sm text-gray-700">
-                <div className="mb-1"><strong>Detected id:</strong> {detectedId ?? "(none)"}</div>
-              </div>
+              
 
               <div className="flex space-x-3">
                 <button onClick={() => { setError(null); setNeedAction(true); setManualId(''); setDetectedId(null); }} className="px-6 py-2 bg-gradient-to-r from-[#18749b] to-teal-600 text-white rounded-lg hover:from-[#156285] hover:to-teal-700 transition-all">Try Again</button>
