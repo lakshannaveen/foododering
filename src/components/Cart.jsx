@@ -42,6 +42,8 @@ const Cart = ({
 
   const [orderIdDisplay, setOrderIdDisplay] = useState(() => sessionManager.getOrderId());
   const [tableIdDisplay, setTableIdDisplay] = useState(() => sessionManager.getTableId());
+  const [editingKey, setEditingKey] = useState(null);
+  const [tempSelectedSize, setTempSelectedSize] = useState(null);
 
   useEffect(() => {
     // Refresh displayed order/table when cart opens or items change
@@ -418,6 +420,16 @@ const Cart = ({
                                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${hasValidSizeId ? "bg-[#18749b]/10 border-[#18749b]/20" : "bg-red-100 text-red-800 border-red-200"}`}>
                                         Size: {item.selectedSize.Size}
                                       </span>
+                                      <button
+                                        onClick={() => {
+                                          const key = `${item.id}_${menuItemSizeId || ''}`;
+                                          setEditingKey(key);
+                                          setTempSelectedSize(item.selectedSize || null);
+                                        }}
+                                        className="text-xs text-blue-600 hover:underline ml-2"
+                                      >
+                                        Edit
+                                      </button>
                                       {item.selectedSize.MenuItemSizeId && (
                                         <span className="text-xs text-gray-500">ID: {item.selectedSize.MenuItemSizeId}</span>
                                       )}
@@ -427,6 +439,59 @@ const Cart = ({
                                     <div className="flex items-center space-x-2 mb-1">
                                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${hasValidSizeId ? "bg-[#18749b]/10 border-[#18749b]/20" : "bg-red-100 text-red-800 border-red-200"}`}>Size: {item.size}</span>
                                       {item.menuItemSizeId && (<span className="text-xs text-gray-500">ID: {item.menuItemSizeId}</span>)}
+                                      <button
+                                        onClick={() => {
+                                          const key = `${item.id}_${menuItemSizeId || ''}`;
+                                          setEditingKey(key);
+                                          // create a minimal selectedSize object if only size string exists
+                                          setTempSelectedSize(item.selectedSize || (item.menuItemSizeId ? { MenuItemSizeId: item.menuItemSizeId, Size: item.size, Price: item.price } : null));
+                                        }}
+                                        className="text-xs text-blue-600 hover:underline ml-2"
+                                      >
+                                        Edit
+                                      </button>
+                                    </div>
+                                  )}
+                                  {/* Inline size editor */}
+                                  {editingKey === `${item.id}_${menuItemSizeId || ''}` && item.sizes && item.sizes.length > 0 && (
+                                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                      <div className="text-xs text-gray-600 mb-2">Choose size</div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {item.sizes.map((size) => (
+                                          <button
+                                            key={size.MenuItemSizeId}
+                                            onClick={() => setTempSelectedSize(size)}
+                                            className={`px-3 py-2 text-sm rounded-lg border ${tempSelectedSize?.MenuItemSizeId === size.MenuItemSizeId ? 'border-[#18749b] bg-[#18749b]/10' : 'border-gray-200'}`}
+                                          >
+                                            <div className="font-medium">{size.Size}</div>
+                                            <div className="text-xs text-gray-500">{new Intl.NumberFormat('en-LK',{style:'currency',currency:'LKR',minimumFractionDigits:0}).format(parseFloat(size.Price)).replace('LKR','Rs.')}</div>
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <div className="flex items-center gap-3 mt-3">
+                                        <button
+                                          onClick={async () => {
+                                            // Save selection
+                                            try {
+                                              await cartService.updateItemSize(item.id, menuItemSizeId, tempSelectedSize);
+                                              if (typeof onCartUpdated === 'function') onCartUpdated();
+                                            } catch (e) {
+                                              console.error('Failed to update item size', e);
+                                            }
+                                            setEditingKey(null);
+                                            setTempSelectedSize(null);
+                                          }}
+                                          className="px-3 py-2 bg-[#18749b] text-white rounded-lg text-sm"
+                                        >
+                                          Save
+                                        </button>
+                                        <button
+                                          onClick={() => { setEditingKey(null); setTempSelectedSize(null); }}
+                                          className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
                                   {/* Error warning for invalid items */}

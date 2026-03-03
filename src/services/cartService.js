@@ -43,6 +43,40 @@ export const cartService = {
     sessionStorage.setItem("restaurant-cart", payload);
     return updatedCart;
   },
+  // Update the selected size for a cart item. If a different cart entry
+  // already exists with the new size, merge quantities and remove the old entry.
+  updateItemSize: (itemId, oldSizeId, newSelectedSize) => {
+    const cart = cartService.getCart();
+    const oldKey = oldSizeId ? `${itemId}_${oldSizeId}` : `${itemId}`;
+    const newSizeId = newSelectedSize && newSelectedSize.MenuItemSizeId ? String(newSelectedSize.MenuItemSizeId) : '';
+    const newKey = `${itemId}_${newSizeId}`;
+
+    const oldIndex = cart.findIndex((c) => cartService.getCartKey(c) === oldKey);
+    if (oldIndex === -1) return cart;
+
+    const targetIndex = cart.findIndex((c) => cartService.getCartKey(c) === newKey);
+
+    // If target exists, merge quantities
+    if (targetIndex !== -1 && targetIndex !== oldIndex) {
+      cart[targetIndex].quantity = (cart[targetIndex].quantity || 0) + (cart[oldIndex].quantity || 0);
+      // remove old entry
+      cart.splice(oldIndex, 1);
+    } else {
+      // update the existing entry in-place
+      const existing = cart[oldIndex];
+      existing.selectedSize = newSelectedSize;
+      if (newSelectedSize && newSelectedSize.Price) {
+        existing.price = parseFloat(newSelectedSize.Price);
+      }
+      // also update menuItemSizeId for backward compatibility
+      existing.menuItemSizeId = newSelectedSize?.MenuItemSizeId || null;
+    }
+
+    const payload = JSON.stringify(cart);
+    localStorage.setItem("restaurant-cart", payload);
+    sessionStorage.setItem("restaurant-cart", payload);
+    return cart;
+  },
   clearCart: () => {
     localStorage.removeItem("restaurant-cart");
     sessionStorage.removeItem("restaurant-cart");
