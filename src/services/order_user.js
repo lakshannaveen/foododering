@@ -22,7 +22,23 @@ export const orderService = {
       console.log("📥 Backend response:", response.data);
 
       if (response.data.StatusCode === 200 && response.data.ResultSet) {
-        return response.data.ResultSet; // Returns { OrderId, TableId, OrderStatus, TotalAmount, CreatedAt, IsNewOrder }
+        const rs = response.data.ResultSet;
+
+        // Defensive: if backend returned a cancelled/completed order, create a fresh one
+        const statusVal = (rs.OrderStatus || rs.Status || "").toString().toLowerCase();
+        if (statusVal.includes('cancel') || statusVal.includes('complete')) {
+          console.log('⚠️ Existing order is cancelled/completed. Creating a new order for table:', tableId);
+          // Create a new order explicitly. Pass SessionId=0 for safety.
+          const addResp = await axios.post(`${API_URL}/Order/AddOrder`, { TableId: parseInt(tableId), SessionId: 0 });
+          console.log('📥 AddOrder response:', addResp.data);
+          if (addResp.data && (addResp.data.ResultStatusCode === 200 || addResp.data.Result)) {
+            const newOrderId = Number(addResp.data.Result);
+            return { OrderId: newOrderId, TableId: parseInt(tableId), OrderStatus: 'New', TotalAmount: 0, CreatedAt: new Date().toISOString(), IsNewOrder: true };
+          }
+          // Fallthrough to return original result if add failed
+        }
+
+        return rs; // Returns { OrderId, TableId, OrderStatus, TotalAmount, CreatedAt, IsNewOrder }
       } else {
         throw new Error(response.data.Result || "Failed to get/create order");
       }
