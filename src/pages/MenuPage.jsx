@@ -545,7 +545,7 @@ const MenuPage = () => {
             ) : menuItems.length === 0 ? (
               <div className="text-center text-gray-500 py-10 text-base">No menu items found for this category.</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6 lg:gap-8">
                 {menuItems.map((item) => {
                   // Determine selected size for this item
                   const selectedSizeId = selectedSizes[item.id] || (item.sizes && item.sizes[0]?.MenuItemSizeId);
@@ -553,11 +553,11 @@ const MenuPage = () => {
                   return (
                     <div
                       key={item.id}
-                      className="group cursor-pointer bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#18749b]/30 flex flex-row md:flex-col overflow-hidden transform"
+                      className="group cursor-pointer bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#18749b]/30 flex flex-row md:flex-col overflow-hidden transform md:min-h-[320px] lg:min-h-[340px] xl:min-h-[300px] 2xl:min-h-[280px]"
                       onClick={() => handleItemClick(item)}
                     >
                       {/* Image Section */}
-                      <div className="relative w-32 h-32 flex-shrink-0 overflow-hidden bg-gray-100">
+                      <div className="relative w-32 h-32 md:w-full md:h-40 lg:h-48 xl:h-40 2xl:h-36 flex-shrink-0 overflow-hidden bg-gray-100">
                         <img
                           src={getImageUrl(item.image) || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'}
                           alt={item.name}
@@ -567,20 +567,22 @@ const MenuPage = () => {
                       </div>
 
                       {/* Content Section */}
-                      <div className="flex-1 p-4 text-left">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex gap-2">
-                            <h4 className="font-semibold text-base">{item.name}</h4>
-                            {item.subCategoryName && (
-                              <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 mt-1 text-xs">
-                                {item.subCategoryName}
-                              </span>
-                            )}
+                      <div className="flex-1 p-3 md:p-4 text-left flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex flex-col gap-1">
+                              <h4 className="font-semibold text-base md:text-lg leading-tight">{item.name}</h4>
+                              {item.subCategoryName && (
+                                <span className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 text-xs bg-gray-50">
+                                  {item.subCategoryName}
+                                </span>
+                              )}
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-1" />
                           </div>
-                          <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                          <p className="text-sm text-muted-foreground line-clamp-2 md:line-clamp-3 mb-3">{item.description}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-auto">
                           {/* Format prices to include 'Rs.' and use commas for thousands */}
                           <span className="text-lg font-bold text-accent">
                             {item.sizes && item.sizes.length > 0
