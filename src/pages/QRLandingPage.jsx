@@ -59,6 +59,55 @@ const QRLandingPage = () => {
     return null;
   };
 
+  const getTableIdFromQRData = (qrData) => {
+    if (!qrData) return null;
+
+    try {
+      // If it's a direct number, return it
+      if (/^\d+$/.test(qrData.trim())) return qrData.trim();
+
+      // Try to parse as URL
+      const url = new URL(qrData);
+
+      // 1) standard search params
+      const searchParams = new URLSearchParams(url.search);
+      let t = searchParams.get("id") || searchParams.get("tableId") || searchParams.get("table");
+      if (t) return t;
+
+      // 2) hash-based routing where query is after '#'
+      const hash = url.hash || "";
+      const qm = hash.indexOf("?");
+      if (qm !== -1) {
+        const hashQuery = hash.substring(qm);
+        const hashParams = new URLSearchParams(hashQuery);
+        t = hashParams.get("id") || hashParams.get("tableId") || hashParams.get("table");
+        if (t) return t;
+      }
+
+      // 3) common path patterns: /table/123 or /t/123 or /tables/123
+      const pathPatterns = [
+        /\/table\/(\d+)/i,
+        /\/t\/(\d+)/i,
+        /\/tables?\/(\d+)/i,
+        /\/(\d+)(?:$|[?#])/,
+      ];
+      for (const p of pathPatterns) {
+        const m = url.pathname.match(p);
+        if (m) return m[1];
+      }
+
+      // 4) fallback: search the whole href for id= param (non-numeric allowed)
+      const hrefMatch = qrData.match(/[?&]id=([^&#]+)/);
+      if (hrefMatch) return hrefMatch[1];
+
+      return null;
+    } catch (e) {
+      // If not a valid URL, check if it's just a number
+      if (/^\d+$/.test(qrData.trim())) return qrData.trim();
+      return null;
+    }
+  };
+
   useEffect(() => {
     // compute detected id for debug UI and decide action
     let id = null;
@@ -84,44 +133,6 @@ const QRLandingPage = () => {
 
   const initOrder = async () => {
     try {
-      // Get tableId from URL. Support many formats used by QR generators and hash routers
-      const getTableIdFromUrl = () => {
-        const href = window.location.href || "";
-
-        // 1) standard search params
-        const searchParams = new URLSearchParams(window.location.search);
-        let t = searchParams.get("id") || searchParams.get("tableId") || searchParams.get("table") ;
-        if (t) return t;
-
-        // 2) hash-based routing where query is after '#'
-        const hash = window.location.hash || "";
-        const qm = hash.indexOf("?");
-        if (qm !== -1) {
-          const hashQuery = hash.substring(qm);
-          const hashParams = new URLSearchParams(hashQuery);
-          t = hashParams.get("id") || hashParams.get("tableId") || hashParams.get("table");
-          if (t) return t;
-        }
-
-        // 3) common path patterns: /table/123 or /t/123 or /tables/123
-        const pathPatterns = [
-          /\/table\/(\d+)/i,
-          /\/t\/(\d+)/i,
-          /\/tables?\/(\d+)/i,
-          /\/(\d+)(?:$|[?#])/,
-        ];
-        for (const p of pathPatterns) {
-          const m = href.match(p);
-          if (m) return m[1];
-        }
-
-        // 4) fallback: search the whole href for id= param (non-numeric allowed)
-        const hrefMatch = href.match(/[?&]id=([^&#]+)/);
-        if (hrefMatch) return hrefMatch[1];
-
-        return null;
-      };
-
       const tableId = getTableIdFromUrl();
 
       if (!tableId) {
@@ -263,11 +274,16 @@ const QRLandingPage = () => {
           if (detector) {
             const barcodes = await detector.detect(videoEl);
             if (barcodes && barcodes.length > 0) {
-              const code = barcodes[0].rawValue;
-              stopScanner();
-              setStatus('QR scanned. Initializing...');
-              initWithTableId(code);
-              return;
+              const qrData = barcodes[0].rawValue;
+              const tableId = getTableIdFromQRData(qrData);
+              if (tableId) {
+                stopScanner();
+                setStatus('QR scanned. Initializing...');
+                initWithTableId(tableId);
+                return;
+              } else {
+                setScanMessage('Invalid QR code. Please scan a valid table QR code.');
+              }
             }
           } else if (ctx) {
             // jsQR fallback: draw current frame and scan
@@ -280,10 +296,15 @@ const QRLandingPage = () => {
             const imageData = ctx.getImageData(0, 0, w, h);
             const code = jsQR(imageData.data, w, h);
             if (code && code.data) {
-              stopScanner();
-              setStatus('QR scanned. Initializing...');
-              initWithTableId(code.data);
-              return;
+              const tableId = getTableIdFromQRData(code.data);
+              if (tableId) {
+                stopScanner();
+                setStatus('QR scanned. Initializing...');
+                initWithTableId(tableId);
+                return;
+              } else {
+                setScanMessage('Invalid QR code. Please scan a valid table QR code.');
+              }
             }
           }
         } catch (dErr) {
