@@ -7,12 +7,7 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isOpen) return;
-    const t = setTimeout(() => {
-      try { onClose && onClose(); } catch (e) {}
-      try { navigate('/'); } catch (e) {}
-    }, 3000);
-    return () => clearTimeout(t);
+    // Removed auto-close after 3 seconds - modal stays until user clicks okay
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -70,7 +65,7 @@ export default function CompleteOrderSuccessModal({ isOpen, onClose, amount, ord
             }}
             className="px-6 py-3 bg-[#18749B] text-white rounded-lg font-semibold hover:bg-[#156285] transition-colors"
           >
-            Go to Home
+            Okay
           </button>
         </div>
       </div>

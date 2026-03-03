@@ -147,16 +147,17 @@ const QRLandingPage = () => {
 
       setStatus("Loading your order...");
 
-      // Get or create active order for this table (NEW: single order per table)
-      const orderData = await orderService.getOrCreateActiveOrder(parseInt(tableId));
+      // Create new order for this table (unique order ID)
+      const sessionId = `table-${tableId}-${Date.now()}`;
+      const orderData = await orderService.addOrder({ TableId: parseInt(tableId), SessionId: sessionId });
 
       if (orderData && orderData.OrderId) {
         // Save order ID to sessionStorage
         sessionManager.saveOrder(orderData.OrderId);
 
         console.log(
-          `✅ Order ${orderData.IsNewOrder ? 'created' : 'retrieved'}:`,
-          `OrderId: ${orderData.OrderId}, Status: ${orderData.OrderStatus}, Total: ${orderData.TotalAmount}`
+          `✅ Order created:`,
+          `OrderId: ${orderData.OrderId}`
         );
 
         setStatus("Order ready! Redirecting to menu...");
@@ -180,8 +181,8 @@ const QRLandingPage = () => {
     try {
       if (!manualId) return setError("Please enter a table id to continue.");
       localStorage.setItem("id", manualId);
-      setStatus("Loading your order...");
-      const orderData = await orderService.getOrCreateActiveOrder(parseInt(manualId));
+      const sessionId = `table-${manualId}-${Date.now()}`;
+      const orderData = await orderService.addOrder({ TableId: parseInt(manualId), SessionId: sessionId });
       if (orderData && orderData.OrderId) {
         sessionManager.saveOrder(orderData.OrderId);
         setStatus("Order ready! Redirecting to menu...");
