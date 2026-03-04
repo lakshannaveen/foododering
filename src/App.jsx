@@ -17,7 +17,7 @@ import "./App.css";
 import QRLandingPage from "./pages/QRLandingPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PayPalReturn from "./pages/PayPalReturn"; // added
+import PayPalReturn from "./pages/PayPalReturn"; 
 
 function Layout() {
   const location = useLocation();
@@ -42,7 +42,7 @@ function Layout() {
 
       {!hideFooterRoutes.includes(location.pathname) && <Footer />}
 
-      {/* ✅ Toastify container here so all routes can use it */}
+      {/*  Toastify container here so all routes can use it */}
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
@@ -52,7 +52,7 @@ function App() {
   return (
     <Provider store={store}>
       {" "}
-      {/* ✅ wrap with Provider */}
+      {/*  wrap with Provider */}
       <Router>
         <Layout />
       </Router>

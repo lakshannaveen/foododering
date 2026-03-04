@@ -1,4 +1,3 @@
-// UPDATED: Single-order-per-table system (no more session tokens)
 const ORDER_ID_KEY = 'active_order_id';
 const TABLE_ID_KEY = 'id'; // Reuse existing localStorage key
 const PAYMENT_SUCCESS_KEY = 'payment_success_order';

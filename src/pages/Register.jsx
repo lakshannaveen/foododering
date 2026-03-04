@@ -27,15 +27,15 @@ const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ pull success instead of userInfo
+  //  pull success instead of userInfo
   const { loading, error, success } = useSelector((state) => state.auth);
 
-  // ✅ Reset state when component mounts
+  //  Reset state when component mounts
   useEffect(() => {
     dispatch({ type: REGISTER_RESET });
   }, [dispatch]);
 
-  // ✅ Redirect only when registration was successful
+  // Redirect only when registration was successful
   useEffect(() => {
     if (success) {
       navigate("/login");

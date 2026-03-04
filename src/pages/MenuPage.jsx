@@ -1,12 +1,3 @@
-// Use same image URL logic as Cart
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return '';
-    if (imagePath.startsWith('/Images/MenuItems/')) {
-      return `https://foodorderingbackend.dockyardsoftware.com${imagePath}`;
-    }
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    return `https://foodorderingbackend.dockyardsoftware.com${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
-  };
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +66,15 @@ const MenuPage = () => {
     setOrderId(payload);
     setShowOrderSuccess(true);
   };
-
+// Use same image URL logic as Cart
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('/Images/MenuItems/')) {
+      return `https://foodorderingbackend.dockyardsoftware.com${imagePath}`;
+    }
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    return `https://foodorderingbackend.dockyardsoftware.com${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  };
   const handleAddToCart = (item, quantity = 1, selectedSize = null) => {
     let itemToAdd = { ...item };
     if (item.sizes && item.sizes.length > 0) {
@@ -252,7 +251,7 @@ const MenuPage = () => {
     setSelectedSizes(prev => ({ ...prev, [itemId]: sizeId }));
   };
 
-  // ✅ Category → Default Image Mapper
+  //  Category → Default Image Mapper
   const getCategoryImage = (categoryName, index) => {
     const lowerCaseName = categoryName.toLowerCase();
 
@@ -298,7 +297,7 @@ const MenuPage = () => {
     }
   };
 
-  // ✅ Cart Logic
+  //  Cart Logic
   const loadCart = () => {
     const items = cartService.getCart();
     setCartItems(items);

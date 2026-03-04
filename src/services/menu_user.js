@@ -1,5 +1,5 @@
 
-import api from "../index"; // 👈 your pre-configured axios instance
+import api from "../index"; //your pre-configured axios instance
 
 export const menuService = {
   // Get single menu item by ID
@@ -44,7 +44,7 @@ export const menuService = {
       }
     }
 
-    console.log("🍽️ Final fetched menu items:", items); // ✅ log final items
+    console.log("🍽️ Final fetched menu items:", items); //log final items
     return items;
   },
 };

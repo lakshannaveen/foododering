@@ -1,4 +1,3 @@
-// src/services/tableService.js
 import  api  from "../index";
 
 export const getAllTables = async () => {

@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import {
   fetchCategories,
   addCategory,
-  toggleCategoryStatus, // ✅ updated import
+  toggleCategoryStatus, 
 } from "../../actions/categoryActions";
 
 const CategoriesTab = () => {

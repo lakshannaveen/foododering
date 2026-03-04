@@ -1,10 +1,9 @@
-import api from "../index"; // default export
+import api from "../index"; 
 
 export const orderService = {
   getAllOrders: async () => {
     try {
-      const response = await api.get("/Order/GetAllOrders"); // baseURL already included
-      console.log("Orders fetched:", response.data);
+      const response = await api.get("/Order/GetAllOrders"); 
       return response.data.ResultSet || [];
     } catch (error) {
       console.error("Error fetching orders:", error);

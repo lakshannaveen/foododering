@@ -27,7 +27,7 @@
 
 import api from "../index"; // your axios instance with baseURL
 
-// ✅ Add new subcategory
+//  Add new subcategory
 export const addSubCategory = async (subcategoryData) => {
   console.log("➡️ [addSubCategory] Sending data:", subcategoryData);
 
@@ -56,7 +56,7 @@ export const addSubCategory = async (subcategoryData) => {
   }
 };
 
-// ✅ Fetch all subcategories
+// Fetch all subcategories
 export const fetchSubCategories = async () => {
   console.log(
     "➡️ [fetchSubCategories] Requesting /SubCategory/GetAllSubCategory"

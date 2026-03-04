@@ -1,8 +1,6 @@
-// services/categoryService.js
 import api from "../index";
 
-// Add category
-// ✅ categoryService.js
+
 // categoryService.js
 export const addCategoryAPI = async (category) => {
   console.log("📌 addCategoryAPI called with:", category);
