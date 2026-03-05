@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-const OverheadSection = () => {
-  const [overheadList, setOverheadList] = useState([]);
+const OverheadSection = ({ initialOverhead = [] }) => {
+  const [overheadList, setOverheadList] = useState(Array.isArray(initialOverhead) ? initialOverhead.map(i => ({ ...i })) : []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -101,7 +101,7 @@ const OverheadSection = () => {
                 <thead>
                   <tr className="bg-gray-100/80 text-gray-700 text-sm uppercase tracking-wide">
                     <th className="py-3 px-5 text-left font-semibold">Name</th>
-                    <th className="py-3 px-5 text-left font-semibold">Cost ($)</th>
+                    <th className="py-3 px-5 text-left font-semibold">Cost (LKR)</th>
                     <th className="py-3 px-5 text-center font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -110,7 +110,7 @@ const OverheadSection = () => {
                     <tr key={overhead.id} className="hover:bg-blue-50/30 transition">
                       <td className="py-3.5 px-5 font-medium">{overhead.name}</td>
                       <td className="py-3.5 px-5 font-semibold text-emerald-700">
-                        ${parseFloat(overhead.cost).toFixed(2)}
+                        LKR {parseFloat(overhead.cost).toFixed(2)}
                       </td>
                       <td className="py-3.5 px-5 text-center">
                         <div className="flex items-center justify-center gap-5">
@@ -143,7 +143,7 @@ const OverheadSection = () => {
             <div className="mt-6 flex justify-end">
               <div className="bg-white border border-gray-200 rounded-lg px-8 py-4 shadow-sm">
                 <span className="text-lg font-semibold text-gray-800">
-                  Grand Total: <span className="text-emerald-700">${grandTotal.toFixed(2)}</span>
+                  Grand Total: <span className="text-emerald-700">LKR {grandTotal.toFixed(2)}</span>
                 </span>
               </div>
             </div>

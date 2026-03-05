@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-const LaborSection = () => {
-  const [laborList, setLaborList] = useState([]);
+const LaborSection = ({ initialLabor = [] }) => {
+  const [laborList, setLaborList] = useState(Array.isArray(initialLabor) ? initialLabor.map(i => ({ ...i })) : []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
