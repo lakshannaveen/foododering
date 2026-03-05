@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import RecipesSection from "./RecipesSection";
-import IngredientsSection from "./IngredientsSection";
+import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
 import CalculateSection from "./CalculateSection";
@@ -45,16 +45,19 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
   const [searchParams, setSearchParams] = useSearchParams();
   const active = searchParams.get("active") || "recipes";
 
+  const tabClass = (name) =>
+    `px-3 py-2 rounded ${active === name ? "bg-white border border-gray-300 shadow text-gray-900 font-semibold" : "bg-gray-200 text-gray-700"}`;
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-2xl font-semibold mb-4">Recipe Calculator</h3>
 
       <div className="flex gap-2 mb-4">
-        <button onClick={() => setSearchParams({ active: "recipes" })} className="px-3 py-2 bg-gray-200 rounded">Recipes</button>
-        <button onClick={() => setSearchParams({ active: "ingredients" })} className="px-3 py-2 bg-gray-200 rounded">Ingredients</button>
-        <button onClick={() => setSearchParams({ active: "labor" })} className="px-3 py-2 bg-gray-200 rounded">Labor</button>
-        <button onClick={() => setSearchParams({ active: "overhead" })} className="px-3 py-2 bg-gray-200 rounded">Overhead</button>
-        <button onClick={() => setSearchParams({ active: "calculate" })} className="px-3 py-2 bg-gray-200 rounded">Calculate</button>
+        <Link to="?active=recipes" className={tabClass("recipes")}>Recipes</Link>
+        <Link to="?active=stock" className={tabClass("stock")}>Stock</Link>
+        <Link to="?active=labor" className={tabClass("labor")}>Labor</Link>
+        <Link to="?active=overhead" className={tabClass("overhead")}>Overhead</Link>
+        <Link to="?active=calculate" className={tabClass("calculate")}>Calculate</Link>
       </div>
 
       <div className="space-y-3">
@@ -66,8 +69,8 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
             addRow={addRow}
             ingredientsList={ingredientsList}
           />
-        ) : active === "ingredients" ? (
-          <IngredientsSection />
+        ) : active === "stock" ? (
+          <StockSection />
         ) : active === "labor" ? (
           <LaborSection />
         ) : active === "overhead" ? (
