@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 const LaborSection = ({ initialLabor = [] }) => {
   const [laborList, setLaborList] = useState(Array.isArray(initialLabor) ? initialLabor.map(i => ({ ...i })) : []);
+  const grandTotal = laborList.reduce((sum, it) => sum + (parseFloat(it.price) || 0), 0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -141,6 +142,16 @@ const LaborSection = ({ initialLabor = [] }) => {
           </>
         )}
       </div>
+
+      {laborList.length > 0 && (
+        <div className="mt-6 flex justify-end">
+          <div className="bg-white border border-gray-200 rounded-lg px-8 py-4 shadow-sm">
+            <span className="text-lg font-semibold text-gray-800">
+              Grand Total: <span className="text-emerald-700">LKR {grandTotal.toFixed(2)}</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ────────────────────────────────────────────────
           Modern Add / Edit Modal

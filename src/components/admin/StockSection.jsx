@@ -6,6 +6,11 @@ const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPri
 
 const StockSection = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems.map(i => ({ ...i })));
+  const grandTotal = items.reduce((sum, it) => {
+    const q = parseFloat(it.quantity) || 0;
+    const p = parseFloat(it.unitPrice) || 0;
+    return sum + q * p;
+  }, 0);
   const [form, setForm] = useState(emptyItem());
   const [showForm, setShowForm] = useState(false);
 
@@ -139,6 +144,13 @@ const StockSection = ({ initialItems = [] }) => {
               </div>
               );
             })}
+            <div className="mt-6 flex justify-end">
+              <div className="bg-white border border-gray-200 rounded-lg px-8 py-4 shadow-sm">
+                <span className="text-lg font-semibold text-gray-800">
+                  Grand Total: <span className="text-emerald-700">LKR {grandTotal.toFixed(2)}</span>
+                </span>
+              </div>
+            </div>
           </>
         )}
       </div>
