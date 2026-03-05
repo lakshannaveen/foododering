@@ -9,6 +9,7 @@ import store from "./store";
 import MenuPage from "./pages/MenuPage";
 import OrderTracking from "./pages/OrderTrackingPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import RecipeCalculator from "./pages/RecipeCalculator";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -35,6 +36,7 @@ function Layout() {
         <Route path="/track-order/:OrderId" element={<OrderTracking />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/paypal-return" element={<PayPalReturn />} /> {/* added */}
+        <Route path="/calculate" element={<RecipeCalculator />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
