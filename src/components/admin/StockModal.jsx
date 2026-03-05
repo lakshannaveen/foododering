@@ -12,10 +12,10 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
         <h3 className="text-lg font-semibold mb-4">Add Stock Item</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
-          <div className="col-span-5 font-semibold text-sm text-gray-600">Item</div>
+          <div className="col-span-4 font-semibold text-sm text-gray-600">Item</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Quantity</div>
           <div className="col-span-1 font-semibold text-sm text-gray-600">Unit</div>
-          <div className="col-span-2 font-semibold text-sm text-gray-600">Unit Price</div>
+          <div className="col-span-3 font-semibold text-sm text-gray-600">Unit Price</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Total Price</div>
         </div>
 
@@ -25,7 +25,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             placeholder="Item name (e.g. Carrot)"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            className="col-span-5 p-2 border rounded"
+            className="col-span-4 p-2 border rounded w-full min-w-0"
           />
 
           <input
@@ -33,7 +33,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             placeholder="Quantity"
             value={form.quantity}
             onChange={(e) => update('quantity', e.target.value)}
-            className="col-span-2 p-2 border rounded"
+            className="col-span-2 p-2 border rounded w-full min-w-0"
             min="0"
             step="0.01"
           />
@@ -41,7 +41,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
           <select
             value={form.unit}
             onChange={(e) => update('unit', e.target.value)}
-            className="col-span-1 p-2 border rounded bg-white"
+            className="col-span-1 p-2 border rounded bg-white w-full min-w-0"
           >
             <option value="kg">kg</option>
             <option value="g">g</option>
@@ -55,12 +55,12 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             placeholder="Unit price"
             value={form.unitPrice}
             onChange={(e) => update('unitPrice', e.target.value)}
-            className="col-span-2 p-2 border rounded"
+            className="col-span-3 p-2 border rounded w-full min-w-0"
             min="0"
             step="0.01"
           />
 
-          <div className="col-span-2 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center">
+          <div className="col-span-2 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center w-full min-w-0">
             {(() => {
               const q = parseFloat(form.quantity) || 0;
               const p = parseFloat(form.unitPrice) || 0;
