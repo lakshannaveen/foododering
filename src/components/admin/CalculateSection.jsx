@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const RECIPES = [
   { id: 1, name: "Margherita Pizza" },
@@ -21,15 +23,17 @@ const OVERHEAD_OPTIONS = [
   "Electricity", "Gas", "Water", "Packaging", "Cleaning Supplies", "Rent",
 ];
 
-const generateId    = () => Math.random().toString(36).substr(2, 9);
-const newStockRow   = () => ({ id: generateId(), name: "", quantity: "0", unit: "kg", unitCost: "0.00" });
-const newLaborRow   = () => ({ id: generateId(), role: "", hours: "0", hourlyRate: "0.00" });
-const newOverheadRow= () => ({ id: generateId(), name: "", cost: "0.00" });
+const generateId     = () => Math.random().toString(36).substr(2, 9);
+const newStockRow    = () => ({ id: generateId(), name: "", quantity: "0", unit: "kg", unitCost: "0.00" });
+const newLaborRow    = () => ({ id: generateId(), role: "", hours: "0", hourlyRate: "0.00" });
+const newOverheadRow = () => ({ id: generateId(), name: "", cost: "0.00" });
 
 const inputCls  = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
 const selectCls = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
 
 const CalculateSection = () => {
+  const [, setSearchParams] = useSearchParams();
+  const navigate = (target) => setSearchParams({ active: target });
   const [selectedRecipe, setSelectedRecipe] = useState("");
   const [profitMargin, setProfitMargin]     = useState(20);
 
@@ -38,15 +42,12 @@ const CalculateSection = () => {
   const [overhead, setOverhead] = useState([newOverheadRow()]);
   const [result,   setResult]   = useState(null);
 
-  const addStock       = () => setStock(p => [...p, newStockRow()]);
   const updateStock    = (id, f, v) => setStock(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
   const removeStock    = (id) => setStock(p => p.filter(i => i.id!==id));
 
-  const addLabor       = () => setLabor(p => [...p, newLaborRow()]);
   const updateLabor    = (id, f, v) => setLabor(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
   const removeLabor    = (id) => setLabor(p => p.filter(i => i.id!==id));
 
-  const addOverhead    = () => setOverhead(p => [...p, newOverheadRow()]);
   const updateOverhead = (id, f, v) => setOverhead(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
   const removeOverhead = (id) => setOverhead(p => p.filter(i => i.id!==id));
 
@@ -61,8 +62,29 @@ const CalculateSection = () => {
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
 
+  // ✕ remove row button
   const RemoveBtn = ({ onClick }) => (
     <button onClick={onClick} className="text-red-400 hover:text-red-600 text-base leading-none">✕</button>
+  );
+
+  // "Add new X" → navigates to that section's tab
+  const NavBtn = ({ label, target }) => (
+    <button
+      onClick={() => navigate(target)}
+      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors"
+    >
+      {label}
+    </button>
+  );
+
+  // "+" → adds a new inline row
+  const AddRowBtn = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      className="flex items-center justify-center w-8 h-8 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+    >
+      <Plus size={16} />
+    </button>
   );
 
   return (
@@ -88,17 +110,17 @@ const CalculateSection = () => {
         </div>
       </div>
 
-      {/* Stock */}
+      {/* ── Stock ── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Stock</h2>
-          <button onClick={addStock}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Stock
-          </button>
+          {/* Two separate controls: navigate button + inline add row button */}
+          <div className="flex items-center gap-2">
+            <NavBtn label="Add new Stock" target="stock" />
+            <AddRowBtn onClick={() => setStock(p => [...p, newStockRow()])} />
+          </div>
         </div>
 
-        {/* Column labels — shown once above all rows */}
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 1.5fr 1.5fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Stock</span>
           <span className="text-xs text-gray-500">Quantity</span>
@@ -121,22 +143,20 @@ const CalculateSection = () => {
               </select>
               <input type="number" placeholder="0.00" className={inputCls} value={item.unitCost}
                 onChange={e => updateStock(item.id,"unitCost",e.target.value)} />
-              {stock.length > 1
-                ? <RemoveBtn onClick={() => removeStock(item.id)} />
-                : <span />}
+              {stock.length > 1 ? <RemoveBtn onClick={() => removeStock(item.id)} /> : <span />}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Labor */}
+      {/* ── Labor ── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Labor</h2>
-          <button onClick={addLabor}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Labor
-          </button>
+          <div className="flex items-center gap-2">
+            <NavBtn label="Add new Labor" target="labor" />
+            <AddRowBtn onClick={() => setLabor(p => [...p, newLaborRow()])} />
+          </div>
         </div>
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
@@ -155,22 +175,20 @@ const CalculateSection = () => {
                 onChange={e => updateLabor(item.id,"hours",e.target.value)} />
               <input type="number" placeholder="0.00" className={inputCls} value={item.hourlyRate}
                 onChange={e => updateLabor(item.id,"hourlyRate",e.target.value)} />
-              {labor.length > 1
-                ? <RemoveBtn onClick={() => removeLabor(item.id)} />
-                : <span />}
+              {labor.length > 1 ? <RemoveBtn onClick={() => removeLabor(item.id)} /> : <span />}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Overhead */}
+      {/* ── Overhead ── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Overhead</h2>
-          <button onClick={addOverhead}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Overhead
-          </button>
+          <div className="flex items-center gap-2">
+            <NavBtn label="Add new Overhead" target="overhead" />
+            <AddRowBtn onClick={() => setOverhead(p => [...p, newOverheadRow()])} />
+          </div>
         </div>
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "4fr 2fr 20px" }}>
@@ -188,9 +206,7 @@ const CalculateSection = () => {
               </select>
               <input type="number" placeholder="0.00" className={inputCls} value={item.cost}
                 onChange={e => updateOverhead(item.id,"cost",e.target.value)} />
-              {overhead.length > 1
-                ? <RemoveBtn onClick={() => removeOverhead(item.id)} />
-                : <span />}
+              {overhead.length > 1 ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : <span />}
             </div>
           ))}
         </div>
