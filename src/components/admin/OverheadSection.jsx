@@ -91,7 +91,7 @@ const OverheadSection = () => {
       {/* Table */}
       <div>
         {overheadList.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 italic bg-white/60 rounded-lg border border-dashed">
+          <div className="text-sm text-gray-500">
             No overhead entries yet. Click "Add Overhead Cost" to get started.
           </div>
         ) : (

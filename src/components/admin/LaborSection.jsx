@@ -90,7 +90,7 @@ const LaborSection = () => {
       {/* Table */}
       <div>
         {laborList.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 italic bg-white/60 rounded-lg border border-dashed">
+          <div className="text-sm text-gray-500">
             No labor entries yet. Click "Add Labor" to get started.
           </div>
         ) : (
