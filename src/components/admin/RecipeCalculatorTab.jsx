@@ -55,7 +55,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
     }`;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-transparent p-0">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-2xl font-semibold">Recipe Calculator</h3>
@@ -109,7 +109,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
             { id: 'o7', name: 'Packaging Supplies', cost: '8000' }
           ]} />
         ) : active === 'saved' ? (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-transparent p-0">
             <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>
             <SavedList />
           </div>
