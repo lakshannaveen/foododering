@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const RECIPES = [
   { id: 1, name: "Margherita Pizza" },
@@ -92,10 +93,18 @@ const CalculateSection = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Stock</h2>
-          <button onClick={addStock}
-            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Stock
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={addStock}
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <Link to="?active=stock"
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              Add New Stock
+            </Link>
+          </div>
         </div>
 
         {/* Column labels — shown once above all rows */}
@@ -133,10 +142,18 @@ const CalculateSection = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Labor</h2>
-          <button onClick={addLabor}
-            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Labor
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={addLabor}
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <Link to="?active=labor"
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              Add New Labor
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
@@ -167,10 +184,18 @@ const CalculateSection = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Overhead</h2>
-          <button onClick={addOverhead}
-            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
-            Add Overhead
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={addOverhead}
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            <Link to="?active=overhead"
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              Add New Overhead
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "4fr 2fr 20px" }}>
