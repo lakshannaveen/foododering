@@ -188,7 +188,7 @@ const OverheadSection = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="e.g. Rent, Utilities"
+                    placeholder="e.g. Gas / Electricity"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
                   />
                 </div>
