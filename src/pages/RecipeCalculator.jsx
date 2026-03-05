@@ -74,7 +74,7 @@ const RecipeCalculator = () => {
           <div className="flex gap-2">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Recipe name" className="p-2 border rounded" />
             <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Description" className="p-2 border rounded" />
-            <button onClick={add} className="px-3 py-2 bg-blue-600 text-white rounded">Add Recipe</button>
+            <button onClick={add} className="px-3 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded">Add Recipe</button>
           </div>
         </div>
 
@@ -128,7 +128,7 @@ const RecipeCalculator = () => {
               <option>pcs</option>
             </select>
             <input value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Cost per unit" className="p-2 border rounded" />
-            <button onClick={add} className="px-3 py-2 bg-blue-600 text-white rounded">Add Ingredient</button>
+            <button onClick={add} className="px-3 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded">Add Ingredient</button>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ const RecipeCalculator = () => {
           <div className="flex gap-2">
             <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Role (e.g., Chef)" className="p-2 border rounded" />
             <input value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Cost" className="p-2 border rounded" />
-            <button onClick={add} className="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
+            <button onClick={add} className="px-3 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded">Add</button>
           </div>
         </div>
         <div className="bg-white rounded shadow overflow-hidden">
@@ -217,7 +217,7 @@ const RecipeCalculator = () => {
           <div className="flex gap-2">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="p-2 border rounded" />
             <input value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Cost" className="p-2 border rounded" />
-            <button onClick={add} className="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
+            <button onClick={add} className="px-3 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded">Add</button>
           </div>
         </div>
         <div className="bg-white rounded shadow overflow-hidden">

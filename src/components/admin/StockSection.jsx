@@ -45,7 +45,7 @@ const StockSection = ({ initialItems = [] }) => {
       <div className="mb-4">
         <button
           onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-sm mb-0 flex items-center gap-2"
+          className="px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-0 flex items-center gap-2"
         >
           <svg
             className="w-5 h-5"

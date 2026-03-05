@@ -93,7 +93,7 @@ const CalculateSection = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Stock</h2>
           <button onClick={addStock}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
             Add Stock
           </button>
         </div>
@@ -134,7 +134,7 @@ const CalculateSection = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Labor</h2>
           <button onClick={addLabor}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
             Add Labor
           </button>
         </div>
@@ -168,7 +168,7 @@ const CalculateSection = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Overhead</h2>
           <button onClick={addOverhead}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+            className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
             Add Overhead
           </button>
         </div>
@@ -223,7 +223,7 @@ const CalculateSection = () => {
       {/* Calculate Button */}
       <div className="flex justify-end">
         <button onClick={handleCalculate}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-2.5 rounded-lg shadow transition-colors text-sm">
+          className="bg-[#18749b] hover:bg-[#2c5a97] text-white font-semibold px-8 py-2.5 rounded-lg shadow transition-colors text-sm">
           Calculate Cost
         </button>
       </div>
