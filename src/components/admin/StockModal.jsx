@@ -14,9 +14,9 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
         <div className="grid grid-cols-12 gap-3 items-center">
           <div className="col-span-4 font-semibold text-sm text-gray-600">Item</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Quantity</div>
-          <div className="col-span-1 font-semibold text-sm text-gray-600">Unit</div>
+          <div className="col-span-2 font-semibold text-sm text-gray-600">Unit</div>
           <div className="col-span-3 font-semibold text-sm text-gray-600">Unit Price (lkr)</div>
-          <div className="col-span-2 font-semibold text-sm text-gray-600">Total Price</div>
+          <div className="col-span-1 font-semibold text-sm text-gray-600">Total Price</div>
         </div>
 
         <div className="mt-3 grid grid-cols-12 gap-3 items-center">
@@ -41,7 +41,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
           <select
             value={form.unit}
             onChange={(e) => update('unit', e.target.value)}
-            className="col-span-1 p-2 border rounded bg-white w-full min-w-0"
+            className="col-span-2 p-2 border rounded bg-white w-full min-w-0 text-sm"
           >
             <option value="kg">kg</option>
             <option value="g">g</option>
@@ -60,7 +60,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             step="0.01"
           />
 
-          <div className="col-span-2 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center w-full min-w-0">
+          <div className="col-span-1 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center w-full min-w-0">
             {(() => {
               const q = parseFloat(form.quantity) || 0;
               const p = parseFloat(form.unitPrice) || 0;
