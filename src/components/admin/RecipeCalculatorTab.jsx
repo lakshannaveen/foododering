@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
@@ -9,6 +10,7 @@ const emptyRow = () => ({ name: "", quantity: "", unit: "kg", unitCost: "" });
 
 const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0, initialRows = null, ingredientsList = [] }) => {
   const [rows, setRows] = useState([emptyRow()]);
+  const [savedList, setSavedList] = useState([]);
 
   const updateRow = (index, key, value) => {
     const copy = [...rows];
@@ -56,6 +58,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
         <Link to="?active=labor" className={tabClass("labor")}>Labor</Link>
         <Link to="?active=overhead" className={tabClass("overhead")}>Overhead</Link>
         <Link to="?active=calculate" className={tabClass("calculate")}>Calculate</Link>
+        <Link to="?active=saved" className={tabClass("saved")}>Saved Calculations</Link>
       </div>
 
       <div className="space-y-3">
@@ -92,10 +95,133 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
             { id: 'o6', name: 'Maintenance', cost: '5000' },
             { id: 'o7', name: 'Packaging Supplies', cost: '8000' }
           ]} />
+        ) : active === 'saved' ? (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>
+            <SavedList />
+          </div>
         ) : (
           <CalculateSection />
         )}
       </div>
+    </div>
+  );
+};
+
+const SavedList = () => {
+  const [items, setItems] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editValues, setEditValues] = useState({ recipe: '', totalCost: '', suggestedPrice: '' });
+
+  React.useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('savedCalculations') || 'null');
+      if (Array.isArray(saved) && saved.length) {
+        setItems(saved);
+      } else {
+        setItems([
+          { id: 'hc1', recipe: 'Margherita Pizza', result: { totalCost: 420.0, suggestedPrice: 525.0 }, savedAt: '2026-03-01T10:00:00Z' },
+          { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
+        ]);
+      }
+    } catch (e) {
+      setItems([
+        { id: 'hc1', recipe: 'Margherita Pizza', result: { totalCost: 420.0, suggestedPrice: 525.0 }, savedAt: '2026-03-01T10:00:00Z' },
+        { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
+      ]);
+    }
+  }, []);
+
+  const persist = (next) => {
+    try {
+      localStorage.setItem('savedCalculations', JSON.stringify(next));
+    } catch (e) {
+      console.error('persist failed', e);
+    }
+  };
+
+  const handleDelete = (id) => {
+    if (!window.confirm('Delete this saved calculation?')) return;
+    const next = items.filter(i => i.id !== id);
+    setItems(next);
+    persist(next);
+  };
+
+  const startEdit = (it) => {
+    setEditingId(it.id);
+    setEditValues({ recipe: it.recipe || '', totalCost: (it.result?.totalCost||0).toString(), suggestedPrice: (it.result?.suggestedPrice||0).toString() });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValues({ recipe: '', totalCost: '', suggestedPrice: '' });
+  };
+
+  const saveEdit = (id) => {
+    const next = items.map(it => {
+      if (it.id !== id) return it;
+      const updated = {
+        ...it,
+        recipe: editValues.recipe,
+        result: {
+          ...it.result,
+          totalCost: parseFloat(editValues.totalCost) || 0,
+          suggestedPrice: parseFloat(editValues.suggestedPrice) || 0,
+        }
+      };
+      return updated;
+    });
+    setItems(next);
+    persist(next);
+    cancelEdit();
+    alert('Saved changes');
+  };
+
+  if (!items.length) return <p className="text-sm text-gray-500">No saved calculations.</p>;
+
+  return (
+    <div className="space-y-3">
+      {items.map(it => (
+        <div key={it.id} className="p-3 border rounded bg-gray-50 flex justify-between items-center">
+          <div className="flex-1">
+            {editingId === it.id ? (
+              <div className="grid grid-cols-3 gap-2 items-center">
+                <input className="border rounded p-2" value={editValues.recipe} onChange={e => setEditValues(ev => ({ ...ev, recipe: e.target.value }))} />
+                <input className="border rounded p-2" value={editValues.totalCost} onChange={e => setEditValues(ev => ({ ...ev, totalCost: e.target.value }))} />
+                <input className="border rounded p-2" value={editValues.suggestedPrice} onChange={e => setEditValues(ev => ({ ...ev, suggestedPrice: e.target.value }))} />
+              </div>
+            ) : (
+              <>
+                <div className="font-medium">{it.recipe}</div>
+                <div className="text-xs text-gray-500">Saved: {new Date(it.savedAt).toLocaleString()}</div>
+              </>
+            )}
+          </div>
+          <div className="text-right flex items-center gap-3">
+            {editingId === it.id ? (
+              <>
+                <button title="Save" aria-label="Save" className="text-green-600 hover:text-green-800 p-1" onClick={() => saveEdit(it.id)}>
+                  <FaSave />
+                </button>
+                <button title="Cancel" aria-label="Cancel" className="text-gray-600 hover:text-gray-800 p-1" onClick={cancelEdit}>
+                  <FaTimes />
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-sm text-gray-600">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
+                <div className="text-lg font-semibold">Price: LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
+                <button title="Edit" aria-label="Edit" className="text-blue-600 hover:text-blue-800 p-1" onClick={() => startEdit(it)}>
+                  <FaEdit />
+                </button>
+                <button title="Delete" aria-label="Delete" className="text-red-600 hover:text-red-800 p-1" onClick={() => handleDelete(it.id)}>
+                  <FaTrash />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

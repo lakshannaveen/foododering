@@ -132,6 +132,26 @@ const CalculateSection = () => {
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
 
+  const handleSave = () => {
+    if (!result) return alert("Nothing to save. Please select a recipe or enter inputs.");
+    const recipeName = RECIPES.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
+    const payload = {
+      id: generateId(),
+      recipe: recipeName,
+      result,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+      existing.unshift(payload);
+      localStorage.setItem('savedCalculations', JSON.stringify(existing));
+      alert('Calculation saved. Open "Saved Calculations" tab to view.');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save calculation.');
+    }
+  };
+
   // Auto-calculate live whenever inputs change (auto-update summary)
   React.useEffect(() => {
     if (!selectedRecipe) {
@@ -343,11 +363,11 @@ const CalculateSection = () => {
         </div>
       )}
 
-      {/* Calculate Button */}
+      {/* Save Button (calculations are auto-updated) */}
       <div className="flex justify-end">
-        <button onClick={handleCalculate}
+        <button onClick={handleSave}
           className="bg-[#18749b] hover:bg-[#2c5a97] text-white font-semibold px-8 py-2.5 rounded-lg shadow transition-colors text-sm">
-          Calculate Cost
+          Save Calculation
         </button>
       </div>
     </div>
