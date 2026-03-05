@@ -48,7 +48,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
 
   const tabOrder = ["stock", "labor", "overhead", "calculate", "saved"];
   const tabClass = (name) =>
-    `px-4 py-2 rounded-md transition inline-flex items-center gap-2 text-sm ${
+    `flex-1 flex justify-center items-center px-4 py-2 rounded-md transition text-sm ${
       active === name
         ? "bg-gradient-to-r from-[#18749b] to-[#2E5A8A] text-white shadow-md font-semibold"
         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -65,7 +65,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
       </div>
 
       <nav aria-label="Recipe calculator tabs" className="mb-4">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2">
           <Link to="?active=stock" className={tabClass("stock")} aria-current={active === 'stock'}>Stock</Link>
           <Link to="?active=labor" className={tabClass("labor")} aria-current={active === 'labor'}>Labor</Link>
           <Link to="?active=overhead" className={tabClass("overhead")} aria-current={active === 'overhead'}>Overhead</Link>
