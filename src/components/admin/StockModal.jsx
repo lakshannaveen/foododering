@@ -15,7 +15,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
           <div className="col-span-4 font-semibold text-sm text-gray-600">Item</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Quantity</div>
           <div className="col-span-1 font-semibold text-sm text-gray-600">Unit</div>
-          <div className="col-span-3 font-semibold text-sm text-gray-600">Unit Price</div>
+          <div className="col-span-3 font-semibold text-sm text-gray-600">Unit Price (lkr)</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Total Price</div>
         </div>
 
@@ -52,7 +52,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
 
           <input
             type="number"
-            placeholder="Unit price"
+            placeholder="0.00"
             value={form.unitPrice}
             onChange={(e) => update('unitPrice', e.target.value)}
             className="col-span-3 p-2 border rounded w-full min-w-0"

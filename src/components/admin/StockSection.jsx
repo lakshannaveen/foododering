@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Trash2, Edit } from "lucide-react";
 import StockModal from "./StockModal";
 
-const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPrice: "" });
+const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPrice: "0.00" });
 
 const StockSection = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems.map(i => ({ ...i })));
@@ -63,7 +63,7 @@ const StockSection = ({ initialItems = [] }) => {
               <div className="col-span-4">Item</div>
               <div className="col-span-2">Quantity</div>
               <div className="col-span-2">Unit</div>
-              <div className="col-span-2">Unit Price</div>
+              <div className="col-span-2">Unit Price (lkr)</div>
               <div className="col-span-1 text-right">Total</div>
               <div className="col-span-1 text-right">Actions</div>
             </div>
@@ -110,6 +110,7 @@ const StockSection = ({ initialItems = [] }) => {
                   className="col-span-2 p-2 border rounded"
                   min="0"
                   step="0.01"
+                  placeholder="0.00"
                 />
 
                 <div className="col-span-1 text-right font-medium">{total}</div>
