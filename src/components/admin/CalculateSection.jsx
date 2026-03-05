@@ -95,13 +95,13 @@ const CalculateSection = () => {
           <h2 className="text-sm font-semibold text-gray-700">Stock</h2>
           <div className="flex items-center gap-2">
             <button onClick={addStock}
-              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </button>
             <Link to="?active=stock"
-              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors w-40 text-center">
               Add New Stock
             </Link>
           </div>
@@ -144,13 +144,13 @@ const CalculateSection = () => {
           <h2 className="text-sm font-semibold text-gray-700">Labor</h2>
           <div className="flex items-center gap-2">
             <button onClick={addLabor}
-              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </button>
             <Link to="?active=labor"
-              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors w-40 text-center">
               Add New Labor
             </Link>
           </div>
@@ -186,13 +186,13 @@ const CalculateSection = () => {
           <h2 className="text-sm font-semibold text-gray-700">Overhead</h2>
           <div className="flex items-center gap-2">
             <button onClick={addOverhead}
-              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-2 py-2 rounded transition-colors">
+              className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </button>
             <Link to="?active=overhead"
-              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors">
+              className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition-colors w-40 text-center">
               Add New Overhead
             </Link>
           </div>
