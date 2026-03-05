@@ -112,7 +112,7 @@ const CalculateSection = () => {
           <span className="text-xs text-gray-500">Stock</span>
           <span className="text-xs text-gray-500">Quantity</span>
           <span className="text-xs text-gray-500">Unit</span>
-          <span className="text-xs text-gray-500">Unit Cost ($)</span>
+          <span className="text-xs text-gray-500">Unit Cost (LKR)</span>
           <span />
         </div>
 
@@ -159,7 +159,7 @@ const CalculateSection = () => {
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Role</span>
           <span className="text-xs text-gray-500">Hours</span>
-          <span className="text-xs text-gray-500">Hourly Rate ($)</span>
+          <span className="text-xs text-gray-500">Hourly Rate (LKR)</span>
           <span />
         </div>
 
@@ -200,7 +200,7 @@ const CalculateSection = () => {
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "4fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Overhead Item</span>
-          <span className="text-xs text-gray-500">Cost ($)</span>
+          <span className="text-xs text-gray-500">Cost (LKR)</span>
           <span />
         </div>
 
@@ -234,13 +234,13 @@ const CalculateSection = () => {
             ].map(({ label, value }) => (
               <div key={label} className="bg-white rounded-lg p-3 border border-blue-100">
                 <p className="text-xs text-gray-500 mb-1">{label}</p>
-                <p className="text-lg font-bold text-gray-800">${value.toFixed(2)}</p>
+                <p className="text-lg font-bold text-gray-800">LKR {value.toFixed(2)}</p>
               </div>
             ))}
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-500">Suggested Selling Price ({result.margin}% margin)</p>
-            <p className="text-3xl font-bold text-blue-700 mt-1">${result.suggestedPrice.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-blue-700 mt-1">LKR {result.suggestedPrice.toFixed(2)}</p>
           </div>
         </div>
       )}
