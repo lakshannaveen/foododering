@@ -119,7 +119,6 @@ const AdminSidebar = ({
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white text-[#18749b] flex items-center justify-center font-bold shadow-sm">FD</div>
               <div>
                 <h2 className="text-lg font-bold">Admin Panel</h2>
                 <div className="text-xs text-gray-400">Manage menu, orders and recipes</div>
