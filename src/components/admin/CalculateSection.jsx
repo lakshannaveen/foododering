@@ -16,16 +16,48 @@ const STOCK_OPTIONS = [
   "Pasta", "Heavy Cream", "Mushrooms", "Arborio Rice",
 ];
 
+// Hard-coded reference prices (LKR per kg or per litre for liquids)
+const STOCK_PRICE_PER_KG = {
+  "Flour": 120,
+  "Tomato Sauce": 250,
+  "Mozzarella Cheese": 800,
+  "Olive Oil": 1500,
+  "Chicken Breast": 900,
+  "Beef Patty": 700,
+  "Lettuce": 200,
+  "Salmon Fillet": 2200,
+  "Pasta": 300,
+  "Heavy Cream": 700,
+  "Mushrooms": 450,
+  "Arborio Rice": 350,
+};
+
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "piece", "tbsp", "tsp", "cup"];
 
 const OVERHEAD_OPTIONS = [
   "Electricity", "Gas", "Water", "Packaging", "Cleaning Supplies", "Rent",
 ];
 
+// Default overhead rates (LKR per hour or fixed where appropriate)
+const OVERHEAD_RATES = {
+  Electricity: 30,
+  Gas: 50,
+  Water: 10,
+  Packaging: 20,
+  "Cleaning Supplies": 15,
+  Rent: 5000,
+};
+const LABOR_DEFAULT_RATES = {
+  Chef: 600,
+  "Assistant Chef": 350,
+  Server: 200,
+  Manager: 900,
+};
+
 const generateId    = () => Math.random().toString(36).substr(2, 9);
 const newStockRow   = () => ({ id: generateId(), name: "", quantity: "0", unit: "kg", unitCost: "0.00" });
 const newLaborRow   = () => ({ id: generateId(), role: "", hours: "0", hourlyRate: "0.00" });
-const newOverheadRow= () => ({ id: generateId(), name: "", cost: "0.00" });
+const newOverheadRow= () => ({ id: generateId(), name: "", hours: "0", rate: "0.00" });
 
 const inputCls  = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
 const selectCls = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
@@ -40,27 +72,80 @@ const CalculateSection = () => {
   const [result,   setResult]   = useState(null);
 
   const addStock       = () => setStock(p => [...p, newStockRow()]);
-  const updateStock    = (id, f, v) => setStock(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
+  // updateStock auto-fills unitCost when a stock `name` or `unit` is selected
+  const updateStock    = (id, f, v) => setStock(p => p.map(i => {
+    if (i.id !== id) return i;
+    const next = { ...i, [f]: v };
+
+    // if user changed the name or unit, auto fill unitCost from STOCK_PRICE_PER_KG
+    if (f === "name" || f === "unit") {
+      const pricePerKg = STOCK_PRICE_PER_KG[next.name];
+      if (pricePerKg) {
+        // convert pricePerKg to price per selected unit
+        const unit = next.unit || "kg";
+        let unitPrice = pricePerKg;
+        if (unit === "g") unitPrice = pricePerKg / 1000;
+        if (unit.toLowerCase() === "ml") unitPrice = pricePerKg / 1000;
+        if (unit === "piece") unitPrice = pricePerKg; // fallback
+        next.unitCost = unitPrice.toFixed(2).toString();
+      }
+    }
+
+    return next;
+  }));
   const removeStock    = (id) => setStock(p => p.filter(i => i.id!==id));
 
   const addLabor       = () => setLabor(p => [...p, newLaborRow()]);
-  const updateLabor    = (id, f, v) => setLabor(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
+  const updateLabor    = (id, f, v) => setLabor(p => p.map(i => {
+    if (i.id !== id) return i;
+    const next = { ...i, [f]: v };
+    // if role selected and a default rate exists, fill hourlyRate unless user already set one
+    if (f === 'role') {
+      const def = LABOR_DEFAULT_RATES[next.role];
+      if (def && (!next.hourlyRate || parseFloat(next.hourlyRate) === 0)) next.hourlyRate = def.toFixed(2).toString();
+    }
+    return next;
+  }));
   const removeLabor    = (id) => setLabor(p => p.filter(i => i.id!==id));
 
   const addOverhead    = () => setOverhead(p => [...p, newOverheadRow()]);
-  const updateOverhead = (id, f, v) => setOverhead(p => p.map(i => i.id===id ? {...i,[f]:v} : i));
+  const updateOverhead = (id, f, v) => setOverhead(p => p.map(i => {
+    if (i.id !== id) return i;
+    const next = { ...i, [f]: v };
+    // if the user selected an overhead name and we have a default rate, fill it
+    if (f === 'name') {
+      const def = OVERHEAD_RATES[next.name];
+      if (def && (!next.rate || parseFloat(next.rate) === 0)) next.rate = def.toFixed(2).toString();
+    }
+    return next;
+  }));
   const removeOverhead = (id) => setOverhead(p => p.filter(i => i.id!==id));
 
   const handleCalculate = () => {
     if (!selectedRecipe) return alert("Please select a recipe.");
-    const stockTotal    = stock.reduce((s,i) => s+(parseFloat(i.quantity)||0)*(parseFloat(i.unitCost)||0), 0);
-    const laborTotal    = labor.reduce((s,l) => s+(parseFloat(l.hours)||0)*(parseFloat(l.hourlyRate)||0), 0);
-    const overheadTotal = overhead.reduce((s,o) => s+(parseFloat(o.cost)||0), 0);
+    const stockTotal    = stock.reduce((s,i) => s + ((parseFloat(i.quantity)||0) * (parseFloat(i.unitCost)||0)), 0);
+    const laborTotal    = labor.reduce((s,l) => s + ((parseFloat(l.hours)||0) * (parseFloat(l.hourlyRate)||0)), 0);
+    const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
     const margin        = parseFloat(profitMargin) || 0;
     const suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : 0;
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
+
+  // Auto-calculate live whenever inputs change (auto-update summary)
+  React.useEffect(() => {
+    if (!selectedRecipe) {
+      setResult(null);
+      return;
+    }
+    const stockTotal    = stock.reduce((s,i) => s + ((parseFloat(i.quantity)||0) * (parseFloat(i.unitCost)||0)), 0);
+    const laborTotal    = labor.reduce((s,l) => s + ((parseFloat(l.hours)||0) * (parseFloat(l.hourlyRate)||0)), 0);
+    const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
+    const totalCost     = stockTotal + laborTotal + overheadTotal;
+    const margin        = parseFloat(profitMargin) || 0;
+    const suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : 0;
+    setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
+  }, [selectedRecipe, stock, labor, overhead, profitMargin]);
 
   const RemoveBtn = ({ onClick }) => (
     <button onClick={onClick} className="text-red-400 hover:text-red-600 text-base leading-none">✕</button>
@@ -108,17 +193,18 @@ const CalculateSection = () => {
         </div>
 
         {/* Column labels — shown once above all rows */}
-        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 1.5fr 1.5fr 2fr 20px" }}>
+        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
           <span className="text-xs text-gray-500">Stock</span>
           <span className="text-xs text-gray-500">Quantity</span>
           <span className="text-xs text-gray-500">Unit</span>
           <span className="text-xs text-gray-500">Unit Cost (LKR)</span>
+          <span className="text-xs text-gray-500">Total (LKR)</span>
           <span />
         </div>
 
         <div className="space-y-2">
           {stock.map((item) => (
-            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1.5fr 1.5fr 2fr 20px" }}>
+            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
               <select className={selectCls} value={item.name} onChange={e => updateStock(item.id,"name",e.target.value)}>
                 <option value="">-- Select --</option>
                 {STOCK_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
@@ -130,6 +216,9 @@ const CalculateSection = () => {
               </select>
               <input type="number" placeholder="0.00" className={inputCls} value={item.unitCost}
                 onChange={e => updateStock(item.id,"unitCost",e.target.value)} />
+              <div className="p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center">
+                {(((parseFloat(item.quantity)||0) * (parseFloat(item.unitCost)||0))).toFixed(2)}
+              </div>
               {stock.length > 1
                 ? <RemoveBtn onClick={() => removeStock(item.id)} />
                 : <span />}
@@ -156,22 +245,28 @@ const CalculateSection = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
+        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Role</span>
           <span className="text-xs text-gray-500">Hours</span>
           <span className="text-xs text-gray-500">Hourly Rate (LKR)</span>
+          <span className="text-xs text-gray-500">Total (LKR)</span>
           <span />
         </div>
 
         <div className="space-y-2">
           {labor.map((item) => (
-            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
-              <input type="text" placeholder="e.g. Chef" className={inputCls} value={item.role}
-                onChange={e => updateLabor(item.id,"role",e.target.value)} />
+            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
+              <select className={selectCls} value={item.role} onChange={e => updateLabor(item.id,"role",e.target.value)}>
+                <option value="">-- Select --</option>
+                {Object.keys(LABOR_DEFAULT_RATES).map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
               <input type="number" placeholder="0" className={inputCls} value={item.hours}
                 onChange={e => updateLabor(item.id,"hours",e.target.value)} />
               <input type="number" placeholder="0.00" className={inputCls} value={item.hourlyRate}
                 onChange={e => updateLabor(item.id,"hourlyRate",e.target.value)} />
+              <div className="p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center">
+                {((parseFloat(item.hours)||0) * (parseFloat(item.hourlyRate)||0)).toFixed(2)}
+              </div>
               {labor.length > 1
                 ? <RemoveBtn onClick={() => removeLabor(item.id)} />
                 : <span />}
@@ -198,21 +293,24 @@ const CalculateSection = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "4fr 2fr 20px" }}>
+        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Overhead Item</span>
-          <span className="text-xs text-gray-500">Cost (LKR)</span>
+          <span className="text-xs text-gray-500">Hours</span>
+          <span className="text-xs text-gray-500">Rate (LKR/hr)</span>
           <span />
         </div>
 
         <div className="space-y-2">
           {overhead.map((item) => (
-            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "4fr 2fr 20px" }}>
+            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
               <select className={selectCls} value={item.name} onChange={e => updateOverhead(item.id,"name",e.target.value)}>
                 <option value="">-- Select --</option>
                 {OVERHEAD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
-              <input type="number" placeholder="0.00" className={inputCls} value={item.cost}
-                onChange={e => updateOverhead(item.id,"cost",e.target.value)} />
+              <input type="number" placeholder="0" className={inputCls} value={item.hours}
+                onChange={e => updateOverhead(item.id,"hours",e.target.value)} />
+              <input type="number" placeholder="0.00" className={inputCls} value={item.rate}
+                onChange={e => updateOverhead(item.id,"rate",e.target.value)} />
               {overhead.length > 1
                 ? <RemoveBtn onClick={() => removeOverhead(item.id)} />
                 : <span />}
