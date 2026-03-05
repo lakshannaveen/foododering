@@ -12,11 +12,11 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
         <h3 className="text-lg font-semibold mb-4">Add Stock Item</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
-          <div className="col-span-6 font-semibold text-sm text-gray-600">Item</div>
+          <div className="col-span-5 font-semibold text-sm text-gray-600">Item</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Quantity</div>
-          <div className="col-span-2 font-semibold text-sm text-gray-600">Unit</div>
+          <div className="col-span-1 font-semibold text-sm text-gray-600">Unit</div>
           <div className="col-span-2 font-semibold text-sm text-gray-600">Unit Price</div>
-
+          <div className="col-span-2 font-semibold text-sm text-gray-600">Total Price</div>
         </div>
 
         <div className="mt-3 grid grid-cols-12 gap-3 items-center">
@@ -25,7 +25,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             placeholder="Item name (e.g. Carrot)"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            className="col-span-6 p-2 border rounded"
+            className="col-span-5 p-2 border rounded"
           />
 
           <input
@@ -41,7 +41,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
           <select
             value={form.unit}
             onChange={(e) => update('unit', e.target.value)}
-            className="col-span-2 p-2 border rounded bg-white"
+            className="col-span-1 p-2 border rounded bg-white"
           >
             <option value="kg">kg</option>
             <option value="g">g</option>
@@ -59,7 +59,16 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             min="0"
             step="0.01"
           />
+
+          <div className="col-span-2 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center">
+            {(() => {
+              const q = parseFloat(form.quantity) || 0;
+              const p = parseFloat(form.unitPrice) || 0;
+              return (q * p).toFixed(2);
+            })()}
+          </div>
         </div>
+        
 
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={onSave} className="px-4 py-2 bg-green-600 text-white rounded">Save</button>
