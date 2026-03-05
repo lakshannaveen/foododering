@@ -56,7 +56,7 @@ const LABOR_DEFAULT_RATES = {
 
 const generateId    = () => Math.random().toString(36).substr(2, 9);
 const newStockRow   = () => ({ id: generateId(), name: "", quantity: "0", unit: "kg", unitCost: "0.00" });
-const newLaborRow   = () => ({ id: generateId(), role: "", hours: "0", hourlyRate: "0.00" });
+const newLaborRow   = () => ({ id: generateId(), role: "", hours: "0", minutes: "0", hourlyRate: "0.00" });
 const newOverheadRow= () => ({ id: generateId(), name: "", hours: "0", rate: "0.00" });
 
 const inputCls  = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
@@ -124,7 +124,12 @@ const CalculateSection = () => {
   const handleCalculate = () => {
     if (!selectedRecipe) return alert("Please select a recipe.");
     const stockTotal    = stock.reduce((s,i) => s + ((parseFloat(i.quantity)||0) * (parseFloat(i.unitCost)||0)), 0);
-    const laborTotal    = labor.reduce((s,l) => s + ((parseFloat(l.hours)||0) * (parseFloat(l.hourlyRate)||0)), 0);
+    const laborTotal    = labor.reduce((s,l) => {
+      const h = parseFloat(l.hours) || 0;
+      const m = parseFloat(l.minutes) || 0;
+      const hoursDecimal = h + (m / 60);
+      return s + (hoursDecimal * (parseFloat(l.hourlyRate) || 0));
+    }, 0);
     const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
     const margin        = parseFloat(profitMargin) || 0;
@@ -265,9 +270,10 @@ const CalculateSection = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
+        <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Role</span>
           <span className="text-xs text-gray-500">Hours</span>
+          <span className="text-xs text-gray-500">Minutes</span>
           <span className="text-xs text-gray-500">Hourly Rate (LKR)</span>
           <span className="text-xs text-gray-500">Total (LKR)</span>
           <span />
@@ -275,17 +281,25 @@ const CalculateSection = () => {
 
         <div className="space-y-2">
           {labor.map((item) => (
-            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
+            <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
               <select className={selectCls} value={item.role} onChange={e => updateLabor(item.id,"role",e.target.value)}>
                 <option value="">-- Select --</option>
                 {Object.keys(LABOR_DEFAULT_RATES).map(r => <option key={r} value={r}>{r}</option>)}
               </select>
-              <input type="number" placeholder="0" className={inputCls} value={item.hours}
+
+              <input type="number" min="0" placeholder="0" className={inputCls} value={item.hours}
                 onChange={e => updateLabor(item.id,"hours",e.target.value)} />
+
+              <input type="number" min="0" max="59" placeholder="Minutes" className={inputCls} value={item.minutes}
+                onChange={e => updateLabor(item.id,"minutes",e.target.value)} />
+
               <input type="number" placeholder="0.00" className={inputCls} value={item.hourlyRate}
                 onChange={e => updateLabor(item.id,"hourlyRate",e.target.value)} />
+
               <div className="p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center">
-                {((parseFloat(item.hours)||0) * (parseFloat(item.hourlyRate)||0)).toFixed(2)}
+                {(
+                  (((parseFloat(item.hours)||0) + ((parseFloat(item.minutes)||0) / 60)) * (parseFloat(item.hourlyRate)||0))
+                ).toFixed(2)}
               </div>
               {labor.length > 1
                 ? <RemoveBtn onClick={() => removeLabor(item.id)} />
