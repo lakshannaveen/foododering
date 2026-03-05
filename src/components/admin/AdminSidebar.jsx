@@ -26,6 +26,7 @@ const AdminSidebar = ({
     primaryHover: "hover:bg-[#2E5A8A]",
     primaryBorder: "border-[#18749b]",
     activeBg: "bg-[#18749b]/20",
+    activeGradient: "bg-gradient-to-r from-[#154a56] to-[#18749b]",
     text: "text-gray-100",
     textHover: "hover:text-white",
     sidebarBg: "bg-gray-900",
@@ -116,10 +117,14 @@ const AdminSidebar = ({
           className={`${colors.sidebarBg} ${colors.text} h-full p-6 flex flex-col gap-2 overflow-y-auto`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              Admin Panel
-            </h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white text-[#18749b] flex items-center justify-center font-bold shadow-sm">FD</div>
+              <div>
+                <h2 className="text-lg font-bold">Admin Panel</h2>
+                <div className="text-xs text-gray-400">Manage menu, orders and recipes</div>
+              </div>
+            </div>
             <button
               onClick={() => setIsMobileOpen(false)}
               className="lg:hidden p-1 text-gray-400 hover:text-white transition-colors"
@@ -147,8 +152,8 @@ const AdminSidebar = ({
                 key={tab.id}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-all w-full text-left group ${
                   activeTab === tab.id
-                    ? `${colors.activeBg} text-white ${colors.primaryBorder} border-l-4 font-medium`
-                    : `text-gray-300 ${colors.textHover} ${colors.primaryHover} hover:border-l-4 hover:border-[#18749b]/50`
+                    ? `${colors.activeGradient} text-white border-l-4 border-[#18749b] font-semibold shadow-sm`
+                    : `text-gray-300 ${colors.textHover} hover:bg-gray-800/40 hover:text-white`
                 }`}
                 onClick={() => {
                   setActiveTab(tab.id);
@@ -159,7 +164,7 @@ const AdminSidebar = ({
               >
                 <span
                   className={`transition-transform ${
-                    activeTab === tab.id ? "scale-110" : "group-hover:scale-110"
+                    activeTab === tab.id ? "text-white scale-110" : "group-hover:scale-110 text-gray-300"
                   }`}
                 >
                   {tab.icon}

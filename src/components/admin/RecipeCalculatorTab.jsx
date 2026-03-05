@@ -46,20 +46,33 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
   const [searchParams, setSearchParams] = useSearchParams();
   const active = searchParams.get("active") || "stock";
 
+  const tabOrder = ["stock", "labor", "overhead", "calculate", "saved"];
   const tabClass = (name) =>
-    `px-3 py-2 rounded ${active === name ? "bg-white border border-gray-300 shadow text-gray-900 font-semibold" : "bg-gray-200 text-gray-700"}`;
+    `px-4 py-2 rounded-md transition inline-flex items-center gap-2 text-sm ${
+      active === name
+        ? "bg-gradient-to-r from-[#18749b] to-[#2E5A8A] text-white shadow-md font-semibold"
+        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+    }`;
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-2xl font-semibold mb-4">Recipe Calculator</h3>
-
-      <div className="flex gap-2 mb-4">
-        <Link to="?active=stock" className={tabClass("stock")}>Stock</Link>
-        <Link to="?active=labor" className={tabClass("labor")}>Labor</Link>
-        <Link to="?active=overhead" className={tabClass("overhead")}>Overhead</Link>
-        <Link to="?active=calculate" className={tabClass("calculate")}>Calculate</Link>
-        <Link to="?active=saved" className={tabClass("saved")}>Saved Calculations</Link>
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-2xl font-semibold">Recipe Calculator</h3>
+          <p className="text-sm text-gray-500 mt-1">Manage stock, labor and overhead — calculate recipe cost and suggested price.</p>
+        </div>
+        
       </div>
+
+      <nav aria-label="Recipe calculator tabs" className="mb-4">
+        <div className="flex gap-2 flex-wrap">
+          <Link to="?active=stock" className={tabClass("stock")} aria-current={active === 'stock'}>Stock</Link>
+          <Link to="?active=labor" className={tabClass("labor")} aria-current={active === 'labor'}>Labor</Link>
+          <Link to="?active=overhead" className={tabClass("overhead")} aria-current={active === 'overhead'}>Overhead</Link>
+          <Link to="?active=calculate" className={tabClass("calculate")} aria-current={active === 'calculate'}>Calculate</Link>
+          <Link to="?active=saved" className={tabClass("saved")} aria-current={active === 'saved'}>Saved</Link>
+        </div>
+      </nav>
 
       <div className="space-y-3">
         {active === "stock" ? (
