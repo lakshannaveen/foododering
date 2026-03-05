@@ -87,9 +87,9 @@ const CalculateSection = () => {
   };
 
   const inputCls =
-    "border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white";
+    "border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
   const selectCls =
-    "border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white";
+    "border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -138,7 +138,7 @@ const CalculateSection = () => {
           <h2 className="text-base font-semibold text-gray-800">Stock</h2>
           <button
             onClick={addStock}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
           >
             Add Stock
           </button>
@@ -219,7 +219,7 @@ const CalculateSection = () => {
           <h2 className="text-base font-semibold text-gray-800">Labor</h2>
           <button
             onClick={addLabor}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
           >
             Add Labor
           </button>
@@ -285,7 +285,7 @@ const CalculateSection = () => {
           <h2 className="text-base font-semibold text-gray-800">Overhead</h2>
           <button
             onClick={addOverhead}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors"
           >
             Add Overhead
           </button>
@@ -340,8 +340,8 @@ const CalculateSection = () => {
 
       {/* Result Summary */}
       {result && (
-        <div className="bg-teal-50 border border-teal-200 rounded-lg p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-teal-800 mb-3">Cost Summary</h2>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 shadow-sm">
+          <h2 className="text-base font-semibold text-blue-800 mb-3">Cost Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {[
               { label: "Stock", value: result.stockTotal },
@@ -349,7 +349,7 @@ const CalculateSection = () => {
               { label: "Overhead", value: result.overheadTotal },
               { label: "Total Cost", value: result.totalCost },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-lg p-3 border border-teal-100">
+              <div key={label} className="bg-white rounded-lg p-3 border border-blue-100">
                 <p className="text-xs text-gray-500 mb-1">{label}</p>
                 <p className="text-lg font-bold text-gray-800">${value.toFixed(2)}</p>
               </div>
@@ -357,7 +357,7 @@ const CalculateSection = () => {
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-500">Suggested Selling Price ({result.margin}% margin)</p>
-            <p className="text-3xl font-bold text-teal-700 mt-1">${result.suggestedPrice.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-blue-700 mt-1">${result.suggestedPrice.toFixed(2)}</p>
           </div>
         </div>
       )}
@@ -366,7 +366,7 @@ const CalculateSection = () => {
       <div className="flex justify-end">
         <button
           onClick={handleCalculate}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-3 rounded-lg shadow transition-colors text-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg shadow transition-colors text-sm"
         >
           Calculate Cost
         </button>
