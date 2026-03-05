@@ -54,6 +54,11 @@ const AdminSidebar = ({
     },
     { id: "tables", name: "Tables", icon: <FaTable className="text-lg" /> },
     { id: "users", name: "Users", icon: <FaUsers className="text-lg" /> },
+    {
+      id: "recipe-calculator",
+      name: "Recipe Calculator",
+      icon: <FaCog className="text-lg" />,
+    },
   ];
 
   // Handle logout

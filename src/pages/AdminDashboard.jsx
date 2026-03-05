@@ -6,6 +6,7 @@ import SubcategoriesTab from "../components/admin/SubcategoriesTab";
 import TablesTab from "../components/admin/TableTab";
 import UsersTab from "../components/admin/UsersTab";
 import OrderTab from "../components/admin/OrderTab"; 
+import RecipeCalculatorTab from "../components/admin/RecipeCalculatorTab";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +42,7 @@ const AdminDashboard = () => {
           {activeTab === "menu" && <MenuTab />}
           {activeTab === "tables" && <TablesTab />}
           {activeTab === "users" && <UsersTab />}
+          {activeTab === "recipe-calculator" && <RecipeCalculatorTab />}
           {activeTab === "orders" && <OrderTab />} {/* ✅ corrected */}
         </div>
       </main>
