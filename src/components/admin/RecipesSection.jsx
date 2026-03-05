@@ -55,8 +55,7 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
           <>
             <div className="grid grid-cols-12 gap-2 items-center p-2 text-sm font-semibold text-gray-600">
               <div className="col-span-4">Recipe</div>
-              <div className="col-span-6">Description</div>
-              <div className="col-span-1 text-right">Ingredients</div>
+              <div className="col-span-7">Description</div>
               <div className="col-span-1 text-right">Actions</div>
             </div>
             {recipes.map(r => (
@@ -64,10 +63,7 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
                 <div className="col-span-4">
                   <div className="font-medium">{r.name}</div>
                 </div>
-                <div className="col-span-6 text-sm text-gray-600">{r.description}</div>
-                <div className="col-span-1 text-right text-sm">
-                  <button onClick={() => editRecipe(r)} className="text-blue-600 hover:underline">View</button>
-                </div>
+                <div className="col-span-7 text-sm text-gray-600">{r.description}</div>
                 <div className="col-span-1 text-right flex justify-end items-center gap-2">
                   <button onClick={() => editRecipe(r)} className="text-gray-600 hover:text-gray-800" aria-label="Edit recipe"><Edit size={16} /></button>
                   <button onClick={() => deleteRecipe(r.id)} className="text-red-600 hover:text-red-800" aria-label="Delete recipe"><Trash2 size={16} /></button>
