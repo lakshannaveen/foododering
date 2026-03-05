@@ -1,81 +1,81 @@
-import React from "react";
+import React, { useState } from "react";
+import { Edit, Trash2 } from "lucide-react";
+import RecipeModal from "./RecipeModal";
 
 const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList }) => {
+  const [recipes, setRecipes] = useState([]);
+  const [form, setForm] = useState({ id: null, name: "", description: "", ingredients: rows || [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
+  const [showForm, setShowForm] = useState(false);
+
+  const openNew = () => {
+    setForm({ id: null, name: "", description: "", ingredients: [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
+    setShowForm(true);
+  };
+
+  const saveRecipe = () => {
+    if (!form.name) return;
+    if (form.id) {
+      setRecipes(prev => prev.map(r => r.id === form.id ? { ...form } : r));
+    } else {
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      setRecipes(prev => [...prev, { ...form, id }]);
+    }
+    setShowForm(false);
+  };
+
+  const editRecipe = (r) => {
+    setForm({ ...r });
+    setShowForm(true);
+  };
+
+  const deleteRecipe = (id) => setRecipes(prev => prev.filter(r => r.id !== id));
+
   return (
     <div>
-      {rows.map((row, idx) => (
-        <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-          <input
-            type="text"
-            placeholder="Ingredient name"
-            list="ingredients-list"
-            value={row.name}
-            onChange={(e) => updateRow(idx, "name", e.target.value)}
-            className="col-span-4 p-2 border rounded"
-          />
-
-          <input
-            type="number"
-            placeholder="Quantity"
-            value={row.quantity}
-            onChange={(e) => updateRow(idx, "quantity", e.target.value)}
-            className="col-span-2 p-2 border rounded"
-            min="0"
-            step="0.01"
-          />
-
-          <select
-            value={row.unit}
-            onChange={(e) => updateRow(idx, "unit", e.target.value)}
-            className="col-span-2 p-2 border rounded bg-white"
-          >
-            <option value="kg">kg</option>
-            <option value="g">g</option>
-            <option value="liter">liter</option>
-            <option value="lb">lb</option>
-            <option value="pcs">pcs</option>
-          </select>
-
-          <input
-            type="number"
-            placeholder="Unit price (price for 1)"
-            value={row.unitCost}
-            onChange={(e) => updateRow(idx, "unitCost", e.target.value)}
-            className="col-span-2 p-2 border rounded"
-            min="0"
-            step="0.01"
-          />
-
-          <div className="col-span-1 text-right">
-            <span className="block text-sm font-medium">
-              {(() => {
-                const q = parseFloat(row.quantity) || 0;
-                const c = parseFloat(row.unitCost) || 0;
-                return (q * c).toFixed(2);
-              })()}
-            </span>
-          </div>
-
-          <div className="col-span-1 text-right">
-            <button
-              onClick={() => removeRow(idx)}
-              className="text-red-600 hover:underline text-sm"
-              aria-label="Remove row"
-            >
-              Remove
-            </button>
-          </div>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <button onClick={openNew} className="px-3 py-2 bg-blue-600 text-white rounded">Add Recipe</button>
         </div>
-      ))}
+      </div>
 
-      <datalist id="ingredients-list">
-        {ingredientsList && ingredientsList.map((it) => (
-          <option key={it.id || it.name} value={it.name} />
-        ))}
-      </datalist>
+      <RecipeModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        form={form}
+        setForm={setForm}
+        onSave={saveRecipe}
+        onCancel={() => setShowForm(false)}
+        ingredientsList={ingredientsList}
+      />
 
-      <div className="mt-3">
-        <button onClick={addRow} className="px-3 py-2 bg-blue-600 text-white rounded">Add Ingredient</button>
+      <div className="space-y-2">
+        {recipes.length === 0 ? (
+          <div className="text-sm text-gray-500">No recipes yet. Add a recipe above.</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-12 gap-2 items-center p-2 text-sm font-semibold text-gray-600">
+              <div className="col-span-4">Recipe</div>
+              <div className="col-span-6">Description</div>
+              <div className="col-span-1 text-right">Ingredients</div>
+              <div className="col-span-1 text-right">Actions</div>
+            </div>
+            {recipes.map(r => (
+              <div key={r.id} className="grid grid-cols-12 gap-2 items-center p-2 border rounded bg-white">
+                <div className="col-span-4">
+                  <div className="font-medium">{r.name}</div>
+                </div>
+                <div className="col-span-6 text-sm text-gray-600">{r.description}</div>
+                <div className="col-span-1 text-right text-sm">
+                  <button onClick={() => editRecipe(r)} className="text-blue-600 hover:underline">View</button>
+                </div>
+                <div className="col-span-1 text-right flex justify-end items-center gap-2">
+                  <button onClick={() => editRecipe(r)} className="text-gray-600 hover:text-gray-800" aria-label="Edit recipe"><Edit size={16} /></button>
+                  <button onClick={() => deleteRecipe(r.id)} className="text-red-600 hover:text-red-800" aria-label="Delete recipe"><Trash2 size={16} /></button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
