@@ -8,10 +8,15 @@ const RecipeModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
       <div className="absolute inset-0" onClick={onClose}></div>
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 p-6 z-10">
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 z-10">
         <h3 className="text-lg font-semibold mb-4">{form.id ? 'Edit Recipe' : 'Add Recipe'}</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
+          <div className="col-span-6 font-semibold text-sm text-gray-600">Recipe Name</div>
+          <div className="col-span-6 font-semibold text-sm text-gray-600">Description</div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-12 gap-3 items-center">
           <input
             type="text"
             placeholder="Recipe name"
