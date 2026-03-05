@@ -12,6 +12,14 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
         <h3 className="text-lg font-semibold mb-4">Add Stock Item</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
+          <div className="col-span-6 font-semibold text-sm text-gray-600">Item</div>
+          <div className="col-span-2 font-semibold text-sm text-gray-600">Quantity</div>
+          <div className="col-span-2 font-semibold text-sm text-gray-600">Unit</div>
+          <div className="col-span-2 font-semibold text-sm text-gray-600">Unit Price</div>
+
+        </div>
+
+        <div className="mt-3 grid grid-cols-12 gap-3 items-center">
           <input
             type="text"
             placeholder="Item name (e.g. Carrot)"

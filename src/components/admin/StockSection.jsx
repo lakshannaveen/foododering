@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Trash2, Edit } from "lucide-react";
 import StockModal from "./StockModal";
 
 const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPrice: "" });
@@ -12,8 +13,13 @@ const StockSection = ({ initialItems = [] }) => {
 
   const addItem = () => {
     if (!form.name) return;
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    setItems(prev => [...prev, { ...form, id }]);
+    // if editing existing item (form.id present), update it
+    if (form.id) {
+      setItems(prev => prev.map(it => it.id === form.id ? { ...it, ...form } : it));
+    } else {
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      setItems(prev => [...prev, { ...form, id }]);
+    }
     setForm(emptyItem());
     setShowForm(false);
   };
@@ -25,6 +31,11 @@ const StockSection = ({ initialItems = [] }) => {
 
   const updateItem = (id, key, value) => {
     setItems(prev => prev.map(it => it.id === id ? { ...it, [key]: value } : it));
+  };
+
+  const editItem = (item) => {
+    setForm({ ...item });
+    setShowForm(true);
   };
 
   const removeItem = (id) => setItems(prev => prev.filter(it => it.id !== id));
@@ -103,8 +114,13 @@ const StockSection = ({ initialItems = [] }) => {
 
                 <div className="col-span-1 text-right font-medium">{total}</div>
 
-                <div className="col-span-1 text-right">
-                  <button onClick={() => removeItem(item.id)} className="text-red-600 hover:underline text-sm">Delete</button>
+                <div className="col-span-1 text-right flex justify-end items-center gap-2">
+                  <button onClick={() => editItem(item)} className="text-gray-600 hover:text-gray-800" aria-label="Edit item">
+                    <Edit size={16} />
+                  </button>
+                  <button onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-800" aria-label="Delete item">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               );
