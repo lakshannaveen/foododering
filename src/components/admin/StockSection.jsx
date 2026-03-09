@@ -7,12 +7,18 @@ const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPri
 
 const StockSection = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems.map(i => ({ ...i })));
+  const [loading, setLoading] = useState(false);
 
-  // If no initial items provided, fetch ingredients from backend
+  // On mount: use provided initialItems if present, otherwise fetch ingredients.
+  // Run only once to avoid repeated fetches when parent re-creates arrays (prevents spinner blinking).
   useEffect(() => {
     let mounted = true;
     const loadIngredients = async () => {
-      if (initialItems && initialItems.length > 0) return;
+      if (initialItems && initialItems.length > 0) {
+        if (mounted) setItems(initialItems.map(i => ({ ...i })));
+        return;
+      }
+      setLoading(true);
       try {
         const res = await recipeService.getAllIngredients();
         // backend may return ResultSet array
@@ -24,14 +30,16 @@ const StockSection = ({ initialItems = [] }) => {
           unit: i.Unit || "kg",
           unitPrice: i.CostPerUnit != null ? String(i.CostPerUnit) : (i.UnitPrice != null ? String(i.UnitPrice) : "0"),
         }));
-        if (mounted && mapped.length) setItems(mapped);
+        if (mounted) setItems(mapped);
       } catch (e) {
         console.warn('Failed to load ingredients', e);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     loadIngredients();
     return () => { mounted = false; };
-  }, [initialItems]);
+  }, []);
   const grandTotal = items.reduce((sum, it) => {
     const q = parseFloat(it.quantity) || 0;
     const p = parseFloat(it.unitPrice) || 0;
@@ -118,7 +126,14 @@ const StockSection = ({ initialItems = [] }) => {
       </div>
 
       <div className="space-y-2">
-        {items.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
+              <span className="text-gray-600">Loading stock...</span>
+            </div>
+          </div>
+        ) : items.length === 0 ? (
           <div className="text-sm text-gray-500">No stock items yet. Add items above.</div>
         ) : (
           <>
