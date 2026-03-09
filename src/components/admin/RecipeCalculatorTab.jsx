@@ -78,25 +78,9 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
         {active === "stock" ? (
           <StockSection />
         ) : active === "labor" ? (
-          <LaborSection initialLabor={[
-            { id: 'l1', roleName: 'Head Cook', price: '50000', paymentType: 'monthly' },
-            { id: 'l2', roleName: 'Sous Chef', price: '35000', paymentType: 'monthly' },
-            { id: 'l3', roleName: 'Line Cook', price: '25000', paymentType: 'monthly' },
-            { id: 'l4', roleName: 'Assistant Cook', price: '18000', paymentType: 'monthly' },
-            { id: 'l5', roleName: 'Waiter', price: '12000', paymentType: 'monthly' },
-            { id: 'l6', roleName: 'Cleaner', price: '9000', paymentType: 'monthly' },
-            { id: 'l7', roleName: 'Manager', price: '60000', paymentType: 'monthly' }
-          ]} />
+          <LaborSection />
         ) : active === "overhead" ? (
-          <OverheadSection initialOverhead={[
-            { id: 'o1', name: 'Electricity', cost: '12000' },
-            { id: 'o2', name: 'Gas', cost: '4000' },
-            { id: 'o3', name: 'Rent', cost: '150000' },
-            { id: 'o4', name: 'Water', cost: '2000' },
-            { id: 'o5', name: 'Internet', cost: '3500' },
-            { id: 'o6', name: 'Maintenance', cost: '5000' },
-            { id: 'o7', name: 'Packaging Supplies', cost: '8000' }
-          ]} />
+          <OverheadSection />
         ) : active === 'saved' ? (
           <div className="bg-transparent p-0">
             <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>
