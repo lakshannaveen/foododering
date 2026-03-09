@@ -168,17 +168,12 @@ const StockSection = ({ initialItems = [] }) => {
                 />
 
                 <div className="col-span-2 p-2">
-                  <select
+                  <input
+                    type="text"
                     value={item.unit}
-                    disabled
-                    className="w-full p-2 border rounded bg-gray-50 cursor-default"
-                  >
-                    <option value="kg">kg</option>
-                    <option value="g">g</option>
-                    <option value="liter">liter</option>
-                    <option value="lb">lb</option>
-                    <option value="pcs">pcs</option>
-                  </select>
+                    readOnly
+                    className="w-full p-2 border rounded bg-gray-50 cursor-default text-sm"
+                  />
                 </div>
 
                 <input
