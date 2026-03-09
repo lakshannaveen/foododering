@@ -154,15 +154,15 @@ const StockSection = ({ initialItems = [] }) => {
                 <input
                   type="text"
                   value={item.name}
-                  onChange={(e) => updateItem(item.id, 'name', e.target.value)}
-                  className="col-span-4 p-2 border rounded"
+                  readOnly
+                  className="col-span-4 p-2 border rounded bg-gray-50 cursor-default"
                 />
 
                 <input
                   type="number"
                   value={item.quantity}
-                  onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                  className="col-span-2 p-2 border rounded"
+                  readOnly
+                  className="col-span-2 p-2 border rounded bg-gray-50 cursor-default"
                   min="0"
                   step="0.01"
                 />
@@ -170,8 +170,8 @@ const StockSection = ({ initialItems = [] }) => {
                 <div className="col-span-2 p-2">
                   <select
                     value={item.unit}
-                    onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
-                    className="w-full p-2 border rounded bg-white"
+                    disabled
+                    className="w-full p-2 border rounded bg-gray-50 cursor-default"
                   >
                     <option value="kg">kg</option>
                     <option value="g">g</option>
@@ -184,8 +184,8 @@ const StockSection = ({ initialItems = [] }) => {
                 <input
                   type="number"
                   value={item.unitPrice}
-                  onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
-                  className="col-span-2 p-2 border rounded"
+                  readOnly
+                  className="col-span-2 p-2 border rounded bg-gray-50 cursor-default"
                   min="0"
                   step="0.01"
                   placeholder="0.00"

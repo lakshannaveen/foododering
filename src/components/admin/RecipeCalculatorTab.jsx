@@ -60,8 +60,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
         <div>
           <h3 className="text-2xl font-semibold">Recipe Calculator</h3>
           <p className="text-sm text-gray-500 mt-1">Manage stock, labor and overhead — calculate recipe cost and suggested price.</p>
-        </div>
-        
+        </div>   
       </div>
 
       <nav aria-label="Recipe calculator tabs" className="mb-4">
