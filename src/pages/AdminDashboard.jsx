@@ -11,7 +11,13 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return localStorage.getItem("adminActiveTab") || "orders";
+    } catch (e) {
+      return "orders";
+    }
+  });
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -23,6 +29,15 @@ const AdminDashboard = () => {
       navigate("/login");
     }
   }, [navigate]);
+
+  // Persist active admin tab so refresh keeps the same view
+  useEffect(() => {
+    try {
+      localStorage.setItem("adminActiveTab", activeTab);
+    } catch (e) {
+      // ignore write errors (e.g., storage disabled)
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
