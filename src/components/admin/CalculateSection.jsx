@@ -1,37 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import recipeService from "../../services/recipeService";
+import laborService from "../../services/laborService";
 
-const RECIPES = [
-  { id: 1, name: "Margherita Pizza" },
-  { id: 2, name: "Beef Burger" },
-  { id: 3, name: "Caesar Salad" },
-  { id: 4, name: "Grilled Salmon" },
-  { id: 5, name: "Chicken Alfredo Pasta" },
-  { id: 6, name: "Mushroom Risotto" },
-];
-
-const STOCK_OPTIONS = [
-  "Flour", "Tomato Sauce", "Mozzarella Cheese", "Olive Oil",
-  "Chicken Breast", "Beef Patty", "Lettuce", "Salmon Fillet",
-  "Pasta", "Heavy Cream", "Mushrooms", "Arborio Rice",
-];
-
-// Hard-coded reference prices (LKR per kg or per litre for liquids)
-const STOCK_PRICE_PER_KG = {
-  "Flour": 120,
-  "Tomato Sauce": 250,
-  "Mozzarella Cheese": 800,
-  "Olive Oil": 1500,
-  "Chicken Breast": 900,
-  "Beef Patty": 700,
-  "Lettuce": 200,
-  "Salmon Fillet": 2200,
-  "Pasta": 300,
-  "Heavy Cream": 700,
-  "Mushrooms": 450,
-  "Arborio Rice": 350,
-};
+// Recipe, stock and labor data are fetched from APIs; no hard-coded lists here.
 
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "piece", "tbsp", "tsp", "cup"];
 
@@ -48,12 +20,7 @@ const OVERHEAD_RATES = {
   "Cleaning Supplies": 15,
   Rent: 5000,
 };
-const LABOR_DEFAULT_RATES = {
-  Chef: 600,
-  "Assistant Chef": 350,
-  Server: 200,
-  Manager: 900,
-};
+// Labor default rates are fetched from API and merged into `laborRatesState`.
 
 const generateId    = () => Math.random().toString(36).substr(2, 9);
 const newStockRow   = () => ({ id: generateId(), name: "", quantity: "0", unit: "kg", unitCost: "0.00" });
@@ -68,10 +35,10 @@ const CalculateSection = () => {
   const [profitMargin, setProfitMargin]     = useState(20);
 
   // dynamic data fetched from API (fallbacks above)
-  const [recipesList, setRecipesList] = useState(RECIPES);
-  const [stockOptionsState, setStockOptionsState] = useState(STOCK_OPTIONS);
-  const [stockPricePerKgState, setStockPricePerKgState] = useState(STOCK_PRICE_PER_KG);
-  const [laborRatesState, setLaborRatesState] = useState(LABOR_DEFAULT_RATES);
+  const [recipesList, setRecipesList] = useState([]);
+  const [stockOptionsState, setStockOptionsState] = useState([]);
+  const [stockPricePerKgState, setStockPricePerKgState] = useState({});
+  const [laborRatesState, setLaborRatesState] = useState({});
 
   const [stock,    setStock]    = useState([newStockRow()]);
   const [labor,    setLabor]    = useState([newLaborRow()]);
@@ -82,11 +49,14 @@ const CalculateSection = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const [recipesRes, ingRes, laborRes] = await Promise.all([
+        const [recipesRes, ingRes, laborResRaw] = await Promise.all([
           recipeService.getAllRecipes(),
           recipeService.getAllIngredients(),
-          recipeService.getAllLabor(),
+          laborService.getAllLabor(),
         ]);
+
+        // normalize labor response: laborService may return an array, recipeService style returns object with ResultSet
+        const laborRes = Array.isArray(laborResRaw) ? { ResultSet: laborResRaw } : (laborResRaw || {});
 
         if (!mounted) return;
 
@@ -111,7 +81,7 @@ const CalculateSection = () => {
           const rates = {};
           laborRes.ResultSet.forEach(l => {
             const key = l.LaborName || l.Role || l.Name || l.name;
-            const rate = parseFloat(l.Rate || l.RatePerHour || l.RatePerMonth || 0) || 0;
+            const rate = parseFloat(l.Rate || l.RatePerHour || l.RatePerMonth || l.RatePerHour || 0) || 0;
             if (key) rates[key] = rate;
           });
           if (Object.keys(rates).length) setLaborRatesState(prev => ({ ...prev, ...rates }));
@@ -130,9 +100,9 @@ const CalculateSection = () => {
     if (i.id !== id) return i;
     const next = { ...i, [f]: v };
 
-    // if user changed the name or unit, auto fill unitCost from STOCK_PRICE_PER_KG
+    // if user changed the name or unit, auto fill unitCost from fetched stock prices
     if (f === "name" || f === "unit") {
-      const pricePerKg = STOCK_PRICE_PER_KG[next.name];
+      const pricePerKg = stockPricePerKgState[next.name] || 0;
       if (pricePerKg) {
         // convert pricePerKg to price per selected unit
         const unit = next.unit || "kg";
@@ -154,7 +124,7 @@ const CalculateSection = () => {
     const next = { ...i, [f]: v };
     // if role selected and a default rate exists, fill hourlyRate unless user already set one
     if (f === 'role') {
-      const def = LABOR_DEFAULT_RATES[next.role];
+      const def = laborRatesState[next.role];
       if (def && (!next.hourlyRate || parseFloat(next.hourlyRate) === 0)) next.hourlyRate = def.toFixed(2).toString();
     }
     return next;
@@ -192,7 +162,7 @@ const CalculateSection = () => {
 
   const handleSave = () => {
     if (!result) return alert("Nothing to save. Please select a recipe or enter inputs.");
-    const recipeName = RECIPES.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
+    const recipeName = recipesList.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
     const payload = {
       id: generateId(),
       recipe: recipeName,
@@ -241,7 +211,7 @@ const CalculateSection = () => {
             <label className="block text-xs text-gray-500 mb-1">Select Recipe <span className="text-red-500">*</span></label>
             <select className={selectCls} value={selectedRecipe} onChange={e => setSelectedRecipe(e.target.value)}>
               <option value="">-- Select Recipe --</option>
-              {RECIPES.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              {recipesList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           </div>
           <div>
