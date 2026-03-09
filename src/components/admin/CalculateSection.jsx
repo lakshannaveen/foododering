@@ -33,7 +33,8 @@ const selectCls = "border border-gray-300 rounded px-3 py-2 text-sm w-full focus
 
 const CalculateSection = () => {
   const [selectedRecipe, setSelectedRecipe] = useState("");
-  const [profitMargin, setProfitMargin]     = useState(20);
+  // remove hard-coded default; require user input (start empty)
+  const [profitMargin, setProfitMargin]     = useState("");
 
   // dynamic data fetched from API (fallbacks above)
   const [recipesList, setRecipesList] = useState([]);
@@ -156,7 +157,8 @@ const CalculateSection = () => {
     }, 0);
     const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
-    const margin        = parseFloat(profitMargin) || 0;
+    const margin = parseFloat(profitMargin);
+    if (isNaN(margin) || margin <= 0) return alert('Please enter a profit margin greater than 0%.');
     const suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : 0;
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
@@ -191,9 +193,9 @@ const CalculateSection = () => {
     const laborTotal    = labor.reduce((s,l) => s + ((parseFloat(l.hours)||0) * (parseFloat(l.hourlyRate)||0)), 0);
     const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
-    const margin        = parseFloat(profitMargin) || 0;
-    const suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : 0;
-    setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
+    const margin = parseFloat(profitMargin);
+    const suggestedPrice = (!isNaN(margin) && margin > 0 && margin < 100) ? totalCost / (1 - margin/100) : 0;
+    setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin: isNaN(margin) ? 0 : margin });
   }, [selectedRecipe, stock, labor, overhead, profitMargin]);
 
   const RemoveBtn = ({ onClick }) => (
@@ -217,8 +219,13 @@ const CalculateSection = () => {
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Profit Margin (%) <span className="text-red-500">*</span></label>
-            <input type="number" className={inputCls} value={profitMargin} min={0} max={100}
-              onChange={e => setProfitMargin(e.target.value)} />
+            <input type="number" className={inputCls} value={profitMargin} min={1} max={100} placeholder="Enter margin"
+              onChange={e => {
+                const v = e.target.value;
+                // prevent explicit zero entry; clear instead if user types 0
+                if (v === "0" || v === "0.00") setProfitMargin("");
+                else setProfitMargin(v);
+              }} />
           </div>
         </div>
       </div>
@@ -256,13 +263,36 @@ const CalculateSection = () => {
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
                 <SearchableSelect className={selectCls} options={stockOptionsState} value={item.name}
                   onChange={(v) => updateStock(item.id, "name", v)} placeholder="-- Select --" />
-              <input type="number" placeholder="0" className={inputCls} value={item.quantity}
-                onChange={e => updateStock(item.id,"quantity",e.target.value)} />
+              <input
+                type="number"
+                placeholder="0"
+                min="0.01"
+                step="any"
+                className={inputCls}
+                value={item.quantity}
+                onFocus={() => {
+                  if (item.quantity === "0" || item.quantity === "0.00") updateStock(item.id, "quantity", "");
+                }}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === "0" || v === "0.00") {
+                    // prevent explicit zero entry — clear instead
+                    updateStock(item.id, "quantity", "");
+                  } else {
+                    updateStock(item.id, "quantity", v);
+                  }
+                }}
+              />
               <select className={selectCls} value={item.unit} onChange={e => updateStock(item.id,"unit",e.target.value)}>
                 {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
-              <input type="number" placeholder="0.00" className={inputCls} value={item.unitCost}
-                onChange={e => updateStock(item.id,"unitCost",e.target.value)} />
+              <input
+                type="number"
+                placeholder="0.00"
+                className={inputCls + " bg-gray-100 cursor-not-allowed"}
+                value={item.unitCost}
+                readOnly
+              />
               <div className="p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center">
                 {(((parseFloat(item.quantity)||0) * (parseFloat(item.unitCost)||0))).toFixed(2)}
               </div>
@@ -307,14 +337,36 @@ const CalculateSection = () => {
               <SearchableSelect className={selectCls} options={Object.keys(laborRatesState)} value={item.role}
                 onChange={(v) => updateLabor(item.id, "role", v)} placeholder="-- Select --" />
 
-              <input type="number" min="0" placeholder="0" className={inputCls} value={item.hours}
-                onChange={e => updateLabor(item.id,"hours",e.target.value)} />
+              <input
+                type="number"
+                placeholder="0"
+                min="0.01"
+                step="any"
+                className={inputCls}
+                value={item.hours}
+                onFocus={() => {
+                  if (item.hours === "0" || item.hours === "0.00") updateLabor(item.id, "hours", "");
+                }}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === "0" || v === "0.00") {
+                    updateLabor(item.id, "hours", "");
+                  } else {
+                    updateLabor(item.id, "hours", v);
+                  }
+                }}
+              />
 
               <input type="number" min="0" max="59" placeholder="Minutes" className={inputCls} value={item.minutes}
                 onChange={e => updateLabor(item.id,"minutes",e.target.value)} />
 
-              <input type="number" placeholder="0.00" className={inputCls} value={item.hourlyRate}
-                onChange={e => updateLabor(item.id,"hourlyRate",e.target.value)} />
+              <input
+                type="number"
+                placeholder="0.00"
+                className={inputCls + " bg-gray-100 cursor-not-allowed"}
+                value={item.hourlyRate}
+                readOnly
+              />
 
               <div className="p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center">
                 {(
