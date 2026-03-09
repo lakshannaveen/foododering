@@ -76,18 +76,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
 
       <div className="space-y-3">
         {active === "stock" ? (
-          <StockSection initialItems={[
-            { id: 's1', name: 'Rice (50kg)', quantity: '50', unit: 'kg', unitPrice: '125.00' },
-            { id: 's2', name: 'Chicken (10kg)', quantity: '10', unit: 'kg', unitPrice: '800.00' },
-            { id: 's3', name: 'Onion (5kg)', quantity: '5', unit: 'kg', unitPrice: '150.00' },
-            { id: 's4', name: 'Potato (20kg)', quantity: '20', unit: 'kg', unitPrice: '80.00' },
-            { id: 's5', name: 'Tomato (10kg)', quantity: '10', unit: 'kg', unitPrice: '120.00' },
-            { id: 's6', name: 'Flour (25kg)', quantity: '25', unit: 'kg', unitPrice: '220.00' },
-            { id: 's7', name: 'Sugar (10kg)', quantity: '10', unit: 'kg', unitPrice: '160.00' },
-            { id: 's8', name: 'Cooking Oil (20L)', quantity: '20', unit: 'liter', unitPrice: '450.00' },
-            { id: 's9', name: 'Milk (40L)', quantity: '40', unit: 'liter', unitPrice: '140.00' },
-            { id: 's10', name: 'Eggs (500pcs)', quantity: '500', unit: 'pcs', unitPrice: '15.00' }
-          ]} />
+          <StockSection />
         ) : active === "labor" ? (
           <LaborSection initialLabor={[
             { id: 'l1', roleName: 'Head Cook', price: '50000', paymentType: 'monthly' },

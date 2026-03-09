@@ -1,11 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Trash2, Edit } from "lucide-react";
 import StockModal from "./StockModal";
+import recipeService from "../../services/recipeService";
 
 const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPrice: "0.00" });
 
 const StockSection = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems.map(i => ({ ...i })));
+
+  // If no initial items provided, fetch ingredients from backend
+  useEffect(() => {
+    let mounted = true;
+    const loadIngredients = async () => {
+      if (initialItems && initialItems.length > 0) return;
+      try {
+        const res = await recipeService.getAllIngredients();
+        // backend may return ResultSet array
+        const list = Array.isArray(res?.ResultSet) ? res.ResultSet : (Array.isArray(res) ? res : []);
+        const mapped = list.map(i => ({
+          id: i.IngredientId || i.Id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+          name: i.IngredientName || i.Name || i.name || "",
+          quantity: i.CurrentStock != null ? String(i.CurrentStock) : (i.Quantity != null ? String(i.Quantity) : "0"),
+          unit: i.Unit || "kg",
+          unitPrice: i.CostPerUnit != null ? String(i.CostPerUnit) : (i.UnitPrice != null ? String(i.UnitPrice) : "0"),
+        }));
+        if (mounted && mapped.length) setItems(mapped);
+      } catch (e) {
+        console.warn('Failed to load ingredients', e);
+      }
+    };
+    loadIngredients();
+    return () => { mounted = false; };
+  }, [initialItems]);
   const grandTotal = items.reduce((sum, it) => {
     const q = parseFloat(it.quantity) || 0;
     const p = parseFloat(it.unitPrice) || 0;
@@ -16,17 +42,36 @@ const StockSection = ({ initialItems = [] }) => {
 
   const updateForm = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
-  const addItem = () => {
-    if (!form.name) return;
-    // if editing existing item (form.id present), update it
-    if (form.id) {
-      setItems(prev => prev.map(it => it.id === form.id ? { ...it, ...form } : it));
-    } else {
-      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      setItems(prev => [...prev, { ...form, id }]);
+  const addItem = async () => {
+    if (!form.name) return alert('Please provide an item name');
+    try {
+      // prepare payload expected by backend
+      const payload = {
+        IngredientName: form.name,
+        Unit: form.unit,
+        CurrentStock: String(form.quantity || "0"),
+        CostPerUnit: String(form.unitPrice || "0"),
+      };
+
+      const res = await recipeService.addIngredient(payload);
+
+      // if backend returned an id, use it; otherwise generate a local id
+      const newId = res?.IngredientId || res?.Result?.IngredientId || (form.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)));
+
+      // if editing existing item (form.id present), update it
+      if (form.id) {
+        setItems(prev => prev.map(it => it.id === form.id ? { ...it, ...form } : it));
+      } else {
+        setItems(prev => [...prev, { ...form, id: newId }] );
+      }
+
+      setForm(emptyItem());
+      setShowForm(false);
+      alert('Stock item saved successfully');
+    } catch (e) {
+      console.error('Failed to save stock item', e);
+      alert('Failed to save stock item. See console for details.');
     }
-    setForm(emptyItem());
-    setShowForm(false);
   };
 
   const cancelAdd = () => {
