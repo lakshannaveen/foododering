@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import recipeService from "../../services/recipeService";
 import laborService from "../../services/laborService";
+import SearchableSelect from "../SearchableSelect";
 
 // Recipe, stock and labor data are fetched from APIs; no hard-coded lists here.
 
@@ -253,10 +254,8 @@ const CalculateSection = () => {
         <div className="space-y-2">
           {stock.map((item) => (
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
-                <select className={selectCls} value={item.name} onChange={e => updateStock(item.id,"name",e.target.value)}>
-                  <option value="">-- Select --</option>
-                  {stockOptionsState.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+                <SearchableSelect className={selectCls} options={stockOptionsState} value={item.name}
+                  onChange={(v) => updateStock(item.id, "name", v)} placeholder="-- Select --" />
               <input type="number" placeholder="0" className={inputCls} value={item.quantity}
                 onChange={e => updateStock(item.id,"quantity",e.target.value)} />
               <select className={selectCls} value={item.unit} onChange={e => updateStock(item.id,"unit",e.target.value)}>
@@ -305,10 +304,8 @@ const CalculateSection = () => {
         <div className="space-y-2">
           {labor.map((item) => (
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
-              <select className={selectCls} value={item.role} onChange={e => updateLabor(item.id,"role",e.target.value)}>
-                <option value="">-- Select --</option>
-                {Object.keys(laborRatesState).map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <SearchableSelect className={selectCls} options={Object.keys(laborRatesState)} value={item.role}
+                onChange={(v) => updateLabor(item.id, "role", v)} placeholder="-- Select --" />
 
               <input type="number" min="0" placeholder="0" className={inputCls} value={item.hours}
                 onChange={e => updateLabor(item.id,"hours",e.target.value)} />
