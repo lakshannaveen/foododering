@@ -3,7 +3,8 @@ import axios from "axios";
 
 const api = axios.create({
   //baseURL: "https://foodorderingbackend.dockyardsoftware.com", // base API URL
-  baseURL: "https://foodorderingbackend.dockyardsoftware.com", // base API URL
+  //baseURL: "https://foodorderingbackend.dockyardsoftware.com", // base API URL
+  baseURL: "https://foodorderingbackend.dockyardsoftware.com",
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import recipeService from "../../services/recipeService";
 
 const RECIPES = [
   { id: 1, name: "Margherita Pizza" },
@@ -66,10 +67,62 @@ const CalculateSection = () => {
   const [selectedRecipe, setSelectedRecipe] = useState("");
   const [profitMargin, setProfitMargin]     = useState(20);
 
+  // dynamic data fetched from API (fallbacks above)
+  const [recipesList, setRecipesList] = useState(RECIPES);
+  const [stockOptionsState, setStockOptionsState] = useState(STOCK_OPTIONS);
+  const [stockPricePerKgState, setStockPricePerKgState] = useState(STOCK_PRICE_PER_KG);
+  const [laborRatesState, setLaborRatesState] = useState(LABOR_DEFAULT_RATES);
+
   const [stock,    setStock]    = useState([newStockRow()]);
   const [labor,    setLabor]    = useState([newLaborRow()]);
   const [overhead, setOverhead] = useState([newOverheadRow()]);
   const [result,   setResult]   = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const [recipesRes, ingRes, laborRes] = await Promise.all([
+          recipeService.getAllRecipes(),
+          recipeService.getAllIngredients(),
+          recipeService.getAllLabor(),
+        ]);
+
+        if (!mounted) return;
+
+        if (recipesRes && Array.isArray(recipesRes.ResultSet)) {
+          const mapped = recipesRes.ResultSet.map(r => ({ id: r.RecipeId || r.Id || r.id, name: r.RecipeName || r.Name || r.recipeName || r.name }));
+          if (mapped.length) setRecipesList(mapped);
+        }
+
+        if (ingRes && Array.isArray(ingRes.ResultSet)) {
+          const opts = ingRes.ResultSet.map(i => i.IngredientName || i.Name || i.name).filter(Boolean);
+          if (opts.length) setStockOptionsState(opts);
+          const prices = {};
+          ingRes.ResultSet.forEach(i => {
+            const key = i.IngredientName || i.Name || i.name;
+            const cost = parseFloat(i.CostPerUnit || i.Cost || i.CostPerUnitInNumbers || 0) || 0;
+            if (key) prices[key] = cost;
+          });
+          if (Object.keys(prices).length) setStockPricePerKgState(prev => ({ ...prev, ...prices }));
+        }
+
+        if (laborRes && Array.isArray(laborRes.ResultSet)) {
+          const rates = {};
+          laborRes.ResultSet.forEach(l => {
+            const key = l.LaborName || l.Role || l.Name || l.name;
+            const rate = parseFloat(l.Rate || l.RatePerHour || l.RatePerMonth || 0) || 0;
+            if (key) rates[key] = rate;
+          });
+          if (Object.keys(rates).length) setLaborRatesState(prev => ({ ...prev, ...rates }));
+        }
+      } catch (e) {
+        console.warn('Failed to load recipe calculator data', e);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const addStock       = () => setStock(p => [...p, newStockRow()]);
   // updateStock auto-fills unitCost when a stock `name` or `unit` is selected
@@ -230,10 +283,10 @@ const CalculateSection = () => {
         <div className="space-y-2">
           {stock.map((item) => (
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
-              <select className={selectCls} value={item.name} onChange={e => updateStock(item.id,"name",e.target.value)}>
-                <option value="">-- Select --</option>
-                {STOCK_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
+                <select className={selectCls} value={item.name} onChange={e => updateStock(item.id,"name",e.target.value)}>
+                  <option value="">-- Select --</option>
+                  {stockOptionsState.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
               <input type="number" placeholder="0" className={inputCls} value={item.quantity}
                 onChange={e => updateStock(item.id,"quantity",e.target.value)} />
               <select className={selectCls} value={item.unit} onChange={e => updateStock(item.id,"unit",e.target.value)}>
@@ -284,7 +337,7 @@ const CalculateSection = () => {
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
               <select className={selectCls} value={item.role} onChange={e => updateLabor(item.id,"role",e.target.value)}>
                 <option value="">-- Select --</option>
-                {Object.keys(LABOR_DEFAULT_RATES).map(r => <option key={r} value={r}>{r}</option>)}
+                {Object.keys(laborRatesState).map(r => <option key={r} value={r}>{r}</option>)}
               </select>
 
               <input type="number" min="0" placeholder="0" className={inputCls} value={item.hours}
