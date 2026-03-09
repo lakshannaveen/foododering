@@ -159,7 +159,11 @@ const CalculateSection = () => {
     const totalCost     = stockTotal + laborTotal + overheadTotal;
     const margin = parseFloat(profitMargin);
     if (isNaN(margin) || margin <= 0) return alert('Please enter a profit margin greater than 0%.');
-    const suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : 0;
+    // For typical profit margins (<100) we compute selling price from margin-on-price formula.
+    // For very large margins (>=100) fall back to a markup-on-cost calculation to avoid invalid/negative values.
+    const suggestedPrice = margin < 100
+      ? totalCost / (1 - margin/100)
+      : totalCost * (1 + margin/100);
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
 
@@ -194,7 +198,10 @@ const CalculateSection = () => {
     const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
     const margin = parseFloat(profitMargin);
-    const suggestedPrice = (!isNaN(margin) && margin > 0 && margin < 100) ? totalCost / (1 - margin/100) : 0;
+    let suggestedPrice = 0;
+    if (!isNaN(margin) && margin > 0) {
+      suggestedPrice = margin < 100 ? totalCost / (1 - margin/100) : totalCost * (1 + margin/100);
+    }
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin: isNaN(margin) ? 0 : margin });
   }, [selectedRecipe, stock, labor, overhead, profitMargin]);
 
@@ -219,7 +226,7 @@ const CalculateSection = () => {
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Profit Margin (%) <span className="text-red-500">*</span></label>
-            <input type="number" className={inputCls} value={profitMargin} min={1} max={100} placeholder="Enter margin"
+            <input type="number" className={inputCls} value={profitMargin} min={1} max={1000} placeholder="Enter margin"
               onChange={e => {
                 const v = e.target.value;
                 // prevent explicit zero entry; clear instead if user types 0
