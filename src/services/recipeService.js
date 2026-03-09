@@ -41,44 +41,6 @@ export const updateIngredientStatus = async (IngredientId, status) => {
   }
 };
 
-export const addLabor = async ({ Role, CostType, Rate, LaborName }) => {
-  try {
-    const qs = `?Role=${encodeURIComponent(Role||"")}&CostType=${encodeURIComponent(CostType||"")}&Rate=${encodeURIComponent(Rate||"")}&LaborName=${encodeURIComponent(LaborName||"")}`;
-    const response = await api.post(`/Labor/AddLabor${qs}`);
-    return response.data;
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
-export const updateLabor = async ({ LaborId, LaborName, Role, CostType, Rate }) => {
-  try {
-    const qs = `?LaborName=${encodeURIComponent(LaborName||"")}&Role=${encodeURIComponent(Role||"")}&CostType=${encodeURIComponent(CostType||"")}&Rate=${encodeURIComponent(Rate||"")}&LaborId=${encodeURIComponent(LaborId||"")}`;
-    const response = await api.post(`/Labor/UpdateLabor${qs}`);
-    return response.data;
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
-export const getAllLabor = async () => {
-  try {
-    const response = await api.get(`/Labor/GetAllLabor`);
-    return response.data;
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
-export const updateLaborStatus = async (LaborId, Status) => {
-  try {
-    const response = await api.post(`/Labor/UpdateLaborStatus?LaborId=${encodeURIComponent(LaborId)}&Status=${encodeURIComponent(Status)}`);
-    return response.data;
-  } catch (err) {
-    return handleError(err);
-  }
-};
-
 export const addRecipe = async ({ MenuItemId, RecipeName }) => {
   try {
     const qs = `?MenuItemId=${encodeURIComponent(MenuItemId||"")}&RecipeName=${encodeURIComponent(RecipeName||"")}`;
@@ -121,10 +83,6 @@ export default {
   getIngredientById,
   getAllIngredients,
   updateIngredientStatus,
-  addLabor,
-  updateLabor,
-  getAllLabor,
-  updateLaborStatus,
   addRecipe,
   getAllRecipes,
   getRecipeById,

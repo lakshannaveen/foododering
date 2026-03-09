@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import laborService from "../../services/laborService";
 
 const LaborSection = ({ initialLabor = [] }) => {
   const [laborList, setLaborList] = useState(Array.isArray(initialLabor) ? initialLabor.map(i => ({ ...i })) : []);
+  const [loading, setLoading] = useState(false);
   const grandTotal = laborList.reduce((sum, it) => sum + (parseFloat(it.price) || 0), 0);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -22,6 +24,31 @@ const LaborSection = ({ initialLabor = [] }) => {
     setShowForm(true);
   };
 
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const list = await laborService.getAllLabor();
+        if (!mounted) return;
+        // map backend fields to local shape
+        const mapped = list.map((l) => ({
+          id: l.LaborId || l.Id || l.id || Date.now(),
+          roleName: l.Role || l.LaborName || l.RoleName || "",
+          price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
+          paymentType: l.CostType || l.PaymentType || "weekly",
+        }));
+        if (mounted) setLaborList(mapped);
+      } catch (e) {
+        console.error("Error loading labors", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
   const handleEdit = (labor) => {
     setFormData({
       roleName: labor.roleName,
@@ -32,29 +59,54 @@ const LaborSection = ({ initialLabor = [] }) => {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.roleName || !formData.price) {
       alert("Please fill in all fields");
       return;
     }
 
-    const laborToSave = {
-      id: editingId || Date.now(),
-      roleName: formData.roleName.trim(),
-      price: formData.price,
-      paymentType: formData.paymentType,
-    };
-
-    if (editingId) {
-      setLaborList((prev) =>
-        prev.map((item) => (item.id === editingId ? laborToSave : item))
-      );
-    } else {
-      setLaborList((prev) => [...prev, laborToSave]);
+    try {
+      if (editingId) {
+        // Update existing labor via API
+        await laborService.updateLabor({
+          laborId: editingId,
+          laborName: formData.roleName.trim(),
+          role: formData.roleName.trim(),
+          costType: formData.paymentType,
+          rate: formData.price,
+        });
+        // Refresh list
+        const refreshed = await laborService.getAllLabor();
+        setLaborList(refreshed.map((l) => ({
+          id: l.LaborId || l.Id || l.id || Date.now(),
+          roleName: l.Role || l.LaborName || l.RoleName || "",
+          price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
+          paymentType: l.CostType || l.PaymentType || "weekly",
+        })));
+        alert('Labor updated successfully');
+      } else {
+        // Add new labor via API
+        await laborService.addLabor({
+          role: formData.roleName.trim(),
+          costType: formData.paymentType,
+          rate: formData.price,
+          laborName: formData.roleName.trim(),
+        });
+        const refreshed = await laborService.getAllLabor();
+        setLaborList(refreshed.map((l) => ({
+          id: l.LaborId || l.Id || l.id || Date.now(),
+          roleName: l.Role || l.LaborName || l.RoleName || "",
+          price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
+          paymentType: l.CostType || l.PaymentType || "weekly",
+        })));
+        alert('Labor added successfully');
+      }
+      setShowForm(false);
+      setEditingId(null);
+    } catch (e) {
+      console.error('Failed to save labor', e);
+      alert('Failed to save labor. See console for details.');
     }
-
-    setShowForm(false);
-    setEditingId(null);
   };
 
   const handleCancel = () => {
@@ -63,6 +115,7 @@ const LaborSection = ({ initialLabor = [] }) => {
   };
 
   const handleDelete = (id) => {
+    // No delete API provided; remove locally for now
     setLaborList((prev) => prev.filter((item) => item.id !== id));
   };
 
@@ -90,7 +143,11 @@ const LaborSection = ({ initialLabor = [] }) => {
 
       {/* Table */}
       <div>
-        {laborList.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
+          </div>
+        ) : laborList.length === 0 ? (
           <div className="text-sm text-gray-500">
             No labor entries yet. Click "Add Labor" to get started.
           </div>
