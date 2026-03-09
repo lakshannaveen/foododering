@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { X } from "lucide-react";
 import recipeService from "../../services/recipeService";
 import laborService from "../../services/laborService";
 import SearchableSelect from "../SearchableSelect";
@@ -206,7 +207,9 @@ const CalculateSection = () => {
   }, [selectedRecipe, stock, labor, overhead, profitMargin]);
 
   const RemoveBtn = ({ onClick }) => (
-    <button onClick={onClick} className="text-red-400 hover:text-red-600 text-base leading-none">✕</button>
+    <button onClick={onClick} className="text-red-400 hover:text-red-600 text-base leading-none" aria-label="Remove">
+      <X size={16} />
+    </button>
   );
 
   return (

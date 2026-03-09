@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import { Edit, Trash2, Save, X } from 'lucide-react';
 import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
@@ -186,10 +186,10 @@ const SavedList = () => {
             {editingId === it.id ? (
               <>
                 <button title="Save" aria-label="Save" className="text-green-600 hover:text-green-800 p-1" onClick={() => saveEdit(it.id)}>
-                  <FaSave />
+                  <Save size={16} />
                 </button>
                 <button title="Cancel" aria-label="Cancel" className="text-gray-600 hover:text-gray-800 p-1" onClick={cancelEdit}>
-                  <FaTimes />
+                  <X size={16} />
                 </button>
               </>
             ) : (
@@ -197,10 +197,10 @@ const SavedList = () => {
                 <div className="text-sm text-gray-600">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
                 <div className="text-lg font-semibold">Price: LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
                 <button title="Edit" aria-label="Edit" className="text-blue-600 hover:text-blue-800 p-1" onClick={() => startEdit(it)}>
-                  <FaEdit />
+                  <Edit size={16} />
                 </button>
                 <button title="Delete" aria-label="Delete" className="text-red-600 hover:text-red-800 p-1" onClick={() => handleDelete(it.id)}>
-                  <FaTrash />
+                  <Trash2 size={16} />
                 </button>
               </>
             )}
