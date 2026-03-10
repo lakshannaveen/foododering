@@ -6,6 +6,7 @@ import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
 import CalculateSection from "./CalculateSection";
+import RecipesSection from "./RecipesSection";
 
 const emptyRow = () => ({ name: "", quantity: "", unit: "kg", unitCost: "" });
 
@@ -70,6 +71,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
           <Link to="?active=labor" className={tabClass("labor")} aria-current={active === 'labor'}>Labor</Link>
           <Link to="?active=overhead" className={tabClass("overhead")} aria-current={active === 'overhead'}>Overhead</Link>
           <Link to="?active=calculate" className={tabClass("calculate")} aria-current={active === 'calculate'}>Calculate</Link>
+          <Link to="?active=recipes" className={tabClass("recipes")} aria-current={active === 'recipes'}>Recipes</Link>
           <Link to="?active=saved" className={tabClass("saved")} aria-current={active === 'saved'}>Saved</Link>
         </div>
       </nav>
@@ -81,6 +83,8 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
           <LaborSection />
         ) : active === "overhead" ? (
           <OverheadSection />
+        ) : active === 'recipes' ? (
+          <RecipesSection rows={rows} updateRow={updateRow} removeRow={removeRow} addRow={addRow} ingredientsList={ingredientsList} />
         ) : active === 'saved' ? (
           <div className="bg-transparent p-0">
             <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>
