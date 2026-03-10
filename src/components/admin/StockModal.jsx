@@ -5,6 +5,34 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
 
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
+  const handleFocusClear = (key) => {
+    if (key === 'unitPrice') {
+      if (form.unitPrice === '0' || form.unitPrice === '0.00') update('unitPrice', '');
+    }
+    if (key === 'quantity') {
+      if (form.quantity === '0' || form.quantity === '0.00') update('quantity', '');
+    }
+  };
+
+  const handleBlurFormat = (key) => {
+    if (key === 'unitPrice') {
+      if (form.unitPrice === '' || form.unitPrice == null) {
+        update('unitPrice', '0.00');
+      } else {
+        const n = parseFloat(form.unitPrice);
+        update('unitPrice', isNaN(n) ? '0.00' : n.toFixed(2));
+      }
+    }
+    if (key === 'quantity') {
+      if (form.quantity === '' || form.quantity == null) {
+        update('quantity', '0');
+      } else {
+        const n = parseFloat(form.quantity);
+        update('quantity', isNaN(n) ? '0' : String(n));
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
       <div className="absolute inset-0" onClick={onClose}></div>
@@ -32,6 +60,8 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
             type="number"
             placeholder="Quantity"
             value={form.quantity}
+            onFocus={() => handleFocusClear('quantity')}
+            onBlur={() => handleBlurFormat('quantity')}
             onChange={(e) => update('quantity', e.target.value)}
             className="col-span-2 p-2 border rounded w-full min-w-0"
             min="0"
@@ -54,6 +84,8 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
             type="number"
             placeholder="0.00"
             value={form.unitPrice}
+            onFocus={() => handleFocusClear('unitPrice')}
+            onBlur={() => handleBlurFormat('unitPrice')}
             onChange={(e) => update('unitPrice', e.target.value)}
             className="col-span-2 p-2 border rounded w-full min-w-0"
             min="0"
