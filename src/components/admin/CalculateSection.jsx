@@ -368,8 +368,22 @@ const CalculateSection = () => {
                 }}
               />
 
-              <input type="number" min="0" max="59" placeholder="Minutes" className={inputCls} value={item.minutes}
-                onChange={e => updateLabor(item.id,"minutes",e.target.value)} />
+              <input
+                type="number"
+                min="0"
+                max="59"
+                placeholder="Minutes"
+                className={inputCls}
+                value={item.minutes}
+                onFocus={() => {
+                  if (item.minutes === "0" || item.minutes === "0.00") updateLabor(item.id, "minutes", "");
+                }}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === "0" || v === "0.00") updateLabor(item.id, "minutes", "");
+                  else updateLabor(item.id, "minutes", v);
+                }}
+              />
 
               <input
                 type="number"
