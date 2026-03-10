@@ -437,10 +437,8 @@ const CalculateSection = () => {
         <div className="space-y-2">
           {overhead.map((item) => (
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
-              <select className={selectCls} value={item.name} onChange={e => updateOverhead(item.id,"name",e.target.value)}>
-                <option value="">-- Select --</option>
-                {OVERHEAD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
+              <SearchableSelect className={selectCls} options={OVERHEAD_OPTIONS} value={item.name}
+                onChange={(v) => updateOverhead(item.id, "name", v)} placeholder="-- Select --" />
               <input
                 type="number"
                 placeholder="0"
