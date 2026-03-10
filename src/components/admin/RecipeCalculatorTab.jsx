@@ -46,7 +46,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
   }, [initialRows]);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const active = searchParams.get("active") || "stock";
+  const active = searchParams.get("active") || "recipes";
 
   const tabOrder = ["stock", "labor", "overhead", "calculate", "saved"];
   const tabClass = (name) =>
@@ -67,24 +67,24 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
 
       <nav aria-label="Recipe calculator tabs" className="mb-4">
         <div className="flex gap-2">
+          <Link to="?active=recipes" className={tabClass("recipes")} aria-current={active === 'recipes'}>Recipes</Link>
           <Link to="?active=stock" className={tabClass("stock")} aria-current={active === 'stock'}>Stock</Link>
           <Link to="?active=labor" className={tabClass("labor")} aria-current={active === 'labor'}>Labor</Link>
           <Link to="?active=overhead" className={tabClass("overhead")} aria-current={active === 'overhead'}>Overhead</Link>
           <Link to="?active=calculate" className={tabClass("calculate")} aria-current={active === 'calculate'}>Calculate</Link>
-          <Link to="?active=recipes" className={tabClass("recipes")} aria-current={active === 'recipes'}>Recipes</Link>
           <Link to="?active=saved" className={tabClass("saved")} aria-current={active === 'saved'}>Saved</Link>
         </div>
       </nav>
 
       <div className="space-y-3">
-        {active === "stock" ? (
+        {active === 'recipes' ? (
+          <RecipesSection rows={rows} updateRow={updateRow} removeRow={removeRow} addRow={addRow} ingredientsList={ingredientsList} />
+        ) : active === "stock" ? (
           <StockSection />
         ) : active === "labor" ? (
           <LaborSection />
         ) : active === "overhead" ? (
           <OverheadSection />
-        ) : active === 'recipes' ? (
-          <RecipesSection rows={rows} updateRow={updateRow} removeRow={removeRow} addRow={addRow} ingredientsList={ingredientsList} />
         ) : active === 'saved' ? (
           <div className="bg-transparent p-0">
             <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>

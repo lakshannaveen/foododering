@@ -4,11 +4,11 @@ import RecipeModal from "./RecipeModal";
 
 const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList }) => {
   const [recipes, setRecipes] = useState([]);
-  const [form, setForm] = useState({ id: null, name: "", description: "", ingredients: rows || [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
+  const [form, setForm] = useState({ id: null, name: "", ingredients: rows || [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
   const [showForm, setShowForm] = useState(false);
 
   const openNew = () => {
-    setForm({ id: null, name: "", description: "", ingredients: [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
+    setForm({ id: null, name: "", ingredients: [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
     setShowForm(true);
   };
 
@@ -67,16 +67,14 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
         ) : (
           <>
             <div className="grid grid-cols-12 gap-2 items-center p-2 text-sm font-semibold text-gray-600">
-              <div className="col-span-4">Recipe</div>
-              <div className="col-span-7">Description</div>
+              <div className="col-span-11">Recipe</div>
               <div className="col-span-1 text-right">Actions</div>
             </div>
             {recipes.map(r => (
               <div key={r.id} className="grid grid-cols-12 gap-2 items-center p-2 border rounded bg-white">
-                <div className="col-span-4">
+                <div className="col-span-11">
                   <div className="font-medium">{r.name}</div>
                 </div>
-                <div className="col-span-7 text-sm text-gray-600">{r.description}</div>
                 <div className="col-span-1 text-right flex justify-end items-center gap-2">
                   <button onClick={() => editRecipe(r)} className="text-gray-600 hover:text-gray-800" aria-label="Edit recipe"><Edit size={16} /></button>
                   <button onClick={() => deleteRecipe(r.id)} className="text-red-600 hover:text-red-800" aria-label="Delete recipe"><Trash2 size={16} /></button>

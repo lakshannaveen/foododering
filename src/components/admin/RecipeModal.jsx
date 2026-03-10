@@ -12,8 +12,7 @@ const RecipeModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
         <h3 className="text-lg font-semibold mb-4">{form.id ? 'Edit Recipe' : 'Add Recipe'}</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
-          <div className="col-span-6 font-semibold text-sm text-gray-600">Recipe Name</div>
-          <div className="col-span-6 font-semibold text-sm text-gray-600">Description</div>
+          <div className="col-span-12 font-semibold text-sm text-gray-600">Recipe Name</div>
         </div>
 
         <div className="mt-3 grid grid-cols-12 gap-3 items-center">
@@ -22,15 +21,7 @@ const RecipeModal = ({ isOpen, onClose, form, setForm, onSave, onCancel }) => {
             placeholder="Recipe name"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            className="col-span-6 p-2 border rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="Short description"
-            value={form.description}
-            onChange={(e) => update('description', e.target.value)}
-            className="col-span-6 p-2 border rounded"
+            className="col-span-12 p-2 border rounded"
           />
         </div>
 
