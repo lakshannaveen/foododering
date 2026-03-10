@@ -104,9 +104,23 @@ const StockSection = ({ initialItems = [] }) => {
     setShowForm(true);
   };
 
-  const removeItem = (id) => {
-    setItems(prev => prev.filter(it => it.id !== id));
-    toast.success('Stock item removed');
+  const removeItem = async (id) => {
+    // Confirm before deactivating
+    const ok = window.confirm('Are you sure.');
+    if (!ok) return;
+    setSaving(true);
+    try {
+      // call backend to mark as inactive (status 'I')
+      const res = await recipeService.updateIngredientStatus(id, 'I');
+      // success -> remove from local list so it no longer shows
+      setItems(prev => prev.filter(it => it.id !== id));
+      toast.success('Stock item deleted successfully');
+    } catch (e) {
+      console.error('Failed to update ingredient status', e);
+      toast.error('Failed to update stock status');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
