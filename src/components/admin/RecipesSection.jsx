@@ -75,7 +75,12 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
 
       <div className="space-y-2">
         {loading ? (
-          <div className="text-sm text-gray-500">Loading recipes…</div>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
+              <span className="text-gray-600">Loading recipes...</span>
+            </div>
+          </div>
         ) : error ? (
           <div className="text-sm text-red-600">Failed to load recipes: {error}</div>
         ) : recipes.length === 0 ? (
