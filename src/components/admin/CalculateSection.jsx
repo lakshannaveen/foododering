@@ -438,8 +438,20 @@ const CalculateSection = () => {
                 <option value="">-- Select --</option>
                 {OVERHEAD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
-              <input type="number" placeholder="0" className={inputCls} value={item.hours}
-                onChange={e => updateOverhead(item.id,"hours",e.target.value)} />
+              <input
+                type="number"
+                placeholder="0"
+                className={inputCls}
+                value={item.hours}
+                onFocus={() => {
+                  if (item.hours === "0" || item.hours === "0.00") updateOverhead(item.id, "hours", "");
+                }}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === "0" || v === "0.00") updateOverhead(item.id, "hours", "");
+                  else updateOverhead(item.id, "hours", v);
+                }}
+              />
               <input type="number" placeholder="0.00" className={inputCls} value={item.rate}
                 onChange={e => updateOverhead(item.id,"rate",e.target.value)} />
               {overhead.length > 1
