@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { toast } from 'react-toastify';
 import { X } from "lucide-react";
 import recipeService from "../../services/recipeService";
 import laborService from "../../services/laborService";
@@ -148,7 +149,7 @@ const CalculateSection = () => {
   const removeOverhead = (id) => setOverhead(p => p.filter(i => i.id!==id));
 
   const handleCalculate = () => {
-    if (!selectedRecipe) return alert("Please select a recipe.");
+    if (!selectedRecipe) return toast.error("Please select a recipe.");
     const stockTotal    = stock.reduce((s,i) => s + ((parseFloat(i.quantity)||0) * (parseFloat(i.unitCost)||0)), 0);
     const laborTotal    = labor.reduce((s,l) => {
       const h = parseFloat(l.hours) || 0;
@@ -159,7 +160,7 @@ const CalculateSection = () => {
     const overheadTotal = overhead.reduce((s,o) => s + ((parseFloat(o.hours)||0) * (parseFloat(o.rate)||0)), 0);
     const totalCost     = stockTotal + laborTotal + overheadTotal;
     const margin = parseFloat(profitMargin);
-    if (isNaN(margin) || margin <= 0) return alert('Please enter a profit margin greater than 0%.');
+    if (isNaN(margin) || margin <= 0) return toast.error('Please enter a profit margin greater than 0%.');
     // For typical profit margins (<100) we compute selling price from margin-on-price formula.
     // For very large margins (>=100) fall back to a markup-on-cost calculation to avoid invalid/negative values.
     const suggestedPrice = margin < 100
@@ -169,7 +170,7 @@ const CalculateSection = () => {
   };
 
   const handleSave = () => {
-    if (!result) return alert("Nothing to save. Please select a recipe or enter inputs.");
+    if (!result) return toast.error("Nothing to save. Please select a recipe or enter inputs.");
     const recipeName = recipesList.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
     const payload = {
       id: generateId(),
@@ -181,10 +182,10 @@ const CalculateSection = () => {
       const existing = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
       existing.unshift(payload);
       localStorage.setItem('savedCalculations', JSON.stringify(existing));
-      alert('Calculation saved. Open "Saved Calculations" tab to view.');
+      toast.success('Calculation saved. Open "Saved Calculations" tab to view.');
     } catch (e) {
       console.error(e);
-      alert('Failed to save calculation.');
+      toast.error('Failed to save calculation.');
     }
   };
 

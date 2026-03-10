@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Edit, Trash2 } from "lucide-react";
+import { toast } from 'react-toastify';
 import laborService from "../../services/laborService";
 
 const LaborSection = ({ initialLabor = [] }) => {
@@ -62,7 +63,7 @@ const LaborSection = ({ initialLabor = [] }) => {
 
   const handleSave = async () => {
     if (!formData.roleName || !formData.price) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
 
@@ -84,7 +85,7 @@ const LaborSection = ({ initialLabor = [] }) => {
           price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
           paymentType: l.CostType || l.PaymentType || "weekly",
         })));
-        alert('Labor updated successfully');
+        toast.success('Labor updated successfully');
       } else {
         // Add new labor via API
         await laborService.addLabor({
@@ -100,13 +101,13 @@ const LaborSection = ({ initialLabor = [] }) => {
           price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
           paymentType: l.CostType || l.PaymentType || "weekly",
         })));
-        alert('Labor added successfully');
+        toast.success('Labor added successfully');
       }
       setShowForm(false);
       setEditingId(null);
     } catch (e) {
       console.error('Failed to save labor', e);
-      alert('Failed to save labor. See console for details.');
+      toast.error('Failed to save labor. See console for details.');
     }
   };
 
@@ -118,6 +119,7 @@ const LaborSection = ({ initialLabor = [] }) => {
   const handleDelete = (id) => {
     // No delete API provided; remove locally for now
     setLaborList((prev) => prev.filter((item) => item.id !== id));
+    toast.success('Labor entry removed');
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Edit } from "lucide-react";
+import { toast } from 'react-toastify';
 import StockModal from "./StockModal";
 import recipeService from "../../services/recipeService";
 
@@ -51,7 +52,10 @@ const StockSection = ({ initialItems = [] }) => {
   const updateForm = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
   const addItem = async () => {
-    if (!form.name) return alert('Please provide an item name');
+    if (!form.name) {
+      toast.error('Please provide an item name');
+      return;
+    }
     try {
       // prepare payload expected by backend
       const payload = {
@@ -75,10 +79,10 @@ const StockSection = ({ initialItems = [] }) => {
 
       setForm(emptyItem());
       setShowForm(false);
-      alert('Stock item saved successfully');
+      toast.success('Stock item saved successfully');
     } catch (e) {
       console.error('Failed to save stock item', e);
-      alert('Failed to save stock item. See console for details.');
+      toast.error('Failed to save stock item. See console for details.');
     }
   };
 
@@ -96,7 +100,10 @@ const StockSection = ({ initialItems = [] }) => {
     setShowForm(true);
   };
 
-  const removeItem = (id) => setItems(prev => prev.filter(it => it.id !== id));
+  const removeItem = (id) => {
+    setItems(prev => prev.filter(it => it.id !== id));
+    toast.success('Stock item removed');
+  };
 
   return (
     <div>

@@ -14,6 +14,7 @@ import {
   FaFileArchive,
   FaTimes
 } from "react-icons/fa";
+import { toast } from 'react-toastify';
 import { QRCodeCanvas } from "qrcode.react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -87,9 +88,13 @@ function TableTab() {
   };
 
   const handleAdd = () => {
-    if (!newTable.trim()) return alert("Table name is required!");
+    if (!newTable.trim()) {
+      toast.error("Table name is required!");
+      return;
+    }
     dispatch(createTable({ TableName: newTable }));
     setNewTable("");
+    toast.success('Table added');
   };
 
   // Generate QR canvas and return as blob
@@ -136,7 +141,7 @@ function TableTab() {
     );
 
     if (selectedTableList.length === 0) {
-      alert("Please generate QR codes first for the selected tables.");
+      toast.error("Please generate QR codes first for the selected tables.");
       return;
     }
 
@@ -164,7 +169,7 @@ function TableTab() {
       saveAs(zipBlob, `table-qr-codes-${timestamp}.zip`);
     } catch (error) {
       console.error("Error creating ZIP file:", error);
-      alert("There was an error creating the ZIP file. Please try again.");
+      toast.error("There was an error creating the ZIP file. Please try again.");
     } finally {
       setBulkDownloading(false);
     }

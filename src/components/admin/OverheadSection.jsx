@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
+import { toast } from 'react-toastify';
 
 const OverheadSection = ({ initialOverhead = [] }) => {
   const [overheadList, setOverheadList] = useState(Array.isArray(initialOverhead) ? initialOverhead.map(i => ({ ...i })) : []);
@@ -32,7 +33,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
 
   const handleSave = () => {
     if (!formData.name || !formData.cost) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
 
@@ -52,6 +53,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
 
     setShowForm(false);
     setEditingId(null);
+    toast.success(editingId ? 'Overhead updated' : 'Overhead added');
   };
 
   const handleCancel = () => {
@@ -61,6 +63,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
 
   const handleDelete = (id) => {
     setOverheadList((prev) => prev.filter((item) => item.id !== id));
+    toast.success('Overhead entry removed');
   };
 
   const grandTotal = overheadList.reduce((sum, item) => {

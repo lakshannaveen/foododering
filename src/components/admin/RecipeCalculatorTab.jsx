@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Edit, Trash2, Save, X } from 'lucide-react';
+import { toast } from 'react-toastify';
 import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
@@ -130,6 +131,7 @@ const SavedList = () => {
     const next = items.filter(i => i.id !== id);
     setItems(next);
     persist(next);
+    toast.success('Saved calculation deleted');
   };
 
   const startEdit = (it) => {
@@ -159,7 +161,7 @@ const SavedList = () => {
     setItems(next);
     persist(next);
     cancelEdit();
-    alert('Saved changes');
+    toast.success('Saved changes');
   };
 
   if (!items.length) return <p className="text-sm text-gray-500">No saved calculations.</p>;
