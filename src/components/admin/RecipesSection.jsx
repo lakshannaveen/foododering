@@ -6,6 +6,7 @@ import recipeService from "../../services/recipeService";
 const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList }) => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ id: null, name: "", ingredients: rows || [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
   const [showForm, setShowForm] = useState(false);
@@ -31,7 +32,21 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
     setShowForm(true);
   };
 
-  const deleteRecipe = (id) => setRecipes(prev => prev.filter(r => r.id !== id));
+  const deleteRecipe = async (id) => {
+    const ok = window.confirm('Are you sure?');
+    if (!ok) return;
+    setSaving(true);
+    try {
+      await recipeService.updateRecipeStatus(id, 'I');
+      setRecipes(prev => prev.filter(r => r.id !== id));
+    } catch (e) {
+      console.error('Failed to update recipe status', e);
+      // keep the item and optionally show an alert — minimal UI here
+      window.alert('Failed to update recipe status');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;

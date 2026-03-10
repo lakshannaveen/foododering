@@ -120,10 +120,20 @@ const LaborSection = ({ initialLabor = [] }) => {
     setEditingId(null);
   };
 
-  const handleDelete = (id) => {
-    // No delete API provided; remove locally for now
-    setLaborList((prev) => prev.filter((item) => item.id !== id));
-    toast.success('Labor entry removed');
+  const handleDelete = async (id) => {
+    const ok = window.confirm('Mark this labor entry as inactive? This will hide it from the list.');
+    if (!ok) return;
+    setSaving(true);
+    try {
+      await laborService.updateLaborStatus(id, 'I');
+      setLaborList((prev) => prev.filter((item) => item.id !== id));
+      toast.success('Labor entry marked inactive');
+    } catch (e) {
+      console.error('Failed to update labor status', e);
+      toast.error('Failed to update labor status');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

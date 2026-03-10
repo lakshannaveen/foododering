@@ -59,8 +59,19 @@ const updateLabor = async ({ laborId, laborName, role, costType, rate }) => {
   }
 };
 
+const updateLaborStatus = async (LaborId, Status) => {
+  try {
+    const res = await api.post(`/Labor/UpdateLaborStatus?LaborId=${encodeURIComponent(LaborId)}&Status=${encodeURIComponent(Status)}`);
+    return res.data;
+  } catch (err) {
+    console.error('Failed to update labor status:', err);
+    throw err;
+  }
+};
+
 export default {
   getAllLabor,
   addLabor,
   updateLabor,
+  updateLaborStatus,
 };
