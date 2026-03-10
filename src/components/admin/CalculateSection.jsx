@@ -223,10 +223,13 @@ const CalculateSection = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-gray-500 mb-1">Select Recipe <span className="text-red-500">*</span></label>
-            <select className={selectCls} value={selectedRecipe} onChange={e => setSelectedRecipe(e.target.value)}>
-              <option value="">-- Select Recipe --</option>
-              {recipesList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
+            <SearchableSelect
+              className={selectCls}
+              options={recipesList}
+              value={selectedRecipe}
+              onChange={(val) => setSelectedRecipe(val)}
+              placeholder="-- Select Recipe --"
+            />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Profit Margin (%) <span className="text-red-500">*</span></label>

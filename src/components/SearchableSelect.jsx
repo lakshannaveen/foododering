@@ -15,14 +15,36 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
 
   useEffect(() => setQuery(""), [value]);
 
-  const filtered = options.filter((o) => (o || "").toLowerCase().includes(query.toLowerCase()));
+  // normalize options to objects: { value, label }
+  const norm = options.map((o) => {
+    if (typeof o === 'string') return { value: o, label: o };
+    if (o && typeof o === 'object') {
+      // common shapes: { id, name } or { value, label }
+      if ('value' in o && 'label' in o) return { value: o.value, label: o.label };
+      if ('id' in o && ('name' in o || 'RecipeName' in o)) return { value: o.id ?? o.Id ?? o.RecipeId, label: o.name ?? o.Name ?? o.RecipeName };
+      if ('id' in o && 'name' in o) return { value: o.id, label: o.name };
+      if ('RecipeId' in o || 'RecipeName' in o) return { value: o.RecipeId ?? o.Id, label: o.RecipeName ?? o.Name };
+      // fallback: try to use first string field
+      const label = o.label || o.name || o.Name || o.RecipeName || JSON.stringify(o);
+      const val = o.value || o.id || o.RecipeId || o.Id || label;
+      return { value: val, label };
+    }
+    return { value: '', label: '' };
+  });
+
+  const filtered = norm.filter((o) => (o.label || "").toLowerCase().includes(query.toLowerCase()));
+
+  const selectedLabel = (() => {
+    const found = norm.find(n => String(n.value) === String(value));
+    return found ? found.label : "";
+  })();
 
   return (
     <div className="relative w-full" ref={ref}>
       <input
         type="text"
         className={className + " w-full"}
-        value={open ? query : (value || "")}
+        value={open ? query : (selectedLabel || "")}
         placeholder={placeholder}
         onFocus={() => setOpen(true)}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -37,8 +59,8 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
         <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-gray-200 rounded shadow-sm">
           {filtered.length ? (
             filtered.map((o) => (
-              <li key={o} className="px-3 py-2 hover:bg-gray-100 cursor-pointer" onMouseDown={(e) => { e.preventDefault(); onChange(o); setOpen(false); }}>
-                {o}
+              <li key={String(o.value)} className="px-3 py-2 hover:bg-gray-100 cursor-pointer" onMouseDown={(e) => { e.preventDefault(); onChange(o.value); setOpen(false); }}>
+                {o.label}
               </li>
             ))
           ) : (
