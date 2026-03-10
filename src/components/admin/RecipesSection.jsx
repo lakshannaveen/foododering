@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import RecipeModal from "./RecipeModal";
+import recipeService from "../../services/recipeService";
 
 const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList }) => {
   const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [form, setForm] = useState({ id: null, name: "", ingredients: rows || [{ name: "", quantity: "", unit: "kg", unitCost: "" }] });
   const [showForm, setShowForm] = useState(false);
 
@@ -29,6 +32,15 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
   };
 
   const deleteRecipe = (id) => setRecipes(prev => prev.filter(r => r.id !== id));
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      await loadRecipesFromApi((list) => { if (mounted) setRecipes(list); }, setLoading, setError);
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div>
@@ -62,7 +74,11 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
       />
 
       <div className="space-y-2">
-        {recipes.length === 0 ? (
+        {loading ? (
+          <div className="text-sm text-gray-500">Loading recipes…</div>
+        ) : error ? (
+          <div className="text-sm text-red-600">Failed to load recipes: {error}</div>
+        ) : recipes.length === 0 ? (
           <div className="text-sm text-gray-500">No recipes yet. Add a recipe above.</div>
         ) : (
           <>
@@ -86,6 +102,22 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
       </div>
     </div>
   );
+};
+
+// load recipes from API on mount
+export const loadRecipesFromApi = async (setRecipes, setLoading, setError) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await recipeService.getAllRecipes();
+    const list = Array.isArray(res?.ResultSet) ? res.ResultSet : [];
+    const mapped = list.map(r => ({ id: r.RecipeId || r.Id || r.id, name: r.RecipeName || r.Name || r.recipeName || r.name }));
+    setRecipes(mapped);
+  } catch (e) {
+    setError(e?.message || 'Unknown error');
+  } finally {
+    setLoading(false);
+  }
 };
 
 export default RecipesSection;
