@@ -9,6 +9,7 @@ const emptyItem = () => ({ id: null, name: "", quantity: "", unit: "kg", unitPri
 const StockSection = ({ initialItems = [] }) => {
   const [items, setItems] = useState(initialItems.map(i => ({ ...i })));
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // On mount: use provided initialItems if present, otherwise fetch ingredients.
   // Run only once to avoid repeated fetches when parent re-creates arrays (prevents spinner blinking).
@@ -56,6 +57,7 @@ const StockSection = ({ initialItems = [] }) => {
       toast.error('Please provide an item name');
       return;
     }
+    setSaving(true);
     try {
       // prepare payload expected by backend
       const payload = {
@@ -83,6 +85,8 @@ const StockSection = ({ initialItems = [] }) => {
     } catch (e) {
       console.error('Failed to save stock item', e);
       toast.error('Failed to save stock item. See console for details.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -110,7 +114,8 @@ const StockSection = ({ initialItems = [] }) => {
       <div className="mb-4">
         <button
           onClick={() => setShowForm(true)}
-          className="px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-0 flex items-center gap-2"
+          disabled={saving}
+          className={"px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-0 flex items-center gap-2 " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
         >
           <svg
             className="w-5 h-5"
@@ -128,6 +133,7 @@ const StockSection = ({ initialItems = [] }) => {
           form={form}
           setForm={setForm}
           onSave={addItem}
+          saving={saving}
           onCancel={cancelAdd}
         />
       </div>

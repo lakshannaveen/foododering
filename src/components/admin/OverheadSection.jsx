@@ -3,13 +3,13 @@ import { Edit, Trash2 } from "lucide-react";
 import { toast } from 'react-toastify';
 
 const OverheadSection = ({ initialOverhead = [] }) => {
-  const [overheadList, setOverheadList] = useState(Array.isArray(initialOverhead) ? initialOverhead.map(i => ({ ...i })) : []);
+  const [overheadList, setOverheadList] = useState(
+    Array.isArray(initialOverhead) ? initialOverhead.map((i) => ({ ...i })) : []
+  );
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    cost: "",
-  });
+  const [formData, setFormData] = useState({ name: "", cost: "" });
+  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,10 +23,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
   };
 
   const handleEdit = (overhead) => {
-    setFormData({
-      name: overhead.name,
-      cost: overhead.cost,
-    });
+    setFormData({ name: overhead.name, cost: overhead.cost });
     setEditingId(overhead.id);
     setShowForm(true);
   };
@@ -37,23 +34,28 @@ const OverheadSection = ({ initialOverhead = [] }) => {
       return;
     }
 
-    const overheadToSave = {
-      id: editingId || Date.now(),
-      name: formData.name.trim(),
-      cost: formData.cost,
-    };
+    setSaving(true);
+    try {
+      const overheadToSave = {
+        id: editingId || Date.now(),
+        name: formData.name.trim(),
+        cost: formData.cost,
+      };
 
-    if (editingId) {
-      setOverheadList((prev) =>
-        prev.map((item) => (item.id === editingId ? overheadToSave : item))
-      );
-    } else {
-      setOverheadList((prev) => [...prev, overheadToSave]);
+      if (editingId) {
+        setOverheadList((prev) =>
+          prev.map((item) => (item.id === editingId ? overheadToSave : item))
+        );
+      } else {
+        setOverheadList((prev) => [...prev, overheadToSave]);
+      }
+
+      setShowForm(false);
+      setEditingId(null);
+      toast.success(editingId ? "Overhead updated" : "Overhead added");
+    } finally {
+      setSaving(false);
     }
-
-    setShowForm(false);
-    setEditingId(null);
-    toast.success(editingId ? 'Overhead updated' : 'Overhead added');
   };
 
   const handleCancel = () => {
@@ -63,7 +65,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
 
   const handleDelete = (id) => {
     setOverheadList((prev) => prev.filter((item) => item.id !== id));
-    toast.success('Overhead entry removed');
+    toast.success("Overhead entry removed");
   };
 
   const grandTotal = overheadList.reduce((sum, item) => {
@@ -74,7 +76,11 @@ const OverheadSection = ({ initialOverhead = [] }) => {
     <div className="p-6 border rounded-xl bg-gray-50/70 text-gray-800 shadow-sm">
       <button
         onClick={handleAdd}
-        className="px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-6 flex items-center gap-2"
+        disabled={saving}
+        className={
+          "px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-6 flex items-center gap-2 " +
+          (saving ? "opacity-60 cursor-not-allowed" : "")
+        }
       >
         <svg
           className="w-5 h-5"
@@ -82,12 +88,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
         Add Overhead Cost
       </button>
@@ -182,9 +183,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
             <div className="p-6">
               <div className="flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[250px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Name
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
                   <input
                     type="text"
                     name="name"
@@ -196,9 +195,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
                 </div>
 
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Cost (LKR)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Cost (LKR)</label>
                   <input
                     type="number"
                     name="cost"
@@ -214,17 +211,15 @@ const OverheadSection = ({ initialOverhead = [] }) => {
 
             {/* Footer */}
             <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-4">
-              <button
-                onClick={handleCancel}
-                className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium transition"
-              >
+              <button onClick={handleCancel} disabled={saving} className={"px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium transition " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>
                 Cancel
               </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm"
-              >
-                {editingId ? "Update Entry" : "Save"}
+              <button onClick={handleSave} disabled={saving} className={"px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>
+                {saving ? (
+                  <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Saving...</span>
+                ) : (
+                  (editingId ? "Update Entry" : "Save")
+                )}
               </button>
             </div>
           </div>

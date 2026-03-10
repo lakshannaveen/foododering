@@ -14,6 +14,7 @@ const LaborSection = ({ initialLabor = [] }) => {
     price: "",
     paymentType: "weekly",
   });
+  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -67,6 +68,7 @@ const LaborSection = ({ initialLabor = [] }) => {
       return;
     }
 
+    setSaving(true);
     try {
       if (editingId) {
         // Update existing labor via API
@@ -108,6 +110,8 @@ const LaborSection = ({ initialLabor = [] }) => {
     } catch (e) {
       console.error('Failed to save labor', e);
       toast.error('Failed to save labor. See console for details.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -126,7 +130,8 @@ const LaborSection = ({ initialLabor = [] }) => {
     <div className="p-6 border rounded-xl bg-gray-50/70 text-gray-800 shadow-sm">
       <button
         onClick={handleAdd}
-        className="px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-6 flex items-center gap-2"
+        disabled={saving}
+        className={"px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-6 flex items-center gap-2 " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
       >
         <svg
           className="w-5 h-5"
@@ -299,9 +304,14 @@ const LaborSection = ({ initialLabor = [] }) => {
               </button>
               <button
                 onClick={handleSave}
-                className="px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm"
+                disabled={saving}
+                className={"px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
               >
-                {editingId ? "Update Entry" : "Save Labor"}
+                {saving ? (
+                  <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Saving...</span>
+                ) : (
+                  (editingId ? "Update Entry" : "Save Labor")
+                )}
               </button>
             </div>
           </div>
