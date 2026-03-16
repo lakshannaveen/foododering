@@ -10,6 +10,7 @@ const LaborSection = ({ initialLabor = [] }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
+    laborName: "",
     roleName: "",
     price: "",
     paymentType: "weekly",
@@ -22,7 +23,7 @@ const LaborSection = ({ initialLabor = [] }) => {
   };
 
   const handleAdd = () => {
-    setFormData({ roleName: "", price: "", paymentType: "weekly" });
+    setFormData({ laborName: "", roleName: "", price: "", paymentType: "weekly" });
     setEditingId(null);
     setShowForm(true);
   };
@@ -37,6 +38,7 @@ const LaborSection = ({ initialLabor = [] }) => {
         // map backend fields to local shape
         const mapped = list.map((l) => ({
           id: l.LaborId || l.Id || l.id || Date.now(),
+          laborName: l.LaborName || l.Name || l.laborName || "",
           roleName: l.Role || l.LaborName || l.RoleName || "",
           price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
           paymentType: l.CostType || l.PaymentType || "weekly",
@@ -54,6 +56,7 @@ const LaborSection = ({ initialLabor = [] }) => {
 
   const handleEdit = (labor) => {
     setFormData({
+      laborName: labor.laborName || "",
       roleName: labor.roleName,
       price: labor.price,
       paymentType: labor.paymentType || "weekly",
@@ -74,7 +77,7 @@ const LaborSection = ({ initialLabor = [] }) => {
         // Update existing labor via API
         await laborService.updateLabor({
           laborId: editingId,
-          laborName: formData.roleName.trim(),
+          laborName: formData.laborName.trim() || formData.roleName.trim(),
           role: formData.roleName.trim(),
           costType: formData.paymentType,
           rate: formData.price,
@@ -83,6 +86,7 @@ const LaborSection = ({ initialLabor = [] }) => {
         const refreshed = await laborService.getAllLabor();
         setLaborList(refreshed.map((l) => ({
           id: l.LaborId || l.Id || l.id || Date.now(),
+          laborName: l.LaborName || l.Name || l.laborName || "",
           roleName: l.Role || l.LaborName || l.RoleName || "",
           price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
           paymentType: l.CostType || l.PaymentType || "weekly",
@@ -94,11 +98,12 @@ const LaborSection = ({ initialLabor = [] }) => {
           role: formData.roleName.trim(),
           costType: formData.paymentType,
           rate: formData.price,
-          laborName: formData.roleName.trim(),
+          laborName: formData.laborName.trim() || formData.roleName.trim(),
         });
         const refreshed = await laborService.getAllLabor();
         setLaborList(refreshed.map((l) => ({
           id: l.LaborId || l.Id || l.id || Date.now(),
+          laborName: l.LaborName || l.Name || l.laborName || "",
           roleName: l.Role || l.LaborName || l.RoleName || "",
           price: l.Rate != null ? String(l.Rate) : (l.Price != null ? String(l.Price) : "0"),
           paymentType: l.CostType || l.PaymentType || "weekly",
@@ -200,9 +205,10 @@ const LaborSection = ({ initialLabor = [] }) => {
             <div className="overflow-x-auto">
               {/* Table Header - Subtle Gradient with Blur */}
               <div className="grid grid-cols-12 gap-2 items-center px-4 py-3 text-sm font-medium text-gray-700 uppercase tracking-wider bg-gradient-to-r from-blue-50/80 to-blue-100/80 backdrop-blur-sm rounded-t-xl border-b border-blue-200/50">
-                <div className="col-span-4">Role</div>
-                <div className="col-span-3">Rate (LKR/hr)</div>
-                <div className="col-span-3">Payment Type</div>
+                <div className="col-span-3">Name</div>
+                <div className="col-span-3">Role</div>
+                <div className="col-span-2">Rate (LKR/hr)</div>
+                <div className="col-span-2">Payment Type</div>
                 <div className="col-span-2 text-right">Actions</div>
               </div>
 
@@ -213,18 +219,23 @@ const LaborSection = ({ initialLabor = [] }) => {
                     key={labor.id}
                     className="grid grid-cols-12 gap-2 items-center px-4 py-3 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors"
                   >
+                    {/* Labor Name */}
+                    <div className="col-span-3 text-gray-800 font-medium text-sm truncate">
+                      {labor.laborName || "-"}
+                    </div>
+
                     {/* Role */}
-                    <div className="col-span-4 text-gray-800 font-medium text-sm truncate">
+                    <div className="col-span-3 text-gray-700 text-sm truncate">
                       {labor.roleName}
                     </div>
 
                     {/* Rate */}
-                    <div className="col-span-3 text-gray-700 text-sm font-mono">
+                    <div className="col-span-2 text-gray-700 text-sm font-mono">
                       {formatCurrency(labor.price)}
                     </div>
 
                     {/* Payment Type */}
-                    <div className="col-span-3 text-gray-700 text-sm capitalize">
+                    <div className="col-span-2 text-gray-700 text-sm capitalize">
                       {labor.paymentType}
                     </div>
 
@@ -289,7 +300,21 @@ const LaborSection = ({ initialLabor = [] }) => {
             {/* Form Content - Horizontal Layout */}
             <div className="p-6">
               <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[200px]">
+                <div className="flex-1 min-w-[180px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Labor Name
+                  </label>
+                  <input
+                    type="text"
+                    name="laborName"
+                    value={formData.laborName}
+                    onChange={handleInputChange}
+                    placeholder="e.g. John Doe"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+                  />
+                </div>
+
+                <div className="flex-1 min-w-[180px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Role / Position
                   </label>
