@@ -17,7 +17,7 @@ const OVERHEAD_RATES = { Electricity: 30, Gas: 50, Water: 10, Packaging: 20, "Cl
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const newStockRow = () => ({ id: generateId(), name: "", quantity: "", unit: "kg", unitCost: "0.00" });
 const newLaborRow = () => ({ id: generateId(), role: "", hours: "", minutes: "", hourlyRate: "0.00" });
-const newOverheadRow = () => ({ id: generateId(), name: "", hours: "", rate: "0.00" });
+const newOverheadRow = () => ({ id: generateId(), name: "", minutes: "", rate: "0.00" });
 
 const inputCls = "border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow";
 const selectCls = "border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow";
@@ -156,7 +156,7 @@ const CalculateSection = () => {
         overheadRes.ResultSet.forEach((item) => {
           const overheadName = item.OverheadName || "";
           if (overheadName && availableOverhead.includes(overheadName.toLowerCase())) {
-            validRows.push({ id: generateId(), name: overheadName, hours: item.MinutesRequired ? (parseInt(item.MinutesRequired) / 60).toFixed(2).toString() : "0", rate: item.CostPerHour?.toString() || overheadRatesState[overheadName]?.toFixed(2).toString() || OVERHEAD_RATES[overheadName]?.toFixed(2).toString() || "0.00" });
+            validRows.push({ id: generateId(), name: overheadName, minutes: item.MinutesRequired ? item.MinutesRequired.toString() : "0", rate: item.CostPerHour?.toString() || overheadRatesState[overheadName]?.toFixed(2).toString() || OVERHEAD_RATES[overheadName]?.toFixed(2).toString() || "0.00" });
           } else if (overheadName) { missingNames.push(overheadName); }
         });
         if (missingNames.length > 0) { setMissingOverhead(true); setMissingOverheadNames(missingNames); setOverhead([newOverheadRow()]); }
@@ -208,6 +208,9 @@ const CalculateSection = () => {
     }
     return next;
   }));
+
+  // Calculate overhead hours from minutes for total calculation
+  const getOverheadHours = (minutes) => (parseFloat(minutes) || 0) / 60;
   const removeOverhead = (id) => setOverhead(p => p.filter(i => i.id !== id));
 
   const handleCalculate = () => {
@@ -215,7 +218,7 @@ const CalculateSection = () => {
     if (missingIngredients || missingLabor || missingOverhead) return toast.error("Please add missing ingredients, labor, or overhead to the recipe.");
     const stockTotal = stock.reduce((s, i) => s + ((parseFloat(i.quantity) || 0) * (parseFloat(i.unitCost) || 0)), 0);
     const laborTotal = labor.reduce((s, l) => { const h = parseFloat(l.hours) || 0; const m = parseFloat(l.minutes) || 0; return s + ((h + m / 60) * (parseFloat(l.hourlyRate) || 0)); }, 0);
-    const overheadTotal = overhead.reduce((s, o) => s + ((parseFloat(o.hours) || 0) * (parseFloat(o.rate) || 0)), 0);
+    const overheadTotal = overhead.reduce((s, o) => s + (getOverheadHours(o.minutes) * (parseFloat(o.rate) || 0)), 0);
     const totalCost = stockTotal + laborTotal + overheadTotal;
     const margin = parseFloat(profitMargin);
     if (isNaN(margin) || margin <= 0) return toast.error('Please enter a profit margin greater than 0%.');
@@ -239,7 +242,7 @@ const CalculateSection = () => {
     if (!selectedRecipe) { setResult(null); return; }
     const stockTotal = stock.reduce((s, i) => s + ((parseFloat(i.quantity) || 0) * (parseFloat(i.unitCost) || 0)), 0);
     const laborTotal = labor.reduce((s, l) => { const h = parseFloat(l.hours) || 0; const m = parseFloat(l.minutes) || 0; return s + ((h + m / 60) * (parseFloat(l.hourlyRate) || 0)); }, 0);
-    const overheadTotal = overhead.reduce((s, o) => s + ((parseFloat(o.hours) || 0) * (parseFloat(o.rate) || 0)), 0);
+    const overheadTotal = overhead.reduce((s, o) => s + (getOverheadHours(o.minutes) * (parseFloat(o.rate) || 0)), 0);
     const totalCost = stockTotal + laborTotal + overheadTotal;
     const margin = parseFloat(profitMargin);
     let suggestedPrice = 0;
@@ -272,9 +275,9 @@ const CalculateSection = () => {
     };
   });
 
-  const overheadLineItems = overhead.filter(o => o.name && parseFloat(o.hours) > 0 && parseFloat(o.rate) > 0).map(o => {
-    const hrs = parseFloat(o.hours);
-    const mins = Math.round(hrs * 60);
+  const overheadLineItems = overhead.filter(o => o.name && parseFloat(o.minutes) > 0 && parseFloat(o.rate) > 0).map(o => {
+    const mins = parseFloat(o.minutes);
+    const hrs = mins / 60;
     return {
       label: o.name,
       detail: `${mins} min × LKR ${parseFloat(o.rate).toFixed(2)}/hr`,
@@ -398,15 +401,16 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
-            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span></span>
+          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
+            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span>Total (LKR)</span><span></span>
           </div>
           <div className="space-y-3">
             {overhead.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
                 <SearchableSelect className={selectCls} options={overheadOptionsState.length ? overheadOptionsState : OVERHEAD_OPTIONS} value={item.name} onChange={(v) => updateOverhead(item.id, "name", v)} placeholder="-- Select --" dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto" />
-                <input type="number" placeholder="0" className={inputCls} value={item.hours} onFocus={() => { if (item.hours === "0" || item.hours === "0.00") updateOverhead(item.id, "hours", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateOverhead(item.id, "hours", ""); else updateOverhead(item.id, "hours", v); }} />
+                <input type="number" placeholder="0" className={inputCls} value={item.minutes} onFocus={() => { if (item.minutes === "0" || item.minutes === "0.00") updateOverhead(item.id, "minutes", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateOverhead(item.id, "minutes", ""); else updateOverhead(item.id, "minutes", v); }} />
                 <input type="number" placeholder="0.00" className={inputCls} value={item.rate} onChange={e => updateOverhead(item.id, "rate", e.target.value)} />
+                <div className="p-2 border rounded-lg bg-gray-100 text-sm text-gray-800 font-medium flex items-center justify-center">{(getOverheadHours(item.minutes) * (parseFloat(item.rate) || 0)).toFixed(2)}</div>
                 {overhead.length > 1 ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : <span />}
               </div>
             ))}
