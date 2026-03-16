@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash2, Receipt } from "lucide-react";
+import { Edit, Trash2, Coins, Receipt } from "lucide-react";
 import { toast } from 'react-toastify';
 import overheadService from "../../services/overheadService";
 
@@ -136,7 +136,7 @@ const OverheadSection = ({ initialOverhead = [] }) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-[#18749b]" />
+            <Coins className="w-6 h-6 text-[#18749b]" />
             Overhead Costs
           </h1>
           <p className="text-sm text-gray-500 mt-1">
