@@ -15,9 +15,9 @@ const OVERHEAD_OPTIONS = ["Electricity", "Gas", "Water", "Packaging", "Cleaning 
 const OVERHEAD_RATES = { Electricity: 30, Gas: 50, Water: 10, Packaging: 20, "Cleaning Supplies": 15, Rent: 5000 };
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
-const newStockRow = () => ({ id: generateId(), name: "", quantity: "", unit: "kg", unitCost: "0.00" });
-const newLaborRow = () => ({ id: generateId(), role: "", hours: "", minutes: "", hourlyRate: "0.00" });
-const newOverheadRow = () => ({ id: generateId(), name: "", minutes: "", rate: "0.00" });
+const newStockRow = () => ({ id: generateId(), name: "", quantity: "", unit: "kg", unitCost: "0.00", saved: false });
+const newLaborRow = () => ({ id: generateId(), role: "", hours: "", minutes: "", hourlyRate: "0.00", saved: false });
+const newOverheadRow = () => ({ id: generateId(), name: "", minutes: "", rate: "0.00", saved: false });
 
 const inputCls = "border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow";
 const selectCls = "border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow";
@@ -45,6 +45,9 @@ const CalculateSection = () => {
   const [missingOverhead, setMissingOverhead] = useState(false);
   const [missingOverheadNames, setMissingOverheadNames] = useState([]);
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(false);
+  const [savingIngredient, setSavingIngredient] = useState(null);
+  const [savingLabor, setSavingLabor] = useState(null);
+  const [savingOverhead, setSavingOverhead] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -128,7 +131,7 @@ const CalculateSection = () => {
         ingRes.ResultSet.forEach((item) => {
           const ingredientName = item.IngredientName || "";
           if (ingredientName && availableIngredients.includes(ingredientName.toLowerCase())) {
-            validRows.push({ id: generateId(), name: ingredientName, quantity: item.QuantityRequired?.toString() || "0", unit: item.Unit || "kg", unitCost: stockPricePerKgState[ingredientName] ? (stockPricePerKgState[ingredientName] / (item.Unit === "g" || item.Unit === "ml" ? 1000 : 1)).toFixed(2).toString() : "0.00" });
+            validRows.push({ id: generateId(), name: ingredientName, quantity: item.QuantityRequired?.toString() || "0", unit: item.Unit || "kg", unitCost: stockPricePerKgState[ingredientName] ? (stockPricePerKgState[ingredientName] / (item.Unit === "g" || item.Unit === "ml" ? 1000 : 1)).toFixed(2).toString() : "0.00", saved: true });
           } else if (ingredientName) { missingNames.push(ingredientName); }
         });
         if (missingNames.length > 0) { setMissingIngredients(true); setMissingIngredientNames(missingNames); setStock([newStockRow()]); }
@@ -142,7 +145,7 @@ const CalculateSection = () => {
         laborRes.ResultSet.forEach((item) => {
           const laborName = item.LaborName || "";
           if (laborName && availableLabor.includes(laborName.toLowerCase())) {
-            validRows.push({ id: generateId(), role: laborName, hours: item.MinutesRequired ? Math.floor(parseInt(item.MinutesRequired) / 60).toString() : "0", minutes: item.MinutesRequired ? (parseInt(item.MinutesRequired) % 60).toString() : "0", hourlyRate: item.Rate?.toString() || laborRatesState[laborName]?.toString() || "0.00" });
+            validRows.push({ id: generateId(), role: laborName, hours: item.MinutesRequired ? Math.floor(parseInt(item.MinutesRequired) / 60).toString() : "0", minutes: item.MinutesRequired ? (parseInt(item.MinutesRequired) % 60).toString() : "0", hourlyRate: item.Rate?.toString() || laborRatesState[laborName]?.toString() || "0.00", saved: true });
           } else if (laborName) { missingNames.push(laborName); }
         });
         if (missingNames.length > 0) { setMissingLabor(true); setMissingLaborNames(missingNames); setLabor([newLaborRow()]); }
@@ -156,7 +159,7 @@ const CalculateSection = () => {
         overheadRes.ResultSet.forEach((item) => {
           const overheadName = item.OverheadName || "";
           if (overheadName && availableOverhead.includes(overheadName.toLowerCase())) {
-            validRows.push({ id: generateId(), name: overheadName, minutes: item.MinutesRequired ? item.MinutesRequired.toString() : "0", rate: item.CostPerHour?.toString() || overheadRatesState[overheadName]?.toFixed(2).toString() || OVERHEAD_RATES[overheadName]?.toFixed(2).toString() || "0.00" });
+            validRows.push({ id: generateId(), name: overheadName, minutes: item.MinutesRequired ? item.MinutesRequired.toString() : "0", rate: item.CostPerHour?.toString() || overheadRatesState[overheadName]?.toFixed(2).toString() || OVERHEAD_RATES[overheadName]?.toFixed(2).toString() || "0.00", saved: true });
           } else if (overheadName) { missingNames.push(overheadName); }
         });
         if (missingNames.length > 0) { setMissingOverhead(true); setMissingOverheadNames(missingNames); setOverhead([newOverheadRow()]); }
@@ -212,6 +215,118 @@ const CalculateSection = () => {
   // Calculate overhead hours from minutes for total calculation
   const getOverheadHours = (minutes) => (parseFloat(minutes) || 0) / 60;
   const removeOverhead = (id) => setOverhead(p => p.filter(i => i.id !== id));
+
+  // Save handlers for adding new items to recipe
+  const handleSaveIngredient = async (item) => {
+    if (!selectedRecipe) return toast.error('Please select a recipe first');
+    if (!item.name) return toast.error('Please select an ingredient');
+    if (!item.quantity || parseFloat(item.quantity) <= 0) return toast.error('Please enter a valid quantity');
+
+    setSavingIngredient(item.id);
+    try {
+      // Find the ingredient ID from the stock options
+      const ingredient = stockOptionsState.find(i => i.toLowerCase() === item.name.toLowerCase());
+      if (!ingredient) {
+        // Try to get from the original response - we need to look up by name
+        return toast.error('Ingredient not found in stock list');
+      }
+      
+      // Get ingredient ID from the price list
+      const ingredientId = Object.entries(stockPricePerKgState).find(([key]) => key.toLowerCase() === item.name.toLowerCase())?.[1];
+      if (!ingredientId) {
+        // We don't have the ID, we need to search through ingredients
+        const response = await recipeService.getAllIngredients();
+        const ing = response?.ResultSet?.find(i => (i.IngredientName || i.Name || i.name)?.toLowerCase() === item.name.toLowerCase());
+        if (!ing) return toast.error('Ingredient not found');
+        
+        const res = await recipeService.addIngredientToRecipe(ing.IngredientId || ing.Id || ing.id, selectedRecipe, item.quantity);
+        if (res?.StatusCode === 200 || res?.status === 200) {
+          toast.success('Ingredient added to recipe');
+          setStock(p => p.map(i => i.id === item.id ? { ...i, saved: true } : i));
+        } else {
+          toast.error(res?.Result || 'Failed to add ingredient');
+        }
+      } else {
+        // Use the price key which contains the ID - actually we need to find the ingredient differently
+        // Let me use a different approach - search in the original ingredients list
+        const response = await recipeService.getAllIngredients();
+        const ing = response?.ResultSet?.find(i => (i.IngredientName || i.Name || i.name)?.toLowerCase() === item.name.toLowerCase());
+        if (!ing) return toast.error('Ingredient not found in database');
+        
+        const res = await recipeService.addIngredientToRecipe(ing.IngredientId || ing.Id || ing.id, selectedRecipe, item.quantity);
+        if (res?.StatusCode === 200 || res?.status === 200) {
+          toast.success('Ingredient added to recipe');
+          setStock(p => p.map(i => i.id === item.id ? { ...i, saved: true } : i));
+        } else {
+          toast.error(res?.Result || 'Failed to add ingredient');
+        }
+      }
+    } catch (err) {
+      console.error('Error saving ingredient:', err);
+      toast.error('Failed to save ingredient');
+    } finally {
+      setSavingIngredient(null);
+    }
+  };
+
+  const handleSaveLabor = async (item) => {
+    if (!selectedRecipe) return toast.error('Please select a recipe first');
+    if (!item.role) return toast.error('Please select a labor role');
+    const totalMinutes = (parseFloat(item.hours) || 0) * 60 + (parseFloat(item.minutes) || 0);
+    if (totalMinutes <= 0) return toast.error('Please enter valid hours or minutes');
+    if (!item.hourlyRate || parseFloat(item.hourlyRate) <= 0) return toast.error('Please enter a valid hourly rate');
+
+    setSavingLabor(item.id);
+    try {
+      const response = await laborService.getAllLabor();
+      const laborData = response?.ResultSet || response || [];
+      const laborItem = laborData.find(l => (l.LaborName || l.Role || l.Name || l.name)?.toLowerCase() === item.role.toLowerCase());
+      if (!laborItem) return toast.error('Labor role not found');
+
+      const laborId = laborItem.LaborId || laborItem.Id || laborItem.id;
+      const res = await recipeService.addLaborToRecipe(laborId, selectedRecipe, totalMinutes.toString(), item.hourlyRate);
+      if (res?.StatusCode === 200 || res?.status === 200) {
+        toast.success('Labor added to recipe');
+        setLabor(p => p.map(l => l.id === item.id ? { ...l, saved: true } : l));
+      } else {
+        toast.error(res?.Result || 'Failed to add labor');
+      }
+    } catch (err) {
+      console.error('Error saving labor:', err);
+      toast.error('Failed to save labor');
+    } finally {
+      setSavingLabor(null);
+    }
+  };
+
+  const handleSaveOverhead = async (item) => {
+    if (!selectedRecipe) return toast.error('Please select a recipe first');
+    if (!item.name) return toast.error('Please select an overhead item');
+    if (!item.minutes || parseFloat(item.minutes) <= 0) return toast.error('Please enter valid minutes');
+    if (!item.rate || parseFloat(item.rate) <= 0) return toast.error('Please enter a valid rate');
+
+    setSavingOverhead(item.id);
+    try {
+      const response = await overheadService.getAllOverhead();
+      const overheadData = Array.isArray(response) ? response : (response?.ResultSet || []);
+      const overheadItem = overheadData.find(o => (o.OverheadName || o.Name || o.Overhead || o.name)?.toLowerCase() === item.name.toLowerCase());
+      if (!overheadItem) return toast.error('Overhead item not found');
+
+      const overheadId = overheadItem.OverheadId || overheadItem.Id || overheadItem.id;
+      const res = await recipeService.addOverheadToRecipe(overheadId, selectedRecipe, item.minutes, item.rate);
+      if (res?.StatusCode === 200 || res?.status === 200) {
+        toast.success('Overhead added to recipe');
+        setOverhead(p => p.map(o => o.id === item.id ? { ...o, saved: true } : o));
+      } else {
+        toast.error(res?.Result || 'Failed to add overhead');
+      }
+    } catch (err) {
+      console.error('Error saving overhead:', err);
+      toast.error('Failed to save overhead');
+    } finally {
+      setSavingOverhead(null);
+    }
+  };
 
   const handleCalculate = () => {
     if (!selectedRecipe) return toast.error("Please select a recipe.");
@@ -322,29 +437,47 @@ const CalculateSection = () => {
         <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between flex-wrap gap-4 rounded-t-xl">
           <div className="flex items-center gap-2"><Package size={18} className="text-blue-600" /><h2 className="text-sm font-semibold text-gray-700">Stock / Ingredients</h2></div>
           <div className="flex items-center gap-3">
-            <button onClick={addStock} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"><Plus size={16} />Add Row</button>
+            <button onClick={addStock} className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-md"><Plus size={16} />Add Row</button>
             <Link to="?active=stock" className="inline-flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"><Package size={16} />Manage Stock</Link>
           </div>
         </div>
         {missingIngredients && (
           <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
             <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{missingIngredientNames.length > 0 ? `The following ingredients are not available in your stock: ${missingIngredientNames.join(', ')}. Please add them using "Manage Stock" before using this recipe.` : 'This recipe has no ingredients linked. You can add them manually below.'}</p>
+            <p className="text-sm text-red-700">{missingIngredientNames.length > 0 ? `Ingredients are not found in stock: ${missingIngredientNames.join(', ')}. Click "Manage Stock" to add new stocks.` : 'This recipe has no ingredients linked. You can add them manually below.'}</p>
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
-            <span>Ingredient</span><span>Quantity</span><span>Unit</span><span>Unit Cost (LKR)</span><span>Total (LKR)</span><span></span>
+          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 36px 20px" }}>
+            <span>Ingredient</span><span>Quantity</span><span>Unit</span><span>Unit Cost (LKR)</span><span>Total (LKR)</span><span></span><span></span>
           </div>
           <div className="space-y-3">
             {stock.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 20px" }}>
-                <SearchableSelect className={selectCls} options={stockOptionsState} value={item.name} onChange={(v) => updateStock(item.id, "name", v)} placeholder="-- Select --" dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto" />
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 36px 20px" }}>
+                <SearchableSelect 
+                  className={selectCls} 
+                  options={stockOptionsState} 
+                  value={item.name} 
+                  onChange={(v) => updateStock(item.id, "name", v)} 
+                  placeholder="-- Select --" 
+                  dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+                  disabled={item.saved}
+                />
                 <input type="number" placeholder="0" min="0.01" step="any" className={inputCls} value={item.quantity} onFocus={() => { if (item.quantity === "0" || item.quantity === "0.00") updateStock(item.id, "quantity", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateStock(item.id, "quantity", ""); else updateStock(item.id, "quantity", v); }} />
-                <select className={selectCls} value={item.unit} onChange={e => updateStock(item.id, "unit", e.target.value)}>{UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}</select>
+                <select className={selectCls} value={item.unit} onChange={e => updateStock(item.id, "unit", e.target.value)} disabled={item.saved}>{UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}</select>
                 <input type="number" placeholder="0.00" className={inputCls + " bg-gray-100 cursor-not-allowed"} value={item.unitCost} readOnly />
                 <div className="p-2 border rounded-lg bg-gray-100 text-sm text-gray-800 font-medium flex items-center justify-center">{((parseFloat(item.quantity) || 0) * (parseFloat(item.unitCost) || 0)).toFixed(2)}</div>
-                {stock.length > 1 ? <RemoveBtn onClick={() => removeStock(item.id)} /> : <span />}
+                {!item.saved ? (
+                  <button 
+                    onClick={() => handleSaveIngredient(item)} 
+                    disabled={savingIngredient === item.id}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    title="Save to recipe"
+                  >
+                    {savingIngredient === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
+                  </button>
+                ) : ""}
+                {(stock.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeStock(item.id)} /> : ""}
               </div>
             ))}
           </div>
@@ -356,8 +489,8 @@ const CalculateSection = () => {
         <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between flex-wrap gap-4 rounded-t-xl">
           <div className="flex items-center gap-2"><Users size={18} className="text-blue-600" /><h2 className="text-sm font-semibold text-gray-700">Labor</h2></div>
           <div className="flex items-center gap-3">
-            <button onClick={addLabor} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"><Plus size={16} />Add Row</button>
-            <Link to="?active=labor" className="inline-flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"><Users size={16} />Manage Labor</Link>
+            <button onClick={addLabor} className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-md"><Plus size={16} />Add Row</button>
+            <Link to="?active=labor" className="inline-flex items-center gap-1.5 border border-gray-300 from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"><Users size={16} />Manage Labor</Link>
           </div>
         </div>
         {missingLabor && (
@@ -367,18 +500,36 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
-            <span>Role</span><span>Hours</span><span>Minutes</span><span>Hourly Rate (LKR)</span><span>Total (LKR)</span><span></span>
+          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 36px 20px" }}>
+            <span>Role</span><span>Hours</span><span>Minutes</span><span>Hourly Rate (LKR)</span><span>Total (LKR)</span><span></span><span></span>
           </div>
           <div className="space-y-3">
             {labor.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 20px" }}>
-                <SearchableSelect className={selectCls} options={Object.keys(laborRatesState)} value={item.role} onChange={(v) => updateLabor(item.id, "role", v)} placeholder="-- Select --" dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto" />
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 36px 20px" }}>
+                <SearchableSelect 
+                  className={selectCls} 
+                  options={Object.keys(laborRatesState)} 
+                  value={item.role} 
+                  onChange={(v) => updateLabor(item.id, "role", v)} 
+                  placeholder="-- Select --" 
+                  dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+                  disabled={item.saved}
+                />
                 <input type="number" placeholder="0" min="0.01" step="any" className={inputCls} value={item.hours} onFocus={() => { if (item.hours === "0" || item.hours === "0.00") updateLabor(item.id, "hours", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateLabor(item.id, "hours", ""); else updateLabor(item.id, "hours", v); }} />
                 <input type="number" min="0" max="59" placeholder="Minutes" className={inputCls} value={item.minutes} onFocus={() => { if (item.minutes === "0" || item.minutes === "0.00") updateLabor(item.id, "minutes", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateLabor(item.id, "minutes", ""); else updateLabor(item.id, "minutes", v); }} />
                 <input type="number" placeholder="0.00" className={inputCls + " bg-gray-100 cursor-not-allowed"} value={item.hourlyRate} readOnly />
                 <div className="p-2 border rounded-lg bg-gray-100 text-sm text-gray-800 font-medium flex items-center justify-center">{(((parseFloat(item.hours) || 0) + (parseFloat(item.minutes) || 0) / 60) * (parseFloat(item.hourlyRate) || 0)).toFixed(2)}</div>
-                {labor.length > 1 ? <RemoveBtn onClick={() => removeLabor(item.id)} /> : <span />}
+                {!item.saved ? (
+                  <button 
+                    onClick={() => handleSaveLabor(item)} 
+                    disabled={savingLabor === item.id}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    title="Save to recipe"
+                  >
+                    {savingLabor === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
+                  </button>
+                ) : ""}
+                {(labor.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeLabor(item.id)} /> : ""}
               </div>
             ))}
           </div>
@@ -390,7 +541,7 @@ const CalculateSection = () => {
         <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between flex-wrap gap-4 rounded-t-xl">
           <div className="flex items-center gap-2"><Zap size={18} className="text-blue-600" /><h2 className="text-sm font-semibold text-gray-700">Overhead</h2></div>
           <div className="flex items-center gap-3">
-            <button onClick={addOverhead} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"><Plus size={16} />Add Row</button>
+            <button onClick={addOverhead} className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-md"><Plus size={16} />Add Row</button>
             <Link to="?active=overhead" className="inline-flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"><Zap size={16} />Manage Overhead</Link>
           </div>
         </div>
@@ -401,17 +552,35 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
-            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span>Total (LKR)</span><span></span>
+          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 36px 20px" }}>
+            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span>Total (LKR)</span><span></span><span></span>
           </div>
           <div className="space-y-3">
             {overhead.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 20px" }}>
-                <SearchableSelect className={selectCls} options={overheadOptionsState.length ? overheadOptionsState : OVERHEAD_OPTIONS} value={item.name} onChange={(v) => updateOverhead(item.id, "name", v)} placeholder="-- Select --" dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto" />
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 36px 20px" }}>
+                <SearchableSelect 
+                  className={selectCls} 
+                  options={overheadOptionsState.length ? overheadOptionsState : OVERHEAD_OPTIONS} 
+                  value={item.name} 
+                  onChange={(v) => updateOverhead(item.id, "name", v)} 
+                  placeholder="-- Select --" 
+                  dropdownClassName="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+                  disabled={item.saved}
+                />
                 <input type="number" placeholder="0" className={inputCls} value={item.minutes} onFocus={() => { if (item.minutes === "0" || item.minutes === "0.00") updateOverhead(item.id, "minutes", ""); }} onChange={e => { const v = e.target.value; if (v === "0" || v === "0.00") updateOverhead(item.id, "minutes", ""); else updateOverhead(item.id, "minutes", v); }} />
                 <input type="number" placeholder="0.00" className={inputCls} value={item.rate} onChange={e => updateOverhead(item.id, "rate", e.target.value)} />
                 <div className="p-2 border rounded-lg bg-gray-100 text-sm text-gray-800 font-medium flex items-center justify-center">{(getOverheadHours(item.minutes) * (parseFloat(item.rate) || 0)).toFixed(2)}</div>
-                {overhead.length > 1 ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : <span />}
+                {!item.saved ? (
+                  <button 
+                    onClick={() => handleSaveOverhead(item)} 
+                    disabled={savingOverhead === item.id}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    title="Save to recipe"
+                  >
+                    {savingOverhead === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
+                  </button>
+                ) : ""}
+                {(overhead.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : ""}
               </div>
             ))}
           </div>
@@ -422,7 +591,7 @@ const CalculateSection = () => {
       {result && (
         <div className="bg-white rounded-xl shadow-lg border border-blue-100">
           {/* Header */}
-          <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center gap-2 rounded-t-xl">
+          <div className="px-6 py-4 bg-gradient-to-r from-[#18749b] to-[#2c5a97] flex items-center gap-2 rounded-t-xl">
             <Calculator size={20} className="text-white" />
             <h2 className="text-sm font-semibold text-white">Cost Summary</h2>
           </div>
@@ -433,7 +602,7 @@ const CalculateSection = () => {
 
               {/* Stock Breakdown */}
               <div className="rounded-lg border border-blue-100 overflow-hidden">
-                <div className="px-4 py-3 bg-blue-50 flex items-center justify-between">
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
                   <span className="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
                     <Package size={13} /> Stock / Ingredients
                   </span>
@@ -449,7 +618,7 @@ const CalculateSection = () => {
                       <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">LKR {item.total}</span>
                     </div>
                   )) : (
-                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-amber-600">
+                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-red-600">
                       <Info size={13} /> No stock items with cost entered
                     </div>
                   )}
@@ -458,11 +627,11 @@ const CalculateSection = () => {
 
               {/* Labor Breakdown */}
               <div className="rounded-lg border border-green-100 overflow-hidden">
-                <div className="px-4 py-3 bg-green-50 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-green-700 flex items-center gap-1.5">
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
                     <Users size={13} /> Labor
                   </span>
-                  <span className="text-xs font-bold text-green-800">LKR {result.laborTotal.toFixed(2)}</span>
+                  <span className="text-xs font-bold text-blue-800">LKR {result.laborTotal.toFixed(2)}</span>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {laborLineItems.length > 0 ? laborLineItems.map((item, idx) => (
@@ -483,11 +652,11 @@ const CalculateSection = () => {
 
               {/* Overhead Breakdown */}
               <div className="rounded-lg border border-purple-100 overflow-hidden">
-                <div className="px-4 py-3 bg-purple-50 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-purple-700 flex items-center gap-1.5">
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
                     <Zap size={13} /> Overhead
                   </span>
-                  <span className="text-xs font-bold text-purple-800">LKR {result.overheadTotal.toFixed(2)}</span>
+                  <span className="text-xs font-bold text-blue-800">LKR {result.overheadTotal.toFixed(2)}</span>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {overheadLineItems.length > 0 ? overheadLineItems.map((item, idx) => (
@@ -518,7 +687,7 @@ const CalculateSection = () => {
             </div>
 
             {/* Suggested Selling Price */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+            <div className="bg-gradient-to-r from-[#18749b] to-[#2c5a97] rounded-lg px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
               <div className="flex items-center gap-2 text-blue-100">
                 <TrendingUp size={18} />
                 <span className="text-sm font-medium">
@@ -534,7 +703,7 @@ const CalculateSection = () => {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button onClick={handleSave} className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-colors text-sm">
+        <button onClick={handleSave} className="inline-flex items-center gap-2 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-all text-sm">
           <Save size={18} />
           Save Calculation
         </button>

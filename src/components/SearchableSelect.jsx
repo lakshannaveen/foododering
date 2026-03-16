@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-- Select --", className = "" }) => {
+const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-- Select --", className = "", disabled = false }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef(null);
@@ -64,19 +64,23 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
     <div className="relative w-full" ref={ref}>
       <input
         type="text"
-        className={className + " w-full"}
+        className={className + " w-full" + (disabled ? " bg-gray-100 cursor-not-allowed" : "")}
         value={open ? query : (selectedLabel || "")}
         placeholder={placeholder}
-        onFocus={() => setOpen(true)}
-        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-        onClick={() => setOpen(true)}
+        onFocus={() => !disabled && setOpen(true)}
+        onChange={(e) => { if (!disabled) { setQuery(e.target.value); setOpen(true); } }}
+        onClick={() => !disabled && setOpen(true)}
+        disabled={disabled}
+        readOnly={disabled}
       />
-      <button type="button" onClick={() => setOpen((s) => !s)}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-auto">
-        ▾
-      </button>
+      {!disabled && (
+        <button type="button" onClick={() => setOpen((s) => !s)}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-auto">
+          ▾
+        </button>
+      )}
 
-      {open && (
+      {open && !disabled && (
         <ul
           className="absolute z-50 mt-1 w-full overflow-auto bg-white border border-gray-200 rounded shadow-sm"
           style={{

@@ -105,6 +105,33 @@ export const getOverheadByRecipe = async (RecipeId) => {
   }
 };
 
+export const addIngredientToRecipe = async (IngredientId, RecipeId, QuantityRequired) => {
+  try {
+    const response = await api.post(`/RecipeIngredient/AddIngredientToRecipe?IngredientId=${encodeURIComponent(IngredientId)}&RecipeId=${encodeURIComponent(RecipeId)}&QuantityRequired=${encodeURIComponent(QuantityRequired)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+export const addLaborToRecipe = async (LaborId, RecipeId, MinutesRequired, Rate) => {
+  try {
+    const response = await api.post(`/RecipeLabor/AddLaborToRecipe?LaborId=${encodeURIComponent(LaborId)}&RecipeId=${encodeURIComponent(RecipeId)}&MinutesRequired=${encodeURIComponent(MinutesRequired)}&Rate=${encodeURIComponent(Rate)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+export const addOverheadToRecipe = async (OverheadId, RecipeId, MinutesRequired, CostPerHour) => {
+  try {
+    const response = await api.post(`/RecipeOverhead/AddOverheadToRecipe?OverheadId=${encodeURIComponent(OverheadId)}&RecipeId=${encodeURIComponent(RecipeId)}&MinutesRequired=${encodeURIComponent(MinutesRequired)}&CostPerHour=${encodeURIComponent(CostPerHour)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
 export default {
   addIngredient,
   getIngredientById,
@@ -117,4 +144,7 @@ export default {
   getIngredientsByRecipe,
   getLaborByRecipe,
   getOverheadByRecipe,
+  addIngredientToRecipe,
+  addLaborToRecipe,
+  addOverheadToRecipe,
 };
