@@ -4,6 +4,8 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef(null);
+  const [dropUp, setDropUp] = useState(false);
+  const [menuMaxHeight, setMenuMaxHeight] = useState(192);
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -14,6 +16,25 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
   }, []);
 
   useEffect(() => setQuery(""), [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const buffer = 16; // keep a little breathing room from viewport edge
+
+    // If there's not enough space below, open upwards
+    if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+      setDropUp(true);
+      setMenuMaxHeight(Math.max(120, Math.floor(spaceAbove - buffer)));
+    } else {
+      setDropUp(false);
+      setMenuMaxHeight(Math.max(120, Math.floor(spaceBelow - buffer)));
+    }
+  }, [open]);
 
   // normalize options to objects: { value, label }
   const norm = options.map((o) => {
@@ -56,7 +77,14 @@ const SearchableSelect = ({ options = [], value = "", onChange, placeholder = "-
       </button>
 
       {open && (
-        <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-gray-200 rounded shadow-sm">
+        <ul
+          className="absolute z-50 mt-1 w-full overflow-auto bg-white border border-gray-200 rounded shadow-sm"
+          style={{
+            maxHeight: `${menuMaxHeight}px`,
+            top: dropUp ? 'auto' : 'calc(100% + 0.25rem)',
+            bottom: dropUp ? 'calc(100% + 0.25rem)' : 'auto',
+          }}
+        >
           {filtered.length ? (
             filtered.map((o) => (
               <li key={String(o.value)} className="px-3 py-2 hover:bg-gray-100 cursor-pointer" onMouseDown={(e) => { e.preventDefault(); onChange(o.value); setOpen(false); }}>
