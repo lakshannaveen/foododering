@@ -4,25 +4,18 @@ import { toast } from 'react-toastify';
 import { X } from "lucide-react";
 import recipeService from "../../services/recipeService";
 import laborService from "../../services/laborService";
+import overheadService from "../../services/overheadService";
 import SearchableSelect from "../SearchableSelect";
 
 // Recipe, stock and labor data are fetched from APIs; no hard-coded lists here.
 
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "piece", "tbsp", "tsp", "cup"];
 
-const OVERHEAD_OPTIONS = [
-  "Electricity", "Gas", "Water", "Packaging", "Cleaning Supplies", "Rent",
-];
+// Fallback static overheads (will be replaced by API data when available)
+const OVERHEAD_OPTIONS = ["Electricity", "Gas", "Water", "Packaging", "Cleaning Supplies", "Rent"];
 
-// Default overhead rates (LKR per hour or fixed where appropriate)
-const OVERHEAD_RATES = {
-  Electricity: 30,
-  Gas: 50,
-  Water: 10,
-  Packaging: 20,
-  "Cleaning Supplies": 15,
-  Rent: 5000,
-};
+// Fallback rates (used only if API not available)
+const OVERHEAD_RATES = { Electricity: 30, Gas: 50, Water: 10, Packaging: 20, "Cleaning Supplies": 15, Rent: 5000 };
 // Labor default rates are fetched from API and merged into `laborRatesState`.
 
 const generateId    = () => Math.random().toString(36).substr(2, 9);
@@ -43,6 +36,8 @@ const CalculateSection = () => {
   const [stockOptionsState, setStockOptionsState] = useState([]);
   const [stockPricePerKgState, setStockPricePerKgState] = useState({});
   const [laborRatesState, setLaborRatesState] = useState({});
+  const [overheadOptionsState, setOverheadOptionsState] = useState([]);
+  const [overheadRatesState, setOverheadRatesState] = useState({});
 
   const [stock,    setStock]    = useState([newStockRow()]);
   const [labor,    setLabor]    = useState([newLaborRow()]);
@@ -59,10 +54,11 @@ const CalculateSection = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const [recipesRes, ingRes, laborResRaw] = await Promise.all([
+        const [recipesRes, ingRes, laborResRaw, overheadAllRes] = await Promise.all([
           recipeService.getAllRecipes(),
           recipeService.getAllIngredients(),
           laborService.getAllLabor(),
+          overheadService.getAllOverhead(),
         ]);
 
         // normalize labor response: laborService may return an array, recipeService style returns object with ResultSet
@@ -95,6 +91,28 @@ const CalculateSection = () => {
             if (key) rates[key] = rate;
           });
           if (Object.keys(rates).length) setLaborRatesState(prev => ({ ...prev, ...rates }));
+        }
+
+        // Process overheads fetched from API (list of overhead items with name and cost/rate)
+        try {
+          const list = Array.isArray(overheadAllRes) ? overheadAllRes : (overheadAllRes?.ResultSet || []);
+          if (Array.isArray(list) && list.length) {
+            const opts = [];
+            const rates = {};
+            list.forEach(o => {
+              const name = o.OverheadName || o.Name || o.Overhead || o.name;
+              const rate = parseFloat(o.CostPerHour ?? o.Cost ?? 0) || 0;
+              if (name) {
+                opts.push(name);
+                rates[name] = rate;
+              }
+            });
+            if (opts.length) setOverheadOptionsState(opts);
+            if (Object.keys(rates).length) setOverheadRatesState(prev => ({ ...prev, ...rates }));
+          }
+        } catch (e) {
+          // ignore overhead fetch errors, fallbacks remain
+          console.warn('Failed to process overheads from API', e);
         }
       } catch (e) {
         console.warn('Failed to load recipe calculator data', e);
@@ -232,7 +250,7 @@ const CalculateSection = () => {
     const next = { ...i, [f]: v };
     // if the user selected an overhead name and we have a default rate, fill it
     if (f === 'name') {
-      const def = OVERHEAD_RATES[next.name];
+      const def = overheadRatesState[next.name] ?? OVERHEAD_RATES[next.name];
       if (def && (!next.rate || parseFloat(next.rate) === 0)) next.rate = def.toFixed(2).toString();
     }
     return next;
@@ -542,7 +560,7 @@ const CalculateSection = () => {
         <div className="space-y-2">
           {overhead.map((item) => (
             <div key={item.id} className="grid gap-3 items-center" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
-              <SearchableSelect className={selectCls} options={OVERHEAD_OPTIONS} value={item.name}
+              <SearchableSelect className={selectCls} options={overheadOptionsState.length ? overheadOptionsState : OVERHEAD_OPTIONS} value={item.name}
                 onChange={(v) => updateOverhead(item.id, "name", v)} placeholder="-- Select --" />
               <input
                 type="number"
