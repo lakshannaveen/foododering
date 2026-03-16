@@ -78,6 +78,33 @@ export const updateRecipeStatus = async (RecipeId, Status) => {
   }
 };
 
+export const getIngredientsByRecipe = async (RecipeId) => {
+  try {
+    const response = await api.get(`/RecipeIngredient/GetIngredientByRecipe?RecipeId=${encodeURIComponent(RecipeId)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+export const getLaborByRecipe = async (RecipeId) => {
+  try {
+    const response = await api.get(`/RecipeLabor/GetLaborByRecipe?RecipeId=${encodeURIComponent(RecipeId)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+export const getOverheadByRecipe = async (RecipeId) => {
+  try {
+    const response = await api.get(`/RecipeOverhead/GetOverHeadByRecipe?RecipeId=${encodeURIComponent(RecipeId)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
 export default {
   addIngredient,
   getIngredientById,
@@ -87,4 +114,7 @@ export default {
   getAllRecipes,
   getRecipeById,
   updateRecipeStatus,
+  getIngredientsByRecipe,
+  getLaborByRecipe,
+  getOverheadByRecipe,
 };

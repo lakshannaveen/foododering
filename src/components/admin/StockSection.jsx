@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Package } from "lucide-react";
 import { toast } from 'react-toastify';
 import StockModal from "./StockModal";
 import recipeService from "../../services/recipeService";
@@ -42,11 +42,13 @@ const StockSection = ({ initialItems = [] }) => {
     loadIngredients();
     return () => { mounted = false; };
   }, []);
+  
   const grandTotal = items.reduce((sum, it) => {
     const q = parseFloat(it.quantity) || 0;
     const p = parseFloat(it.unitPrice) || 0;
     return sum + q * p;
   }, 0);
+  
   const [form, setForm] = useState(emptyItem());
   const [showForm, setShowForm] = useState(false);
 
@@ -124,12 +126,24 @@ const StockSection = ({ initialItems = [] }) => {
   };
 
   return (
-    <div>
-      <div className="mb-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Package className="w-6 h-6 text-[#18749b]" />
+            Stock & Ingredients
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your inventory and track costs effortlessly
+          </p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
           disabled={saving}
-          className={"px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-0 flex items-center gap-2 " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
+          className={`mt-4 sm:mt-0 px-6 py-2.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 backdrop-blur-sm backdrop-filter ${
+            saving ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
         >
           <svg
             className="w-5 h-5"
@@ -141,101 +155,117 @@ const StockSection = ({ initialItems = [] }) => {
           </svg>
           Add Stock
         </button>
-        <StockModal
-          isOpen={showForm}
-          onClose={cancelAdd}
-          form={form}
-          setForm={setForm}
-          onSave={addItem}
-          saving={saving}
-          onCancel={cancelAdd}
-        />
       </div>
 
-      <div className="space-y-2">
+      {/* Glassmorphic Table Container */}
+      <div className="bg-white/40 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-4 md:p-6">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
               <span className="text-gray-600">Loading stock...</span>
             </div>
           </div>
         ) : items.length === 0 ? (
-          <div className="text-sm text-gray-500">No stock items yet. Add items above.</div>
+          <div className="text-center py-16">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">No stock items yet.</p>
+            <p className="text-gray-400 text-sm mt-1">Click the "Add Stock" button to get started.</p>
+          </div>
         ) : (
           <>
-            <div className="grid grid-cols-12 gap-2 items-center p-2 text-sm font-semibold text-gray-600">
-              <div className="col-span-4">Item</div>
-              <div className="col-span-2">Quantity</div>
-              <div className="col-span-2">Unit</div>
-              <div className="col-span-2">Unit Price (lkr)</div>
-              <div className="col-span-1 text-right">Total</div>
-              <div className="col-span-1 text-right">Actions</div>
-            </div>
-            {items.map(item => {
-              const q = parseFloat(item.quantity) || 0;
-              const p = parseFloat(item.unitPrice) || 0;
-              const total = (q * p).toFixed(2);
-              return (
-                <div key={item.id} className="grid grid-cols-12 gap-2 items-center p-2 border rounded bg-white">
-                <input
-                  type="text"
-                  value={item.name}
-                  readOnly
-                  className="col-span-4 p-2 border rounded bg-gray-50 cursor-default"
-                />
-
-                <input
-                  type="number"
-                  value={item.quantity}
-                  readOnly
-                  className="col-span-2 p-2 border rounded bg-gray-50 cursor-default"
-                  min="0"
-                  step="0.01"
-                />
-
-                <div className="col-span-2 p-2">
-                  <input
-                    type="text"
-                    value={item.unit}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-50 cursor-default text-sm"
-                  />
-                </div>
-
-                <input
-                  type="number"
-                  value={item.unitPrice}
-                  readOnly
-                  className="col-span-2 p-2 border rounded bg-gray-50 cursor-default"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                />
-
-                <div className="col-span-1 text-right font-medium">{total}</div>
-
-                <div className="col-span-1 text-right flex justify-end items-center gap-2">
-                  <button onClick={() => editItem(item)} className="text-gray-600 hover:text-gray-800" aria-label="Edit item">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-800" aria-label="Delete item">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+            {/* Elegant Table */}
+            <div className="overflow-x-auto">
+              {/* Table Header - Subtle Gradient with Blur */}
+              <div className="grid grid-cols-12 gap-2 items-center px-4 py-3 text-sm font-medium text-gray-700 uppercase tracking-wider bg-gradient-to-r from-blue-50/80 to-blue-100/80 backdrop-blur-sm rounded-t-xl border-b border-blue-200/50">
+                <div className="col-span-3">Item</div>
+                <div className="col-span-2">Quantity</div>
+                <div className="col-span-2">Unit</div>
+                <div className="col-span-2">Unit Price (LKR)</div>
+                <div className="col-span-2 ">Total</div>
+                <div className="col-span-1 ">Actions</div>
               </div>
-              );
-            })}
-            <div className="mt-6 flex justify-end">
-              <div className="bg-white border border-gray-200 rounded-lg px-8 py-4 shadow-sm">
-                <span className="text-lg font-semibold text-gray-800">
-                  Grand Total: <span className="text-emerald-700">LKR {grandTotal.toFixed(2)}</span>
-                </span>
+
+              {/* Table Rows */}
+              <div className="divide-y divide-gray-200/50">
+                {items.map(item => {
+                  const q = parseFloat(item.quantity) || 0;
+                  const p = parseFloat(item.unitPrice) || 0;
+                  const total = (q * p).toFixed(2);
+                  return (
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-12 gap-2 items-center px-4 py-3 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors"
+                    >
+                      {/* Item Name */}
+                      <div className="col-span-3 text-gray-800 font-medium text-sm truncate">
+                        {item.name}
+                      </div>
+
+                      {/* Quantity */}
+                      <div className="col-span-2 text-gray-700 text-sm">
+                        {item.quantity}
+                      </div>
+
+                      {/* Unit */}
+                      <div className="col-span-2 text-gray-700 text-sm">
+                        {item.unit}
+                      </div>
+
+                      {/* Unit Price */}
+                      <div className="col-span-2 text-gray-700 text-sm font-mono">
+                        {parseFloat(item.unitPrice || 0).toFixed(2)}
+                      </div>
+
+                      {/* Total */}
+                      <div className="col-span-2  font-medium text-gray-800 text-sm">
+                        {total}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="col-span-1  flex justify-end items-center gap-3">
+                        <button
+                          onClick={() => editItem(item)}
+                          className="text-blue-700 hover:text-blue-900 transition-colors p-1"
+                          aria-label="Edit item"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="text-red-700 hover:text-red-900 transition-colors p-1"
+                          aria-label="Delete item"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Grand Total - Refined Card */}
+            <div className="mt-8 flex justify-end">
+              <div className="bg-white/60 backdrop-blur-sm border border-blue-200/50 rounded-xl px-8 py-5 shadow-md">
+                <div className="text-sm text-blue-600 font-semibold uppercase tracking-wider">Grand Total</div>
+                <div className="text-3xl font-bold text-gray-800 leading-tight">LKR {grandTotal.toFixed(2)}</div>
               </div>
             </div>
           </>
         )}
       </div>
+
+      {/* Stock Modal (unchanged) */}
+      <StockModal
+        isOpen={showForm}
+        onClose={cancelAdd}
+        form={form}
+        setForm={setForm}
+        onSave={addItem}
+        saving={saving}
+        onCancel={cancelAdd}
+      />
     </div>
   );
 };

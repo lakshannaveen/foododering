@@ -1,6 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Edit, Trash2, Save, X } from 'lucide-react';
+import {
+  Edit, Trash2, Save, X,
+  BookOpen, Package, Users, Factory, Calculator, Bookmark,
+  ClipboardList
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import StockSection from "./StockSection";
 import LaborSection from "./LaborSection";
@@ -38,7 +42,6 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
     return { items, totalCost, labor, overhead, grandTotal };
   }, [rows, externalLaborTotal, externalOverheadTotal]);
 
-  // allow parent to provide initial rows (e.g., when selecting a saved recipe)
   React.useEffect(() => {
     if (initialRows && Array.isArray(initialRows)) {
       setRows(initialRows.map((r) => ({ ...emptyRow(), ...r })));
@@ -48,35 +51,56 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
   const [searchParams, setSearchParams] = useSearchParams();
   const active = searchParams.get("active") || "recipes";
 
-  const tabOrder = ["stock", "labor", "overhead", "calculate", "saved"];
-  const tabClass = (name) =>
-    `flex-1 flex justify-center items-center px-4 py-2 rounded-md transition text-sm ${
-      active === name
-        ? "bg-gradient-to-r from-[#18749b] to-[#2E5A8A] text-white shadow-md font-semibold"
-        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-    }`;
+  const tabs = [
+    { key: "recipes", label: "Recipes", icon: BookOpen },
+    { key: "stock", label: "Stock", icon: Package },
+    { key: "labor", label: "Labor", icon: Users },
+    { key: "overhead", label: "Overhead", icon: Factory },
+    { key: "calculate", label: "Calculate", icon: Calculator },
+    { key: "saved", label: "Saved", icon: Bookmark },
+  ];
 
   return (
-    <div className="bg-transparent p-0">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-transparent">
+      {/* Header with icon and 8‑px spacing */}
+      <div className="flex items-start gap-3 mb-6">
+        {/* Icon with blue background, white color, and 4px padding */}
+        <div className="flex items-center justify-center bg-[#18749b] text-white p-1 rounded-lg">
+          <ClipboardList size={32} strokeWidth={1.5} />
+        </div>
         <div>
-          <h3 className="text-2xl font-semibold">Recipe Calculator</h3>
-          <p className="text-sm text-gray-500 mt-1">Manage stock, labor and overhead — calculate recipe cost and suggested price.</p>
-        </div>   
+          <h2 className="text-3xl font-bold text-gray-800">Recipe Calculator</h2>
+          <p className="text-sm text-gray-500 mt-2">
+            Manage stock, labor and overhead — calculate recipe cost and suggested price.
+          </p>
+        </div>
       </div>
 
-      <nav aria-label="Recipe calculator tabs" className="mb-4">
-        <div className="flex gap-2">
-          <Link to="?active=recipes" className={tabClass("recipes")} aria-current={active === 'recipes'}>Recipes</Link>
-          <Link to="?active=stock" className={tabClass("stock")} aria-current={active === 'stock'}>Stock</Link>
-          <Link to="?active=labor" className={tabClass("labor")} aria-current={active === 'labor'}>Labor</Link>
-          <Link to="?active=overhead" className={tabClass("overhead")} aria-current={active === 'overhead'}>Overhead</Link>
-          <Link to="?active=calculate" className={tabClass("calculate")} aria-current={active === 'calculate'}>Calculate</Link>
-          <Link to="?active=saved" className={tabClass("saved")} aria-current={active === 'saved'}>Saved</Link>
+      {/* Tab Navigation */}
+      <nav aria-label="Recipe calculator tabs" className="mb-6">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <Link
+              key={key}
+              to={`?active=${key}`}
+              className={`
+                inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+                ${active === key
+                  ? 'bg-gradient-to-r from-[#18749b] to-[#2E5A8A] text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }
+              `}
+              aria-current={active === key ? 'page' : undefined}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          ))}
         </div>
       </nav>
 
-      <div className="space-y-3">
+      {/* Content Panel */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         {active === 'recipes' ? (
           <RecipesSection rows={rows} updateRow={updateRow} removeRow={removeRow} addRow={addRow} ingredientsList={ingredientsList} />
         ) : active === "stock" ? (
@@ -86,10 +110,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
         ) : active === "overhead" ? (
           <OverheadSection />
         ) : active === 'saved' ? (
-          <div className="bg-transparent p-0">
-            <h4 className="text-lg font-semibold mb-3">Saved Calculations</h4>
-            <SavedList />
-          </div>
+          <SavedList />
         ) : (
           <CalculateSection />
         )}
@@ -98,6 +119,7 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
   );
 };
 
+// Enhanced SavedList with better spacing and card style
 const SavedList = () => {
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -173,40 +195,75 @@ const SavedList = () => {
   return (
     <div className="space-y-3">
       {items.map(it => (
-        <div key={it.id} className="p-3 border rounded bg-gray-50 flex justify-between items-center">
-          <div className="flex-1">
+        <div key={it.id} className="p-4 border rounded-lg bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
             {editingId === it.id ? (
-              <div className="grid grid-cols-3 gap-2 items-center">
-                <input className="border rounded p-2" value={editValues.recipe} onChange={e => setEditValues(ev => ({ ...ev, recipe: e.target.value }))} />
-                <input className="border rounded p-2" value={editValues.totalCost} onChange={e => setEditValues(ev => ({ ...ev, totalCost: e.target.value }))} />
-                <input className="border rounded p-2" value={editValues.suggestedPrice} onChange={e => setEditValues(ev => ({ ...ev, suggestedPrice: e.target.value }))} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  className="border rounded p-2 text-sm"
+                  value={editValues.recipe}
+                  onChange={e => setEditValues(ev => ({ ...ev, recipe: e.target.value }))}
+                  placeholder="Recipe name"
+                />
+                <input
+                  className="border rounded p-2 text-sm"
+                  value={editValues.totalCost}
+                  onChange={e => setEditValues(ev => ({ ...ev, totalCost: e.target.value }))}
+                  placeholder="Total cost"
+                />
+                <input
+                  className="border rounded p-2 text-sm"
+                  value={editValues.suggestedPrice}
+                  onChange={e => setEditValues(ev => ({ ...ev, suggestedPrice: e.target.value }))}
+                  placeholder="Suggested price"
+                />
               </div>
             ) : (
               <>
-                <div className="font-medium">{it.recipe}</div>
+                <div className="font-medium text-gray-800 truncate">{it.recipe}</div>
                 <div className="text-xs text-gray-500">Saved: {new Date(it.savedAt).toLocaleString()}</div>
               </>
             )}
           </div>
-          <div className="text-right flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {editingId === it.id ? (
               <>
-                <button title="Save" aria-label="Save" className="text-green-600 hover:text-green-800 p-1" onClick={() => saveEdit(it.id)}>
-                  <Save size={16} />
+                <button
+                  title="Save"
+                  aria-label="Save"
+                  className="text-green-600 hover:text-green-800 p-1"
+                  onClick={() => saveEdit(it.id)}
+                >
+                  <Save size={18} />
                 </button>
-                <button title="Cancel" aria-label="Cancel" className="text-gray-600 hover:text-gray-800 p-1" onClick={cancelEdit}>
-                  <X size={16} />
+                <button
+                  title="Cancel"
+                  aria-label="Cancel"
+                  className="text-gray-600 hover:text-gray-800 p-1"
+                  onClick={cancelEdit}
+                >
+                  <X size={18} />
                 </button>
               </>
             ) : (
               <>
-                <div className="text-sm text-gray-600">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
-                <div className="text-lg font-semibold">Price: LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
-                <button title="Edit" aria-label="Edit" className="text-blue-600 hover:text-blue-800 p-1" onClick={() => startEdit(it)}>
-                  <Edit size={16} />
+                <div className="text-sm text-gray-600 whitespace-nowrap">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
+                <div className="text-lg font-semibold text-gray-800 whitespace-nowrap">LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
+                <button
+                  title="Edit"
+                  aria-label="Edit"
+                  className="text-blue-600 hover:text-blue-800 p-1"
+                  onClick={() => startEdit(it)}
+                >
+                  <Edit size={18} />
                 </button>
-                <button title="Delete" aria-label="Delete" className="text-red-600 hover:text-red-800 p-1" onClick={() => handleDelete(it.id)}>
-                  <Trash2 size={16} />
+                <button
+                  title="Delete"
+                  aria-label="Delete"
+                  className="text-red-600 hover:text-red-800 p-1"
+                  onClick={() => handleDelete(it.id)}
+                >
+                  <Trash2 size={18} />
                 </button>
               </>
             )}

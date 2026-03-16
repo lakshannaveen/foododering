@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Briefcase } from "lucide-react";
 import { toast } from 'react-toastify';
 import laborService from "../../services/laborService";
 
@@ -136,99 +136,132 @@ const LaborSection = ({ initialLabor = [] }) => {
     }
   };
 
-  return (
-    <div className="p-6 border rounded-xl bg-gray-50/70 text-gray-800 shadow-sm">
-      <button
-        onClick={handleAdd}
-        disabled={saving}
-        className={"px-5 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm mb-6 flex items-center gap-2 " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Add Labor
-      </button>
+  // Helper to format currency
+  const formatCurrency = (value) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? '0.00' : num.toFixed(2);
+  };
 
-      {/* Table */}
-      <div>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Briefcase className="w-6 h-6 text-[#18749b]" />
+            Labor & Costs
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage labor roles, rates, and payment schedules
+          </p>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={saving}
+          className={`mt-4 sm:mt-0 px-6 py-2.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 backdrop-blur-sm backdrop-filter ${
+            saving ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Add Labor
+        </button>
+      </div>
+
+      {/* Glassmorphic Container */}
+      <div className="bg-white/40 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl p-4 md:p-6">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
+          <div className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#18749b] border-t-transparent"></div>
+              <span className="text-gray-600">Loading labor...</span>
+            </div>
           </div>
         ) : laborList.length === 0 ? (
-          <div className="text-sm text-gray-500">
-            No labor entries yet. Click "Add Labor" to get started.
+          <div className="text-center py-16">
+            <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">No labor entries yet.</p>
+            <p className="text-gray-400 text-sm mt-1">Click the "Add Labor" button to get started.</p>
           </div>
         ) : (
           <>
+            {/* Elegant Table */}
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <thead>
-                  <tr className="bg-gray-100/80 text-gray-700 text-sm uppercase tracking-wide">
-                    <th className="py-3 px-5 text-left font-semibold">Role</th>
-                    <th className="py-3 px-5 text-left font-semibold">Price (LKR)</th>
-                    <th className="py-3 px-5 text-left font-semibold">Payment Type</th>
-                    <th className="py-3 px-5 text-center font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {laborList.map((labor) => (
-                    <tr key={labor.id} className="hover:bg-blue-50/30 transition">
-                      <td className="py-3.5 px-5 font-medium">{labor.roleName}</td>
-                      <td className="py-3.5 px-5">{labor.price}</td>
-                      <td className="py-3.5 px-5">{labor.paymentType}</td>
-                      <td className="py-3.5 px-5 text-center">
-                        <div className="flex items-center justify-center gap-5">
-                            <button
-                              onClick={() => handleEdit(labor)}
-                              className="text-blue-600 hover:text-blue-800 transition"
-                              title="Edit"
-                              aria-label="Edit"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(labor.id)}
-                              className="text-red-600 hover:text-red-800 transition"
-                              title="Delete"
-                              aria-label="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                  ))}
-                </tbody>
-              </table>
+              {/* Table Header - Subtle Gradient with Blur */}
+              <div className="grid grid-cols-12 gap-2 items-center px-4 py-3 text-sm font-medium text-gray-700 uppercase tracking-wider bg-gradient-to-r from-blue-50/80 to-blue-100/80 backdrop-blur-sm rounded-t-xl border-b border-blue-200/50">
+                <div className="col-span-4">Role</div>
+                <div className="col-span-3">Rate (LKR/hr)</div>
+                <div className="col-span-3">Payment Type</div>
+                <div className="col-span-2 text-right">Actions</div>
+              </div>
+
+              {/* Table Rows */}
+              <div className="divide-y divide-gray-200/50">
+                {laborList.map((labor) => (
+                  <div
+                    key={labor.id}
+                    className="grid grid-cols-12 gap-2 items-center px-4 py-3 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors"
+                  >
+                    {/* Role */}
+                    <div className="col-span-4 text-gray-800 font-medium text-sm truncate">
+                      {labor.roleName}
+                    </div>
+
+                    {/* Rate */}
+                    <div className="col-span-3 text-gray-700 text-sm font-mono">
+                      {formatCurrency(labor.price)}
+                    </div>
+
+                    {/* Payment Type */}
+                    <div className="col-span-3 text-gray-700 text-sm capitalize">
+                      {labor.paymentType}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-2 text-right flex justify-end items-center gap-3">
+                      <button
+                        onClick={() => handleEdit(labor)}
+                        className="text-blue-700 hover:text-blue-900 transition-colors p-1"
+                        aria-label="Edit labor"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(labor.id)}
+                        className="text-red-700 hover:text-red-900 transition-colors p-1"
+                        aria-label="Delete labor"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Grand Total - Refined Card */}
+            <div className="mt-8 flex justify-end">
+              <div className="bg-white/60 backdrop-blur-sm border border-blue-200/50 rounded-xl px-8 py-5 shadow-md">
+                <div className="text-sm text-blue-600 font-semibold uppercase tracking-wider">Grand Total</div>
+                <div className="text-3xl font-bold text-gray-800 leading-tight">LKR {grandTotal.toFixed(2)}</div>
+              </div>
             </div>
           </>
         )}
       </div>
 
-      {laborList.length > 0 && (
-        <div className="mt-6 flex justify-end">
-          <div className="bg-white border border-gray-200 rounded-lg px-8 py-4 shadow-sm">
-            <span className="text-lg font-semibold text-gray-800">
-              Grand Total: <span className="text-emerald-700">LKR {grandTotal.toFixed(2)}</span>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ────────────────────────────────────────────────
-          Modern Add / Edit Modal
-      ──────────────────────────────────────────────── */}
+      {/* Add / Edit Modal (unchanged) */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all scale-100">
@@ -315,12 +348,20 @@ const LaborSection = ({ initialLabor = [] }) => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className={"px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm " + (saving ? 'opacity-60 cursor-not-allowed' : '')}
+                className={`px-6 py-2.5 bg-[#18749b] hover:bg-[#2c5a97] text-white font-medium rounded-lg transition shadow-sm ${
+                  saving ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 {saving ? (
-                  <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Saving...</span>
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Saving...
+                  </span>
                 ) : (
-                  (editingId ? "Update Entry" : "Save Labor")
+                  editingId ? "Update Entry" : "Save Labor"
                 )}
               </button>
             </div>

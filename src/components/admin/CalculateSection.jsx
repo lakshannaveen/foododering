@@ -49,6 +49,12 @@ const CalculateSection = () => {
   const [overhead, setOverhead] = useState([newOverheadRow()]);
   const [result,   setResult]   = useState(null);
 
+  // State for tracking missing data when recipe is selected
+  const [missingIngredients, setMissingIngredients] = useState(false);
+  const [missingLabor, setMissingLabor] = useState(false);
+  const [missingOverhead, setMissingOverhead] = useState(false);
+  const [isLoadingRecipe, setIsLoadingRecipe] = useState(false);
+
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -99,6 +105,91 @@ const CalculateSection = () => {
   }, []);
 
   const addStock       = () => setStock(p => [...p, newStockRow()]);
+
+  // Handle recipe selection and fetch related ingredients, labor, and overhead
+  const handleRecipeSelect = async (recipeId) => {
+    setSelectedRecipe(recipeId);
+    setIsLoadingRecipe(true);
+    
+    // Reset missing data flags
+    setMissingIngredients(false);
+    setMissingLabor(false);
+    setMissingOverhead(false);
+    
+    // Reset to empty rows when recipe changes
+    setStock([newStockRow()]);
+    setLabor([newLaborRow()]);
+    setOverhead([newOverheadRow()]);
+    
+    if (!recipeId) {
+      setIsLoadingRecipe(false);
+      return;
+    }
+    
+    try {
+      // Fetch ingredients, labor, and overhead by recipe
+      const [ingRes, laborRes, overheadRes] = await Promise.all([
+        recipeService.getIngredientsByRecipe(recipeId),
+        recipeService.getLaborByRecipe(recipeId),
+        recipeService.getOverheadByRecipe(recipeId),
+      ]);
+
+      // Process ingredients
+      if (ingRes && Array.isArray(ingRes.ResultSet) && ingRes.ResultSet.length > 0) {
+        console.log(ingRes)
+        const ingredientRows = ingRes.ResultSet.map((item, index) => ({
+          id: generateId(),
+          name: item.IngredientName || "",
+          quantity: item.QuantityRequired ? item.QuantityRequired.toString() : "0",
+          unit: item.Unit || "kg",
+          unitCost: stockPricePerKgState[item.IngredientName] ? 
+            (stockPricePerKgState[item.IngredientName] / (item.Unit === "g" || item.Unit === "ml" ? 1000 : 1)).toFixed(2).toString() : "0.00"
+        }));
+        setStock(ingredientRows);
+        setMissingIngredients(false);
+      } else {
+        setMissingIngredients(true);
+        setStock([newStockRow()]);
+      }
+
+      // Process labor
+      if (laborRes && Array.isArray(laborRes.ResultSet) && laborRes.ResultSet.length > 0) {
+        const laborRows = laborRes.ResultSet.map((item) => ({
+          id: generateId(),
+          role: item.LaborName || "",
+          hours: item.MinutesRequired ? Math.floor(parseInt(item.MinutesRequired) / 60).toString() : "0",
+          minutes: item.MinutesRequired ? (parseInt(item.MinutesRequired) % 60).toString() : "0",
+          hourlyRate: item.Rate ? item.Rate.toString() : laborRatesState[item.LaborName] ? laborRatesState[item.LaborName].toString() : "0.00"
+        }));
+        setLabor(laborRows);
+        setMissingLabor(false);
+      } else {
+        setMissingLabor(true);
+        setLabor([newLaborRow()]);
+      }
+
+      // Process overhead
+      if (overheadRes && Array.isArray(overheadRes.ResultSet) && overheadRes.ResultSet.length > 0) {
+        const overheadRows = overheadRes.ResultSet.map((item) => ({
+          id: generateId(),
+          name: item.OverheadName || "",
+          hours: item.MinutesRequired ? (parseInt(item.MinutesRequired) / 60).toFixed(2).toString() : "0",
+          rate: item.CostPerHour ? item.CostPerHour.toString() : OVERHEAD_RATES[item.OverheadName] ? OVERHEAD_RATES[item.OverheadName].toFixed(2).toString() : "0.00"
+        }));
+        setOverhead(overheadRows);
+        setMissingOverhead(false);
+      } else {
+        setMissingOverhead(true);
+        setOverhead([newOverheadRow()]);
+      }
+    } catch (e) {
+      console.warn('Failed to load recipe data', e);
+      toast.error('Failed to load recipe details');
+    } finally {
+      setIsLoadingRecipe(false);
+    }
+  };
+
   // updateStock auto-fills unitCost when a stock `name` or `unit` is selected
   const updateStock    = (id, f, v) => setStock(p => p.map(i => {
     if (i.id !== id) return i;
@@ -150,6 +241,10 @@ const CalculateSection = () => {
 
   const handleCalculate = () => {
     if (!selectedRecipe) return toast.error("Please select a recipe.");
+    // Check if any data is missing before calculating
+    if (missingIngredients || missingLabor || missingOverhead) {
+      return toast.error("Please add missing ingredients, labor, or overhead to the recipe.");
+    }
     const stockTotal    = stock.reduce((s,i) => s + ((parseFloat(i.quantity)||0) * (parseFloat(i.unitCost)||0)), 0);
     const laborTotal    = labor.reduce((s,l) => {
       const h = parseFloat(l.hours) || 0;
@@ -227,9 +322,10 @@ const CalculateSection = () => {
               className={selectCls}
               options={recipesList}
               value={selectedRecipe}
-              onChange={(val) => setSelectedRecipe(val)}
+              onChange={(val) => handleRecipeSelect(val)}
               placeholder="-- Select Recipe --"
             />
+            {isLoadingRecipe && <p className="text-xs text-blue-500 mt-1">Loading recipe details...</p>}
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Profit Margin (%) <span className="text-red-500">*</span></label>
@@ -247,7 +343,10 @@ const CalculateSection = () => {
       {/* Stock */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">Stock</h2>
+          <h2 className="text-sm font-semibold text-gray-700">
+            Stock
+            {missingIngredients && <span className="ml-2 text-red-500 text-xs">⚠ Please add ingredients to recipe</span>}
+          </h2>
           <div className="flex items-center gap-2">
             <button onClick={addStock}
               className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
@@ -321,7 +420,10 @@ const CalculateSection = () => {
       {/* Labor */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">Labor</h2>
+          <h2 className="text-sm font-semibold text-gray-700">
+            Labor
+            {missingLabor && <span className="ml-2 text-red-500 text-xs">⚠ Please add labor to recipe</span>}
+          </h2>
           <div className="flex items-center gap-2">
             <button onClick={addLabor}
               className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
@@ -412,7 +514,10 @@ const CalculateSection = () => {
       {/* Overhead */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">Overhead</h2>
+          <h2 className="text-sm font-semibold text-gray-700">
+            Overhead
+            {missingOverhead && <span className="ml-2 text-red-500 text-xs">⚠ Please add overhead to recipe</span>}
+          </h2>
           <div className="flex items-center gap-2">
             <button onClick={addOverhead}
               className="bg-[#18749b] hover:bg-[#2c5a97] text-white text-sm font-medium px-4 py-2 rounded transition-colors">
@@ -429,7 +534,7 @@ const CalculateSection = () => {
 
         <div className="grid gap-3 mb-2" style={{ gridTemplateColumns: "3fr 2fr 2fr 20px" }}>
           <span className="text-xs text-gray-500">Overhead Item</span>
-          <span className="text-xs text-gray-500">Hours</span>
+          <span className="text-xs text-gray-500">Minutes Required</span>
           <span className="text-xs text-gray-500">Rate (LKR/hr)</span>
           <span />
         </div>
