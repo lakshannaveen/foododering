@@ -50,9 +50,9 @@ export const updateIngredient = async (IngredientId, CurrentStock) => {
   }
 };
 
-export const addRecipe = async ({ MenuItemId, RecipeName }) => {
+export const addRecipe = async ({ MenuItemSizeId, RecipeName }) => {
   try {
-    const qs = `?MenuItemId=${encodeURIComponent(MenuItemId||"")}&RecipeName=${encodeURIComponent(RecipeName||"")}`;
+    const qs = `?MenuItemSizeId=${encodeURIComponent(MenuItemSizeId||"")}&RecipeName=${encodeURIComponent(RecipeName||"")}`;
     const response = await api.post(`/Recipe/AddRecipe${qs}`);
     return response.data;
   } catch (err) {

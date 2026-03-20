@@ -33,25 +33,39 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
     setShowForm(true);
   };
 
-  const saveRecipe = () => {
+  const saveRecipe = async () => {
     if (!form.name || !form.menuItemId || !form.menuItemSizeId) return;
     
-    const recipeData = {
-      id: form.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
-      name: form.name,
-      menuItemId: form.menuItemId,
-      menuItemName: form.menuItemName,
-      menuItemSizeId: form.menuItemSizeId,
-      size: form.size,
-      ingredients: form.ingredients,
-    };
-    
-    if (form.id) {
-      setRecipes(prev => prev.map(r => r.id === form.id ? { ...r, ...recipeData } : r));
-    } else {
-      setRecipes(prev => [...prev, recipeData]);
+    setSaving(true);
+    try {
+      // Call the API with MenuItemSizeId (not MenuItemId)
+      await recipeService.addRecipe({
+        MenuItemSizeId: form.menuItemSizeId,
+        RecipeName: form.name
+      });
+      
+      const recipeData = {
+        id: form.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        name: form.name,
+        menuItemId: form.menuItemId,
+        menuItemName: form.menuItemName,
+        menuItemSizeId: form.menuItemSizeId,
+        size: form.size,
+        ingredients: form.ingredients,
+      };
+      
+      if (form.id) {
+        setRecipes(prev => prev.map(r => r.id === form.id ? { ...r, ...recipeData } : r));
+      } else {
+        setRecipes(prev => [...prev, recipeData]);
+      }
+      setShowForm(false);
+    } catch (e) {
+      console.error('Failed to save recipe', e);
+      window.alert('Failed to save recipe');
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
   };
 
   const editRecipe = (r) => {
