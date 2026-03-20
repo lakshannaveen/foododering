@@ -49,6 +49,7 @@ const CalculateSection = () => {
   const [savingIngredient, setSavingIngredient] = useState(null);
   const [savingLabor, setSavingLabor] = useState(null);
   const [savingOverhead, setSavingOverhead] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -348,6 +349,8 @@ const CalculateSection = () => {
     if (!result) return toast.error("Nothing to save. Please select a recipe or enter inputs.");
     const recipeName = recipesList.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
     const payload = { id: generateId(), recipe: recipeName, result, savedAt: new Date().toISOString() };
+    // mark saving state so UI can disable button
+    setIsSaving(true);
     try {
       const existing = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
       existing.unshift(payload);
@@ -392,6 +395,7 @@ const CalculateSection = () => {
         toast.info('Calculation saved locally only.');
       }
     } catch (e) { console.error(e); toast.error('Failed to save calculation.'); }
+    finally { setIsSaving(false); }
   };
 
   React.useEffect(() => {
@@ -744,9 +748,14 @@ const CalculateSection = () => {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button onClick={handleSave} className="inline-flex items-center gap-2 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-all text-sm">
-          <Save size={18} />
-          Save Calculation
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          aria-busy={isSaving}
+          className={`inline-flex items-center gap-2 bg-gradient-to-r from-[#18749b] to-[#2c5a97] text-white font-semibold px-8 py-3 rounded-lg shadow-md transition-all text-sm ${isSaving ? 'opacity-60 cursor-not-allowed' : 'hover:from-[#0f5a7a] hover:to-[#1e3f6b]'}`}
+        >
+          {isSaving ? <Loader size={16} className="animate-spin" /> : <Save size={18} />}
+          {isSaving ? 'Saving...' : 'Save Calculation'}
         </button>
       </div>
     </div>
