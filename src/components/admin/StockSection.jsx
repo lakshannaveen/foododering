@@ -62,46 +62,29 @@ const StockSection = ({ initialItems = [] }) => {
     }
     setSaving(true);
     try {
-      // If an ingredient with the same name already exists, update it instead of creating a duplicate
-      const nameKey = (form.name || '').trim().toLowerCase();
-      const existing = items.find(it => (it.name || '').trim().toLowerCase() === nameKey);
-      if (existing && !form.id) {
-        // Add flow but name exists -> call update on server but enforce user-entered value locally
-        try {
-          await recipeService.updateIngredient(existing.id, String(form.quantity || "0"));
-        } catch (e) {
-          console.warn('Server update failed, will still update UI locally', e);
-        }
-        // Update local state immediately to reflect the user's desired value
-        setItems(prev => prev.map(it => it.id === existing.id ? { ...it, quantity: String(form.quantity || "0"), unit: form.unit || it.unit, unitPrice: form.unitPrice || it.unitPrice } : it));
-        setForm(emptyItem());
-        setShowForm(false);
-        toast.success('Existing stock item updated ');
+      // prepare payload expected by backend
+      const payload = {
+        IngredientName: form.name,
+        Unit: form.unit,
+        CurrentStock: String(form.quantity || "0"),
+        CostPerUnit: String(form.unitPrice || "0"),
+      };
+
+      const res = await recipeService.addIngredient(payload);
+
+      // if backend returned an id, use it; otherwise generate a local id
+      const newId = res?.IngredientId || res?.Result?.IngredientId || (form.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)));
+
+      // if editing existing item (form.id present), update it
+      if (form.id) {
+        setItems(prev => prev.map(it => it.id === form.id ? { ...it, ...form } : it));
       } else {
-        // Normal add or explicit edit path
-        // prepare payload expected by backend
-        const payload = {
-          IngredientName: form.name,
-          Unit: form.unit,
-          CurrentStock: String(form.quantity || "0"),
-          CostPerUnit: String(form.unitPrice || "0"),
-        };
-
-        const res = await recipeService.addIngredient(payload);
-        // if backend returned an id, use it; otherwise generate a local id
-        const newId = res?.IngredientId || res?.Result?.IngredientId || (form.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)));
-
-        // if editing existing item (form.id present), update local representation, else append
-        if (form.id) {
-          setItems(prev => prev.map(it => it.id === form.id ? { ...it, ...form } : it));
-        } else {
-          setItems(prev => [...prev, { ...form, id: newId }] );
-        }
-
-        setForm(emptyItem());
-        setShowForm(false);
-        toast.success('Stock item saved successfully');
+        setItems(prev => [...prev, { ...form, id: newId }] );
       }
+
+      setForm(emptyItem());
+      setShowForm(false);
+      toast.success('Stock item saved successfully');
     } catch (e) {
       console.error('Failed to save stock item', e);
       toast.error('Failed to save stock item. See console for details.');
@@ -127,18 +110,24 @@ const StockSection = ({ initialItems = [] }) => {
     }
     setSaving(true);
     try {
-      try {
-        await recipeService.updateIngredient(form.id, form.quantity);
-      } catch (e) {
-        console.warn('Server update failed, will still update UI locally', e);
-      }
-      // Update local state to the user's entered values so UI reflects desired quantity
-      setItems(prev => prev.map(it => it.id === form.id ? { ...it, quantity: String(form.quantity || "0"), unit: form.unit || it.unit, unitPrice: form.unitPrice || it.unitPrice } : it));
-
+      const res = await recipeService.updateIngredient(form.id, form.quantity);
+      
+      // After successful update, refresh the entire list from backend
+      const refreshRes = await recipeService.getAllIngredients();
+      const list = Array.isArray(refreshRes?.ResultSet) ? refreshRes.ResultSet : (Array.isArray(refreshRes) ? refreshRes : []);
+      const mapped = list.map(i => ({
+        id: i.IngredientId || i.Id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        name: i.IngredientName || i.Name || i.name || "",
+        quantity: i.CurrentStock != null ? String(i.CurrentStock) : (i.Quantity != null ? String(i.Quantity) : "0"),
+        unit: i.Unit || "kg",
+        unitPrice: i.CostPerUnit != null ? String(i.CostPerUnit) : (i.UnitPrice != null ? String(i.UnitPrice) : "0"),
+      }));
+      setItems(mapped);
+      
       setForm(emptyItem());
       setShowForm(false);
       setIsEditing(false);
-      toast.success('Stock item updated locally (server called)');
+      toast.success('Stock item updated successfully');
     } catch (e) {
       console.error('Failed to update stock item', e);
       toast.error('Failed to update stock item. See console for details.');
