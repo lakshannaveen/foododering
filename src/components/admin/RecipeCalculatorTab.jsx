@@ -12,6 +12,7 @@ import OverheadSection from "./OverheadSection";
 import CalculateSection from "./CalculateSection";
 import RecipesSection from "./RecipesSection";
 import productionCostService from "../../services/productionCostService";
+import { Loader } from 'lucide-react';
 
 const emptyRow = () => ({ name: "", quantity: "", unit: "kg", unitCost: "" });
 
@@ -123,11 +124,13 @@ const RecipeCalculatorTab = ({ externalLaborTotal = 0, externalOverheadTotal = 0
 // Enhanced SavedList with better spacing and card style
 const SavedList = () => {
   const [items, setItems] = useState([]);
+  const [loadingSaved, setLoadingSaved] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({ recipe: '', totalCost: '', suggestedPrice: '' });
 
   React.useEffect(() => {
     let mounted = true;
+    setLoadingSaved(true);
     (async () => {
       try {
         const list = await productionCostService.getAllProductionCosts();
@@ -141,6 +144,7 @@ const SavedList = () => {
             raw: it,
           }));
           setItems(mapped);
+          setLoadingSaved(false);
           return;
         }
       } catch (err) {
@@ -164,8 +168,9 @@ const SavedList = () => {
           { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
         ]);
       }
-      return () => { mounted = false; };
+      if (mounted) setLoadingSaved(false);
     })();
+    return () => { mounted = false; };
   }, []);
 
   const persist = (next) => {
@@ -213,6 +218,13 @@ const SavedList = () => {
     cancelEdit();
     toast.success('Saved changes');
   };
+
+  if (loadingSaved) return (
+    <div className="p-6 text-sm text-gray-500 flex items-center gap-2">
+      <Loader className="animate-spin" size={16} />
+      <span>Loading saved calculations...</span>
+    </div>
+  );
 
   if (!items.length) return <p className="text-sm text-gray-500">No saved calculations.</p>;
 
