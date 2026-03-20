@@ -360,16 +360,17 @@ const CalculateSection = () => {
       try {
         const recipeObj = recipesList.find(r => String(r.id) === String(selectedRecipe));
         const menuItemSizeId = recipeObj?.menuItemSizeId || 0;
-        const suggested = parseFloat(result.suggestedPrice);
-        const totalForServer = (!isNaN(suggested) && suggested > 0) ? suggested : parseFloat(result.totalCost || 0);
+        const actualTotal = parseFloat(result.totalCost || 0) || 0;
+        // Send actual total as both TotalCost and SuggestedPrice to satisfy backend expectation
         const data = {
           MenuItemSizeId: menuItemSizeId,
           IngredientCost: (result.stockTotal || 0).toFixed(2),
           LaborCost: (result.laborTotal || 0).toFixed(2),
           OverheadCost: (result.overheadTotal || 0).toFixed(2),
-          // Send suggested selling price as TotalCost when available (per request)
-          TotalCost: totalForServer.toFixed(2),
-          SuggestedPrice: (result.suggestedPrice || 0).toFixed(2),
+          TotalCost: actualTotal.toFixed(2),
+          SuggestedPrice: actualTotal.toFixed(2),
+          // alternate field name some backends expect
+          SuggestedSellingPrice: actualTotal.toFixed(2),
         };
 
         const res = await productionCostService.addProductionCosts(data);
