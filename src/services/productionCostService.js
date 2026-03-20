@@ -29,17 +29,35 @@ const productionCostService = {
     const oc = parseFloat(OverheadCost) || 0;
     const tc = parseFloat(TotalCost) || 0;
     const sp = parseFloat(SuggestedPrice) || 0;
+
     if (isNaN(mid) || mid <= 0) {
       return { success: false, message: 'Invalid MenuItemSizeId (must be a positive integer)', code: 400 };
     }
 
     try {
-      // include SuggestedPrice if available so backend or future endpoints can persist it
-      const url = `/ProductionCosts/AddProductionCosts/?MenuItemSizeId=${encodeURIComponent(mid)}&IngredientCost=${encodeURIComponent(ic)}&LaborCost=${encodeURIComponent(lc)}&OverheadCost=${encodeURIComponent(oc)}&TotalCost=${encodeURIComponent(tc)}&SuggestedPrice=${encodeURIComponent(sp)}`;
-      const response = await api.post(url);
-      return { success: true, status: response.status, data: response.data };
+      // Send JSON body (more robust than query string) and coerce numeric types
+      const payload = {
+        MenuItemSizeId: mid,
+        IngredientCost: ic,
+        LaborCost: lc,
+        OverheadCost: oc,
+        TotalCost: tc,
+        SuggestedPrice: sp,
+      };
+
+      const response = await api.post(`/ProductionCosts/AddProductionCosts`, payload);
+
+      const data = response?.data;
+
+      // Some backend endpoints return HTTP 200 but include an internal StatusCode/ResultStatusCode.
+      // Treat those as failures unless they explicitly indicate success.
+      const backendStatus = data?.StatusCode ?? data?.ResultStatusCode ?? null;
+      if (backendStatus !== null && backendStatus !== 200 && backendStatus !== 1) {
+        return { success: false, status: response.status, error: data };
+      }
+
+      return { success: true, status: response.status, data };
     } catch (error) {
-      // If server returned a response body, surface it
       if (error?.response) {
         return { success: false, status: error.response.status, error: error.response.data };
       }

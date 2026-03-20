@@ -344,7 +344,7 @@ const CalculateSection = () => {
     setResult({ stockTotal, laborTotal, overheadTotal, totalCost, suggestedPrice, margin });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!result) return toast.error("Nothing to save. Please select a recipe or enter inputs.");
     const recipeName = recipesList.find(r => String(r.id) === String(selectedRecipe))?.name || "Custom";
     const payload = { id: generateId(), recipe: recipeName, result, savedAt: new Date().toISOString() };
@@ -352,44 +352,45 @@ const CalculateSection = () => {
       const existing = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
       existing.unshift(payload);
       localStorage.setItem('savedCalculations', JSON.stringify(existing));
-      toast.success('Calculation saved. Open "Saved Calculations" tab to view.');
-      // Also attempt to persist to backend ProductionCosts (best-effort)
-      (async () => {
-        try {
-          // Map fields expected by backend
-          const recipeObj = recipesList.find(r => String(r.id) === String(selectedRecipe));
-          const menuItemSizeId = recipeObj?.menuItemSizeId || 0;
-          const suggested = parseFloat(result.suggestedPrice);
-          const totalForServer = (!isNaN(suggested) && suggested > 0) ? suggested : parseFloat(result.totalCost || 0);
-          const data = {
-            MenuItemSizeId: menuItemSizeId,
-            IngredientCost: (result.stockTotal || 0).toFixed(2),
-            LaborCost: (result.laborTotal || 0).toFixed(2),
-            OverheadCost: (result.overheadTotal || 0).toFixed(2),
-            // Send suggested selling price as TotalCost when available (per request)
-            TotalCost: totalForServer.toFixed(2),
-            SuggestedPrice: (result.suggestedPrice || 0).toFixed(2),
-          };
-          const res = await productionCostService.addProductionCosts(data);
-          if (res?.success) {
-            toast.success('Also saved production cost to server');
-          } else {
-            // Extract server message when possible
-            let serverMsg = res?.message || '';
-            if (!serverMsg && res?.error) {
-              // common shapes: { Result: "..." } or raw string
-              if (typeof res.error === 'string') serverMsg = res.error;
-              else if (res.error.Result) serverMsg = res.error.Result;
-              else serverMsg = JSON.stringify(res.error);
-            }
-            if (!serverMsg) serverMsg = 'Failed to save production cost to server';
-            // Show the backend error (e.g. "Error converting data type varchar to int.")
-            toast.error(`Production cost save failed: ${serverMsg}`);
+
+      // Attempt to persist to backend ProductionCosts and show a single clear outcome to user
+      try {
+        const recipeObj = recipesList.find(r => String(r.id) === String(selectedRecipe));
+        const menuItemSizeId = recipeObj?.menuItemSizeId || 0;
+        const suggested = parseFloat(result.suggestedPrice);
+        const totalForServer = (!isNaN(suggested) && suggested > 0) ? suggested : parseFloat(result.totalCost || 0);
+        const data = {
+          MenuItemSizeId: menuItemSizeId,
+          IngredientCost: (result.stockTotal || 0).toFixed(2),
+          LaborCost: (result.laborTotal || 0).toFixed(2),
+          OverheadCost: (result.overheadTotal || 0).toFixed(2),
+          // Send suggested selling price as TotalCost when available (per request)
+          TotalCost: totalForServer.toFixed(2),
+          SuggestedPrice: (result.suggestedPrice || 0).toFixed(2),
+        };
+
+        const res = await productionCostService.addProductionCosts(data);
+
+        if (res?.success) {
+          toast.success('Calculation saved and persisted to server. Open "Saved Calculations" tab to view.');
+        } else {
+          // Extract server message when possible
+          let serverMsg = res?.message || '';
+          if (!serverMsg && res?.error) {
+            if (typeof res.error === 'string') serverMsg = res.error;
+            else if (res.error.Result) serverMsg = res.error.Result;
+            else serverMsg = JSON.stringify(res.error);
           }
-        } catch (err) {
-          console.warn('Failed saving production cost to server', err);
+          if (!serverMsg) serverMsg = 'Failed to save production cost to server';
+          // Show the backend error (e.g. "Error converting data type varchar to int.")
+          toast.error(`Production cost save failed: ${serverMsg}`);
+          toast.info('Calculation saved locally only.');
         }
-      })();
+      } catch (err) {
+        console.warn('Failed saving production cost to server', err);
+        toast.error('Failed to save production cost to server (network error)');
+        toast.info('Calculation saved locally only.');
+      }
     } catch (e) { console.error(e); toast.error('Failed to save calculation.'); }
   };
 
