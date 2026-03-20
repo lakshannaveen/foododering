@@ -314,14 +314,7 @@ const SavedList = () => {
                 <div className="text-sm text-gray-600 whitespace-nowrap">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
                 <div className="text-lg font-semibold text-gray-800 whitespace-nowrap">LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
                 {/* edit removed per request */}
-                <button
-                  title="Delete"
-                  aria-label="Delete"
-                  className="text-red-600 hover:text-red-800 p-1"
-                  onClick={() => handleDelete(it.id)}
-                >
-                  <Trash2 size={18} />
-                </button>
+                {/* delete button removed */}
               </>
             )}
           </div>
