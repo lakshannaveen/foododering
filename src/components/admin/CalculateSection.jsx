@@ -274,7 +274,6 @@ const CalculateSection = () => {
     if (!item.role) return toast.error('Please select a labor role');
     const totalMinutes = (parseFloat(item.hours) || 0) * 60 + (parseFloat(item.minutes) || 0);
     if (totalMinutes <= 0) return toast.error('Please enter valid hours or minutes');
-    if (!item.hourlyRate || parseFloat(item.hourlyRate) <= 0) return toast.error('Please enter a valid hourly rate');
 
     setSavingLabor(item.id);
     try {
@@ -284,7 +283,7 @@ const CalculateSection = () => {
       if (!laborItem) return toast.error('Labor role not found');
 
       const laborId = laborItem.LaborId || laborItem.Id || laborItem.id;
-      const res = await recipeService.addLaborToRecipe(laborId, selectedRecipe, totalMinutes.toString(), item.hourlyRate);
+      const res = await recipeService.addLaborByRecipe(laborId, selectedRecipe, totalMinutes.toString());
       if (res?.StatusCode === 200 || res?.status === 200) {
         toast.success('Labor added to recipe');
         setLabor(p => p.map(l => l.id === item.id ? { ...l, saved: true } : l));
@@ -303,7 +302,6 @@ const CalculateSection = () => {
     if (!selectedRecipe) return toast.error('Please select a recipe first');
     if (!item.name) return toast.error('Please select an overhead item');
     if (!item.minutes || parseFloat(item.minutes) <= 0) return toast.error('Please enter valid minutes');
-    if (!item.rate || parseFloat(item.rate) <= 0) return toast.error('Please enter a valid rate');
 
     setSavingOverhead(item.id);
     try {
@@ -313,7 +311,7 @@ const CalculateSection = () => {
       if (!overheadItem) return toast.error('Overhead item not found');
 
       const overheadId = overheadItem.OverheadId || overheadItem.Id || overheadItem.id;
-      const res = await recipeService.addOverheadToRecipe(overheadId, selectedRecipe, item.minutes, item.rate);
+      const res = await recipeService.addOverheadByRecipe(selectedRecipe, overheadId, item.minutes);
       if (res?.StatusCode === 200 || res?.status === 200) {
         toast.success('Overhead added to recipe');
         setOverhead(p => p.map(o => o.id === item.id ? { ...o, saved: true } : o));
@@ -366,7 +364,7 @@ const CalculateSection = () => {
   }, [selectedRecipe, stock, labor, overhead, profitMargin]);
 
   const RemoveBtn = ({ onClick }) => (
-    <button onClick={onClick} className="text-red-400 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-red-50" aria-label="Remove">
+    <button onClick={onClick} className="text-red-500 hover:text-red-600 transition-colors p-1 focus:outline-none focus:ring-0" aria-label="Remove">
       <X size={16} />
     </button>
   );
@@ -448,12 +446,12 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 36px 20px" }}>
-            <span>Ingredient</span><span>Quantity</span><span>Unit</span><span>Unit Cost (LKR)</span><span>Total (LKR)</span><span></span><span></span>
+          <div className="grid gap-3 mb-6 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: stock.some(i => i.saved) ? "3fr 1.2fr 1fr 1.5fr 1.5fr" : "3fr 1.2fr 1fr 1.5fr 1.5fr 36px " }}>
+            <span>Ingredient</span><span>Quantity</span><span>Unit</span><span>Unit Cost (LKR)</span><span>Total (LKR)</span>
           </div>
           <div className="space-y-3">
             {stock.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1.2fr 1fr 1.5fr 1.5fr 36px 20px" }}>
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: item.saved ? "3fr 1.2fr 1fr 1.5fr 1.5fr" : "3fr 1.2fr 1fr 1.5fr 1.5fr 36px 18px " }}>
                 <SearchableSelect 
                   className={selectCls} 
                   options={stockOptionsState} 
@@ -471,13 +469,13 @@ const CalculateSection = () => {
                   <button 
                     onClick={() => handleSaveIngredient(item)} 
                     disabled={savingIngredient === item.id}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 focus:outline-none focus:ring-0"
                     title="Save to recipe"
                   >
                     {savingIngredient === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
                   </button>
-                ) : ""}
-                {(stock.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeStock(item.id)} /> : ""}
+                ) : <div></div>}
+                {(stock.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeStock(item.id)} /> : (stock.length > 1 ? <div></div> : <div></div>)}
               </div>
             ))}
           </div>
@@ -500,12 +498,12 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 36px 20px" }}>
-            <span>Role</span><span>Hours</span><span>Minutes</span><span>Hourly Rate (LKR)</span><span>Total (LKR)</span><span></span><span></span>
+          <div className="grid gap-3 mb-6 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: labor.some(i => i.saved) ? "3fr 1fr 1fr 2fr 2fr" : "3fr 1fr 1fr 2fr 2fr 36px " }}>
+            <span>Role</span><span>Hours</span><span>Minutes</span><span>Hourly Rate (LKR)</span><span>Total (LKR)</span>
           </div>
           <div className="space-y-3">
             {labor.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 1fr 1fr 2fr 2fr 36px 20px" }}>
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: item.saved ? "3fr 1fr 1fr 2fr 2fr" : "3fr 1fr 1fr 2fr 2fr 36px 18px " }}>
                 <SearchableSelect 
                   className={selectCls} 
                   options={Object.keys(laborRatesState)} 
@@ -523,13 +521,13 @@ const CalculateSection = () => {
                   <button 
                     onClick={() => handleSaveLabor(item)} 
                     disabled={savingLabor === item.id}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 focus:outline-none focus:ring-0"
                     title="Save to recipe"
                   >
                     {savingLabor === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
                   </button>
-                ) : ""}
-                {(labor.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeLabor(item.id)} /> : ""}
+                ) : <div></div>}
+                {(labor.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeLabor(item.id)} /> : (labor.length > 1 ? <div></div> : <div></div>)}
               </div>
             ))}
           </div>
@@ -552,12 +550,12 @@ const CalculateSection = () => {
           </div>
         )}
         <div className="p-6">
-          <div className="grid gap-3 mb-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 36px 20px" }}>
-            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span>Total (LKR)</span><span></span><span></span>
+          <div className="grid gap-3 mb-6 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: overhead.some(i => i.saved) ? "3fr 2fr 2fr 2fr" : "3fr 2fr 2fr 2fr 36px " }}>
+            <span>Overhead Item</span><span>Minutes Required</span><span>Rate (LKR/hr)</span><span>Total (LKR)</span>
           </div>
           <div className="space-y-3">
             {overhead.map((item) => (
-              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: "3fr 2fr 2fr 2fr 36px 20px" }}>
+              <div key={item.id} className="grid gap-3 items-center bg-gray-50/30 p-3 rounded-lg border border-gray-100 hover:shadow-sm transition-shadow" style={{ gridTemplateColumns: item.saved ? "3fr 2fr 2fr 2fr" : "3fr 2fr 2fr 2fr 36px 18px " }}>
                 <SearchableSelect 
                   className={selectCls} 
                   options={overheadOptionsState.length ? overheadOptionsState : OVERHEAD_OPTIONS} 
@@ -574,13 +572,13 @@ const CalculateSection = () => {
                   <button 
                     onClick={() => handleSaveOverhead(item)} 
                     disabled={savingOverhead === item.id}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-300/30 text-blue-600 hover:bg-blue-500/30 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 focus:outline-none focus:ring-0"
                     title="Save to recipe"
                   >
                     {savingOverhead === item.id ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
                   </button>
-                ) : ""}
-                {(overhead.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : ""}
+                ) : <div></div>}
+                {(overhead.length > 1 && !item.saved) ? <RemoveBtn onClick={() => removeOverhead(item.id)} /> : (overhead.length > 1 ? <div></div> : <div></div>)}
               </div>
             ))}
           </div>
@@ -638,12 +636,12 @@ const CalculateSection = () => {
                     <div key={idx} className="px-4 py-2.5 flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{item.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{item.detail}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>
                       </div>
                       <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">LKR {item.total}</span>
                     </div>
                   )) : (
-                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-amber-600">
+                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-red-600">
                       <Info size={13} /> No labor hours recorded
                     </div>
                   )}
@@ -663,12 +661,12 @@ const CalculateSection = () => {
                     <div key={idx} className="px-4 py-2.5 flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{item.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{item.detail}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>
                       </div>
                       <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">LKR {item.total}</span>
                     </div>
                   )) : (
-                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-amber-600">
+                    <div className="px-4 py-3 flex items-center gap-2 text-xs text-red-600">
                       <Info size={13} /> No overhead costs entered
                     </div>
                   )}
@@ -681,7 +679,7 @@ const CalculateSection = () => {
               <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Calculator size={15} className="text-gray-500" />
                 Total Cost
-                <span className="text-xs font-normal text-gray-400">(Stock + Labor + Overhead)</span>
+                <span className="text-xs font-normal text-gray-600">(Stock + Labor + Overhead)</span>
               </span>
               <span className="text-lg font-bold text-gray-800">LKR {result.totalCost.toFixed(2)}</span>
             </div>

@@ -1,6 +1,6 @@
 import React from "react";
 
-const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving = false }) => {
+const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving = false, isEditing = false, onUpdate }) => {
   if (!isOpen) return null;
 
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
@@ -37,7 +37,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
       <div className="absolute inset-0" onClick={onClose}></div>
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 z-10">
-        <h3 className="text-lg font-semibold mb-4">Add Stock Item</h3>
+        <h3 className="text-lg font-semibold mb-4">{isEditing ? 'Edit Stock Item' : 'Add Stock Item'}</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
           <div className="col-span-4 font-semibold text-sm text-gray-600">Item</div>
@@ -54,6 +54,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
             className="col-span-4 p-2 border rounded w-full min-w-0"
+            disabled={isEditing}
           />
 
           <input
@@ -72,6 +73,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
             value={form.unit}
             onChange={(e) => update('unit', e.target.value)}
             className="col-span-2 p-2 border rounded bg-white w-full min-w-0 text-sm"
+            disabled={isEditing}
           >
             <option value="kg">kg</option>
             <option value="g">g</option>
@@ -103,13 +105,23 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
         
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onSave} disabled={saving} className={"px-4 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>
-            {saving ? (
-              <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Saving...</span>
-            ) : (
-              'Save'
-            )}
-          </button>
+          {isEditing ? (
+            <button onClick={onUpdate} disabled={saving} className={"px-4 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>
+              {saving ? (
+                <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Updating...</span>
+              ) : (
+                'Update'
+              )}
+            </button>
+          ) : (
+            <button onClick={onSave} disabled={saving} className={"px-4 py-2 bg-[#18749b] hover:bg-[#2c5a97] text-white rounded " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>
+              {saving ? (
+                <span className="inline-flex items-center gap-2"><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>Saving...</span>
+              ) : (
+                'Save'
+              )}
+            </button>
+          )}
           <button onClick={onCancel} disabled={saving} className={"px-4 py-2 bg-gray-200 rounded " + (saving ? 'opacity-60 cursor-not-allowed' : '')}>Cancel</button>
         </div>
       </div>

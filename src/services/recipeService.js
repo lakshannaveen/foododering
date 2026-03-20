@@ -41,6 +41,15 @@ export const updateIngredientStatus = async (IngredientId, status) => {
   }
 };
 
+export const updateIngredient = async (IngredientId, CurrentStock) => {
+  try {
+    const response = await api.post(`/Ingredient/UpdateIngredient?IngredientId=${encodeURIComponent(IngredientId)}&CurrentStock=${encodeURIComponent(CurrentStock)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
 export const addRecipe = async ({ MenuItemId, RecipeName }) => {
   try {
     const qs = `?MenuItemId=${encodeURIComponent(MenuItemId||"")}&RecipeName=${encodeURIComponent(RecipeName||"")}`;
@@ -114,9 +123,27 @@ export const addIngredientToRecipe = async (IngredientId, RecipeId, QuantityRequ
   }
 };
 
+export const addLaborByRecipe = async (LaborId, RecipeId, TimeRequired) => {
+  try {
+    const response = await api.post(`/RecipeLabor/AddLaborByRecipe?LaborId=${encodeURIComponent(LaborId)}&RecipeId=${encodeURIComponent(RecipeId)}&TimeRequired=${encodeURIComponent(TimeRequired)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
 export const addLaborToRecipe = async (LaborId, RecipeId, MinutesRequired, Rate) => {
   try {
     const response = await api.post(`/RecipeLabor/AddLaborToRecipe?LaborId=${encodeURIComponent(LaborId)}&RecipeId=${encodeURIComponent(RecipeId)}&MinutesRequired=${encodeURIComponent(MinutesRequired)}&Rate=${encodeURIComponent(Rate)}`);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
+export const addOverheadByRecipe = async (RecipeId, OverheadId, HoursUsed) => {
+  try {
+    const response = await api.post(`/RecipeOverhead/AddOverHeadByRecipe?RecipeId=${encodeURIComponent(RecipeId)}&OverheadId=${encodeURIComponent(OverheadId)}&HoursUsed=${encodeURIComponent(HoursUsed)}`);
     return response.data;
   } catch (err) {
     return handleError(err);
@@ -137,6 +164,7 @@ export default {
   getIngredientById,
   getAllIngredients,
   updateIngredientStatus,
+  updateIngredient,
   addRecipe,
   getAllRecipes,
   getRecipeById,
@@ -145,6 +173,8 @@ export default {
   getLaborByRecipe,
   getOverheadByRecipe,
   addIngredientToRecipe,
+  addLaborByRecipe,
   addLaborToRecipe,
+  addOverheadByRecipe,
   addOverheadToRecipe,
 };

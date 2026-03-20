@@ -51,6 +51,7 @@ const StockSection = ({ initialItems = [] }) => {
   
   const [form, setForm] = useState(emptyItem());
   const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const updateForm = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
@@ -95,14 +96,49 @@ const StockSection = ({ initialItems = [] }) => {
   const cancelAdd = () => {
     setForm(emptyItem());
     setShowForm(false);
+    setIsEditing(false);
   };
 
-  const updateItem = (id, key, value) => {
+  const updateItemLocal = (id, key, value) => {
     setItems(prev => prev.map(it => it.id === id ? { ...it, [key]: value } : it));
+  };
+
+  const updateItem = async () => {
+    if (!form.id) {
+      toast.error('No item selected for update');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await recipeService.updateIngredient(form.id, form.quantity);
+      
+      // After successful update, refresh the entire list from backend
+      const refreshRes = await recipeService.getAllIngredients();
+      const list = Array.isArray(refreshRes?.ResultSet) ? refreshRes.ResultSet : (Array.isArray(refreshRes) ? refreshRes : []);
+      const mapped = list.map(i => ({
+        id: i.IngredientId || i.Id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        name: i.IngredientName || i.Name || i.name || "",
+        quantity: i.CurrentStock != null ? String(i.CurrentStock) : (i.Quantity != null ? String(i.Quantity) : "0"),
+        unit: i.Unit || "kg",
+        unitPrice: i.CostPerUnit != null ? String(i.CostPerUnit) : (i.UnitPrice != null ? String(i.UnitPrice) : "0"),
+      }));
+      setItems(mapped);
+      
+      setForm(emptyItem());
+      setShowForm(false);
+      setIsEditing(false);
+      toast.success('Stock item updated successfully');
+    } catch (e) {
+      console.error('Failed to update stock item', e);
+      toast.error('Failed to update stock item. See console for details.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const editItem = (item) => {
     setForm({ ...item });
+    setIsEditing(true);
     setShowForm(true);
   };
 
@@ -139,7 +175,7 @@ const StockSection = ({ initialItems = [] }) => {
           </p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { setForm(emptyItem()); setIsEditing(false); setShowForm(true); }}
           disabled={saving}
           className={`mt-4 sm:mt-0 px-6 py-2.5 bg-gradient-to-r from-[#18749b] to-[#2c5a97] hover:from-[#0f5a7a] hover:to-[#1e3f6b] text-white font-medium rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 backdrop-blur-sm backdrop-filter ${
             saving ? 'opacity-60 cursor-not-allowed' : ''
@@ -265,6 +301,8 @@ const StockSection = ({ initialItems = [] }) => {
         onSave={addItem}
         saving={saving}
         onCancel={cancelAdd}
+        isEditing={isEditing}
+        onUpdate={updateItem}
       />
     </div>
   );
