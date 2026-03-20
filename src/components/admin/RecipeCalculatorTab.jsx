@@ -11,6 +11,7 @@ import LaborSection from "./LaborSection";
 import OverheadSection from "./OverheadSection";
 import CalculateSection from "./CalculateSection";
 import RecipesSection from "./RecipesSection";
+import productionCostService from "../../services/productionCostService";
 
 const emptyRow = () => ({ name: "", quantity: "", unit: "kg", unitCost: "" });
 
@@ -126,22 +127,45 @@ const SavedList = () => {
   const [editValues, setEditValues] = useState({ recipe: '', totalCost: '', suggestedPrice: '' });
 
   React.useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('savedCalculations') || 'null');
-      if (Array.isArray(saved) && saved.length) {
-        setItems(saved);
-      } else {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await productionCostService.getAllProductionCosts();
+        if (!mounted) return;
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped = list.map((it, idx) => ({
+            id: it.ProductionCostId || it.MenuItemSizeId || `pc-${idx}`,
+            recipe: `MenuItem ${it.MenuItemSizeId || ''}`,
+            result: { totalCost: parseFloat(it.TotalCost) || parseFloat(it.Total_Cost) || 0, suggestedPrice: parseFloat(it.TotalCost) || 0 },
+            savedAt: it.CalculatedAt || new Date().toISOString(),
+            raw: it,
+          }));
+          setItems(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Failed to load production costs from server', err);
+      }
+
+      // fallback to localStorage when server returns nothing or failed
+      try {
+        const saved = JSON.parse(localStorage.getItem('savedCalculations') || 'null');
+        if (Array.isArray(saved) && saved.length) {
+          setItems(saved);
+        } else {
+          setItems([
+            { id: 'hc1', recipe: 'Margherita Pizza', result: { totalCost: 420.0, suggestedPrice: 525.0 }, savedAt: '2026-03-01T10:00:00Z' },
+            { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
+          ]);
+        }
+      } catch (e) {
         setItems([
           { id: 'hc1', recipe: 'Margherita Pizza', result: { totalCost: 420.0, suggestedPrice: 525.0 }, savedAt: '2026-03-01T10:00:00Z' },
           { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
         ]);
       }
-    } catch (e) {
-      setItems([
-        { id: 'hc1', recipe: 'Margherita Pizza', result: { totalCost: 420.0, suggestedPrice: 525.0 }, savedAt: '2026-03-01T10:00:00Z' },
-        { id: 'hc2', recipe: 'Beef Burger', result: { totalCost: 320.0, suggestedPrice: 400.0 }, savedAt: '2026-03-02T14:30:00Z' },
-      ]);
-    }
+      return () => { mounted = false; };
+    })();
   }, []);
 
   const persist = (next) => {

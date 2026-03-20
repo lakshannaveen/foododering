@@ -8,6 +8,7 @@ import {
 import recipeService from "../../services/recipeService";
 import laborService from "../../services/laborService";
 import overheadService from "../../services/overheadService";
+import productionCostService from "../../services/productionCostService";
 import SearchableSelect from "../SearchableSelect";
 
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "piece", "tbsp", "tsp", "cup"];
@@ -348,6 +349,37 @@ const CalculateSection = () => {
       existing.unshift(payload);
       localStorage.setItem('savedCalculations', JSON.stringify(existing));
       toast.success('Calculation saved. Open "Saved Calculations" tab to view.');
+      // Also attempt to persist to backend ProductionCosts (best-effort)
+      (async () => {
+        try {
+          // Map fields expected by backend
+          const data = {
+            MenuItemSizeId: selectedRecipe || 0,
+            IngredientCost: (result.stockTotal || 0).toFixed(2),
+            LaborCost: (result.laborTotal || 0).toFixed(2),
+            OverheadCost: (result.overheadTotal || 0).toFixed(2),
+            TotalCost: (result.totalCost || 0).toFixed(2),
+          };
+          const res = await productionCostService.addProductionCosts(data);
+          if (res?.success) {
+            toast.success('Also saved production cost to server');
+          } else {
+            // Extract server message when possible
+            let serverMsg = res?.message || '';
+            if (!serverMsg && res?.error) {
+              // common shapes: { Result: "..." } or raw string
+              if (typeof res.error === 'string') serverMsg = res.error;
+              else if (res.error.Result) serverMsg = res.error.Result;
+              else serverMsg = JSON.stringify(res.error);
+            }
+            if (!serverMsg) serverMsg = 'Failed to save production cost to server';
+            // Show the backend error (e.g. "Error converting data type varchar to int.")
+            toast.error(`Production cost save failed: ${serverMsg}`);
+          }
+        } catch (err) {
+          console.warn('Failed saving production cost to server', err);
+        }
+      })();
     } catch (e) { console.error(e); toast.error('Failed to save calculation.'); }
   };
 
