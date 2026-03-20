@@ -12,6 +12,7 @@ import OverheadSection from "./OverheadSection";
 import CalculateSection from "./CalculateSection";
 import RecipesSection from "./RecipesSection";
 import productionCostService from "../../services/productionCostService";
+import { getAllMenuItems } from '../../services/menuService';
 import { Loader } from 'lucide-react';
 
 const emptyRow = () => ({ name: "", quantity: "", unit: "kg", unitCost: "" });
@@ -133,16 +134,43 @@ const SavedList = () => {
     setLoadingSaved(true);
     (async () => {
       try {
-        const list = await productionCostService.getAllProductionCosts();
+        const [list, menuResp] = await Promise.all([
+          productionCostService.getAllProductionCosts(),
+          (async () => {
+            try { return await getAllMenuItems(); } catch (e) { return null; }
+          })(),
+        ]);
         if (!mounted) return;
         if (Array.isArray(list) && list.length > 0) {
-          const mapped = list.map((it, idx) => ({
-            id: it.ProductionCostId || it.MenuItemSizeId || `pc-${idx}`,
-            recipe: `MenuItem ${it.MenuItemSizeId || ''}`,
-            result: { totalCost: parseFloat(it.TotalCost) || parseFloat(it.Total_Cost) || 0, suggestedPrice: parseFloat(it.TotalCost) || 0 },
-            savedAt: it.CalculatedAt || new Date().toISOString(),
-            raw: it,
-          }));
+          // Build a lookup from MenuItemSizeId -> "Name (Size)"
+          const sizeMap = {};
+          try {
+            const menuItems = menuResp?.ResultSet || menuResp || [];
+            if (Array.isArray(menuItems) && menuItems.length) {
+              menuItems.forEach(mi => {
+                const name = mi.MenuItemName || mi.Name || mi.Name || mi.menuItemName || mi.MenuItemName;
+                const sizes = mi.Sizes || mi.SizesJson || mi.MenuItemSizes || mi.sizes || [];
+                if (Array.isArray(sizes)) {
+                  sizes.forEach(s => {
+                    const sid = s.MenuItemSizeId || s.Id || s.id;
+                    const label = s.Size || s.Name || s.SizeName || s.size || '';
+                    if (sid) sizeMap[String(sid)] = `${name}${label ? ` (${label})` : ''}`;
+                  });
+                }
+              });
+            }
+          } catch (err) { console.warn('Failed to build menu size map', err); }
+
+          const mapped = list.map((it, idx) => {
+            const mid = (it.MenuItemSizeId != null) ? String(it.MenuItemSizeId) : null;
+            return {
+              id: it.ProductionCostId || mid || `pc-${idx}`,
+              recipe: mid ? (sizeMap[mid] || `MenuItem ${mid}`) : `MenuItem ${it.MenuItemSizeId || ''}`,
+              result: { totalCost: parseFloat(it.TotalCost) || parseFloat(it.Total_Cost) || 0, suggestedPrice: parseFloat(it.TotalCost) || 0 },
+              savedAt: it.CalculatedAt || new Date().toISOString(),
+              raw: it,
+            };
+          });
           setItems(mapped);
           setLoadingSaved(false);
           return;

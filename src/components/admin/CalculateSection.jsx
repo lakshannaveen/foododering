@@ -63,7 +63,11 @@ const CalculateSection = () => {
         const laborRes = Array.isArray(laborResRaw) ? { ResultSet: laborResRaw } : (laborResRaw || {});
         if (!mounted) return;
         if (recipesRes && Array.isArray(recipesRes.ResultSet)) {
-          const mapped = recipesRes.ResultSet.map(r => ({ id: r.RecipeId || r.Id || r.id, name: r.RecipeName || r.Name || r.recipeName || r.name }));
+          const mapped = recipesRes.ResultSet.map(r => ({
+            id: r.RecipeId || r.Id || r.id,
+            name: r.RecipeName || r.Name || r.recipeName || r.name,
+            menuItemSizeId: r.MenuItemSizeId || r.menuItemSizeId || null,
+          }));
           if (mapped.length) setRecipesList(mapped);
         }
         if (ingRes && Array.isArray(ingRes.ResultSet)) {
@@ -353,8 +357,10 @@ const CalculateSection = () => {
       (async () => {
         try {
           // Map fields expected by backend
+          const recipeObj = recipesList.find(r => String(r.id) === String(selectedRecipe));
+          const menuItemSizeId = recipeObj?.menuItemSizeId || 0;
           const data = {
-            MenuItemSizeId: selectedRecipe || 0,
+            MenuItemSizeId: menuItemSizeId,
             IngredientCost: (result.stockTotal || 0).toFixed(2),
             LaborCost: (result.laborTotal || 0).toFixed(2),
             OverheadCost: (result.overheadTotal || 0).toFixed(2),
