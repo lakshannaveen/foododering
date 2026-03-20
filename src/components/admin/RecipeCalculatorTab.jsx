@@ -166,7 +166,7 @@ const SavedList = () => {
             return {
               id: it.ProductionCostId || mid || `pc-${idx}`,
               recipe: mid ? (sizeMap[mid] || `MenuItem ${mid}`) : `MenuItem ${it.MenuItemSizeId || ''}`,
-              result: { totalCost: parseFloat(it.TotalCost) || parseFloat(it.Total_Cost) || 0, suggestedPrice: parseFloat(it.TotalCost) || 0 },
+              result: { totalCost: parseFloat(it.TotalCost) || parseFloat(it.Total_Cost) || 0, suggestedPrice: parseFloat(it.SuggestedPrice) || parseFloat(it.Suggested_Price) || parseFloat(it.SuggestedSellingPrice) || parseFloat(it.TotalCost) || 0 },
               savedAt: it.CalculatedAt || new Date().toISOString(),
               raw: it,
             };

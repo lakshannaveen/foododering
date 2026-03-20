@@ -21,19 +21,21 @@ const productionCostService = {
     }
   },
 
-  addProductionCosts: async ({ MenuItemSizeId = 0, IngredientCost = 0, LaborCost = 0, OverheadCost = 0, TotalCost = 0 } = {}) => {
+  addProductionCosts: async ({ MenuItemSizeId = 0, IngredientCost = 0, LaborCost = 0, OverheadCost = 0, TotalCost = 0, SuggestedPrice = 0 } = {}) => {
     // Basic client-side validation / coercion
     const mid = parseInt(MenuItemSizeId, 10);
     const ic = parseFloat(IngredientCost) || 0;
     const lc = parseFloat(LaborCost) || 0;
     const oc = parseFloat(OverheadCost) || 0;
     const tc = parseFloat(TotalCost) || 0;
+    const sp = parseFloat(SuggestedPrice) || 0;
     if (isNaN(mid) || mid <= 0) {
       return { success: false, message: 'Invalid MenuItemSizeId (must be a positive integer)', code: 400 };
     }
 
     try {
-      const url = `/ProductionCosts/AddProductionCosts/?MenuItemSizeId=${encodeURIComponent(mid)}&IngredientCost=${encodeURIComponent(ic)}&LaborCost=${encodeURIComponent(lc)}&OverheadCost=${encodeURIComponent(oc)}&TotalCost=${encodeURIComponent(tc)}`;
+      // include SuggestedPrice if available so backend or future endpoints can persist it
+      const url = `/ProductionCosts/AddProductionCosts/?MenuItemSizeId=${encodeURIComponent(mid)}&IngredientCost=${encodeURIComponent(ic)}&LaborCost=${encodeURIComponent(lc)}&OverheadCost=${encodeURIComponent(oc)}&TotalCost=${encodeURIComponent(tc)}&SuggestedPrice=${encodeURIComponent(sp)}`;
       const response = await api.post(url);
       return { success: true, status: response.status, data: response.data };
     } catch (error) {
