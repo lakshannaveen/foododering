@@ -92,6 +92,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
             className="col-span-2 p-2 border rounded w-full min-w-0"
             min="0"
             step="0.01"
+            disabled={isEditing}
           />
 
           <div className="col-span-2 p-2 border rounded bg-gray-50 text-sm text-gray-800 flex items-center justify-center w-full min-w-0">
