@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
-  Edit, Trash2, Save, X,
+  Trash2, Save, X,
   BookOpen, Package, Users, Factory, Calculator, Bookmark,
   ClipboardList
 } from 'lucide-react';
@@ -313,14 +313,7 @@ const SavedList = () => {
               <>
                 <div className="text-sm text-gray-600 whitespace-nowrap">Cost: LKR {(it.result?.totalCost||0).toFixed(2)}</div>
                 <div className="text-lg font-semibold text-gray-800 whitespace-nowrap">LKR {(it.result?.suggestedPrice||0).toFixed(2)}</div>
-                <button
-                  title="Edit"
-                  aria-label="Edit"
-                  className="text-blue-600 hover:text-blue-800 p-1"
-                  onClick={() => startEdit(it)}
-                >
-                  <Edit size={18} />
-                </button>
+                {/* edit removed per request */}
                 <button
                   title="Delete"
                   aria-label="Delete"
