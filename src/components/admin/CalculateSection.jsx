@@ -377,6 +377,78 @@ const CalculateSection = () => {
 
         if (res?.success) {
           toast.success('Calculation saved and persisted to server. Open "Saved Calculations" tab to view.');
+          // After successful save of production costs, attempt to deduct stock from inventory
+          try {
+            // Load full ingredient records to obtain IDs and current stock values
+            const ingResp = await recipeService.getAllIngredients();
+            const ingList = (ingResp && ingResp.ResultSet) ? ingResp.ResultSet : (Array.isArray(ingResp) ? ingResp : []);
+
+            const rawItems = stock.filter(i => i.name && parseFloat(i.quantity) > 0);
+            const itemsToDeduct = [];
+            const missingNames = [];
+            rawItems.forEach(i => {
+              const qty = parseFloat(i.quantity) || 0;
+              const found = ingList.find(x => ((x.IngredientName || x.Name || x.name) || '').toLowerCase() === (i.name || '').toLowerCase());
+              const ingredientId = found ? (found.IngredientId || found.Id || found.id) : null;
+              if (!ingredientId) {
+                missingNames.push(i.name);
+                return;
+              }
+              const currentStockRaw = found ? (parseFloat(found.CurrentStock) || parseFloat(found.CurrentStockInNumbers) || 0) : 0;
+              const newStock = Math.max(0, currentStockRaw - qty);
+              itemsToDeduct.push({
+                IngredientId: ingredientId,
+                IngredientName: i.name,
+                Quantity: qty, // send numeric
+                Unit: i.unit,
+                CurrentStock: newStock, // send numeric non-null
+              });
+            });
+
+            if (missingNames.length > 0) {
+              toast.error(`Cannot deduct stock: missing ingredients in inventory: ${[...new Set(missingNames)].join(', ')}. Please add them in Manage Stock.`);
+            } else if (itemsToDeduct.length > 0) {
+              const deductPayload = {
+                RecipeId: selectedRecipe,
+                MenuItemSizeId: menuItemSizeId || 0,
+                Items: itemsToDeduct.map(it => ({
+                  IngredientId: it.IngredientId,
+                  IngredientName: it.IngredientName,
+                  Quantity: String(it.Quantity),
+                  Unit: it.Unit,
+                  CurrentStock: String(it.CurrentStock),
+                })),
+              };
+
+              // Backend may not accept a bulk Deductstock JSON body reliably. Use per-ingredient update to ensure CurrentStock is provided.
+              const updates = [];
+              for (const it of itemsToDeduct) {
+                try {
+                  console.debug('[CalculateSection] updateIngredient payload', { IngredientId: it.IngredientId, CurrentStock: String(it.CurrentStock) });
+                  const updRes = await recipeService.updateIngredient(it.IngredientId, String(it.CurrentStock));
+                  console.debug('[CalculateSection] updateIngredient response', updRes);
+                  const ok2 = updRes && (updRes.StatusCode === 200 || updRes.status === 200 || updRes.success || updRes.ResultStatusCode === 200);
+                  updates.push({ item: it, ok: !!ok2, res: updRes });
+                } catch (uerr) {
+                  console.error('updateIngredient error', uerr);
+                  updates.push({ item: it, ok: false, error: uerr });
+                }
+              }
+
+              const failed = updates.filter(u => !u.ok);
+              if (failed.length === 0) {
+                toast.success('Stock deducted successfully (updated ingredient stocks).');
+              } else {
+                console.warn('Some ingredient updates failed', failed);
+                const names = failed.map(f => f.item?.IngredientName || f.item?.IngredientId);
+                toast.error(`Failed to update stock for: ${[...new Set(names)].join(', ')}.`);
+                toast.info('Check console/network for detailed responses.');
+              }
+            }
+          } catch (errDed) {
+            console.warn('Stock deduction error', errDed);
+            toast.error('Stock deduction failed (network error)');
+          }
         } else {
           // Extract server message when possible
           let serverMsg = res?.message || '';

@@ -159,6 +159,16 @@ export const addOverheadToRecipe = async (OverheadId, RecipeId, MinutesRequired,
   }
 };
 
+export const deductStock = async (payload) => {
+  try {
+    // Expecting payload to be an object, e.g. { MenuItemSizeId: 0, Items: [{ IngredientName, Quantity, Unit }] }
+    const response = await api.post(`/Deduct_Stock/Deductstock`, payload);
+    return response.data;
+  } catch (err) {
+    return handleError(err);
+  }
+};
+
 export default {
   addIngredient,
   getIngredientById,
@@ -177,4 +187,5 @@ export default {
   addLaborToRecipe,
   addOverheadByRecipe,
   addOverheadToRecipe,
+  deductStock,
 };
