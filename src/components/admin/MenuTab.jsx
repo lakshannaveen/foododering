@@ -108,17 +108,19 @@ const MenuTab = () => {
   };
 
   const handleUpdateItem = async () => {
-    // Only allow editing of Name, Description and optionally Image.
-    if (!editingItem.Name || String(editingItem.Name).trim() === "") {
-      toast.error("Item name is required");
+    const validSizes = editingItem.Sizes.filter((size) => {
+      const price = parseFloat(size.Price);
+      return size.Size.trim() && !isNaN(price) && price > 0;
+    });
+
+    if (validSizes.length === 0) {
+      toast.error("Please add at least one size with a positive price");
       return;
     }
 
     const itemData = {
-      // include identifier expected by backend
-      MenuItemId: editingItem.MenuItemId || editingItem.MenuItemId || editingItem.MenuItemId,
-      Name: editingItem.Name,
-      Description: editingItem.Description || "",
+      ...editingItem,
+      SizesJson: JSON.stringify(validSizes),
     };
 
     await dispatch(editMenuItem(itemData, imageFile));
@@ -427,12 +429,10 @@ const MenuTab = () => {
                 <div className="sm:col-span-6">
                   <div className="flex items-center justify-between mb-4">
                     <label className="block text-sm font-medium text-gray-700">Sizes & Prices *</label>
-                    {!editingItem && (
-                      <button type="button" onClick={() => addSize(!!editingItem)} className="inline-flex items-center space-x-2 px-3 py-2 text-sm bg-[#18749b] text-white rounded-lg hover:bg-[#2c5a97] transition-colors">
-                        <FaPlus className="w-3 h-3" />
-                        <span>Add Size</span>
-                      </button>
-                    )}
+                    <button type="button" onClick={() => addSize(!!editingItem)} className="inline-flex items-center space-x-2 px-3 py-2 text-sm bg-[#18749b] text-white rounded-lg hover:bg-[#2c5a97] transition-colors">
+                      <FaPlus className="w-3 h-3" />
+                      <span>Add Size</span>
+                    </button>
                   </div>
 
                   <div className="space-y-3">
@@ -440,7 +440,7 @@ const MenuTab = () => {
                       <div key={index} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                         <div className="flex-1">
                           <label className="block text-xs font-medium text-gray-600 mb-1">Size</label>
-                          <select value={sizeObj.Size} onChange={(e) => updateSize(index, "Size", e.target.value, !!editingItem)} disabled={!!editingItem} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors">
+                          <select value={sizeObj.Size} onChange={(e) => updateSize(index, "Size", e.target.value, !!editingItem)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors">
                             <option value="">Select Size</option>
                             <option value="Small">Small</option>
                             <option value="Medium">Medium</option>
@@ -449,9 +449,9 @@ const MenuTab = () => {
                         </div>
                         <div className="flex-1">
                           <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
-                          <input type="number" step="0.01" min="0.01" placeholder="0.00" value={sizeObj.Price} onChange={(e) => updateSize(index, "Price", e.target.value, !!editingItem)} disabled={!!editingItem} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors" />
+                          <input type="number" step="0.01" min="0.01" placeholder="0.00" value={sizeObj.Price} onChange={(e) => updateSize(index, "Price", e.target.value, !!editingItem)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#18749b] focus:border-[#18749b] transition-colors" />
                         </div>
-                        {!editingItem && (editingItem ? editingItem.Sizes : newItem.Sizes).length > 1 && (
+                        {(editingItem ? editingItem.Sizes : newItem.Sizes).length > 1 && (
                           <button type="button" onClick={() => removeSize(index, !!editingItem)} className="flex items-center justify-center p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Remove size">
                             <FaTrash className="w-4 h-4" />
                           </button>
@@ -485,8 +485,17 @@ const MenuTab = () => {
                   <button
                     onClick={handleUpdateItem}
                     disabled={
-                      // Allow update when a non-empty Name exists or an image file is selected.
-                      !(imageFile || (editingItem.Name && String(editingItem.Name).trim() !== ""))
+                      // Keep original validation, but allow update when an image file
+                      // has been selected (so user can update only the image).
+                      !(imageFile || (
+                        editingItem.Name &&
+                        editingItem.CategoryId &&
+                        editingItem.SubCategoryId &&
+                        editingItem.Sizes.some((size) => {
+                          const price = parseFloat(size.Price);
+                          return size.Size.trim() && !isNaN(price) && price > 0;
+                        })
+                      ))
                     }
                     className="px-4 py-2.5 text-sm font-medium text-white bg-[#18749b] border border-transparent rounded-lg hover:bg-[#2c5a97] focus:ring-2 focus:ring-[#18749b] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
