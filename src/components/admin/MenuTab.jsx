@@ -47,6 +47,7 @@ const MenuTab = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [updating, setUpdating] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const pageSize = 10;
@@ -123,9 +124,18 @@ const MenuTab = () => {
       SizesJson: JSON.stringify(validSizes),
     };
 
-    await dispatch(editMenuItem(itemData, imageFile));
-    setEditingItem(null);
-    setImageFile(null);
+    setUpdating(true);
+    try {
+      const res = await dispatch(editMenuItem(itemData, imageFile));
+      // If backend returned a message, show it
+      if (res && (res.message || res.Message)) {
+        toast.info(res.message || res.Message);
+      }
+      setEditingItem(null);
+      setImageFile(null);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handleToggleStatus = async (item) => {
@@ -502,9 +512,7 @@ const MenuTab = () => {
                   <button
                     onClick={handleUpdateItem}
                     disabled={
-                      // Keep original validation, but allow update when an image file
-                      // has been selected (so user can update only the image).
-                      !(imageFile || (
+                      updating || !(imageFile || (
                         editingItem.Name &&
                         editingItem.CategoryId &&
                         editingItem.SubCategoryId &&
@@ -516,7 +524,7 @@ const MenuTab = () => {
                     }
                     className="px-4 py-2.5 text-sm font-medium text-white bg-[#18749b] border border-transparent rounded-lg hover:bg-[#2c5a97] focus:ring-2 focus:ring-[#18749b] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Update Item
+                    {updating ? 'Updating...' : 'Update Item'}
                   </button>
                 ) : (
                   <button

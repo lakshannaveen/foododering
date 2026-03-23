@@ -78,16 +78,19 @@ export const createMenuItem = (item, imageFile) => async (dispatch) => {
 export const editMenuItem = (item, imageFile) => async (dispatch) => {
   try {
     dispatch({ type: MENU_UPDATE_REQUEST });
-    await updateMenuItem(item, imageFile);
+    const res = await updateMenuItem(item, imageFile);
     dispatch({ type: MENU_UPDATE_SUCCESS });
     dispatch(fetchMenuItems());
     toast.success(`Menu item "${item.Name}" updated successfully!`);
+    return res;
   } catch (error) {
     dispatch({
       type: MENU_UPDATE_FAIL,
       payload: error.message || "Failed to update",
     });
     toast.error(`Update failed: ${error.message || "Unknown error"}`);
+    // return the error payload so callers can inspect backend message if needed
+    return error.response ? error.response.data : { message: error.message || 'Failed' };
   }
 };
 
