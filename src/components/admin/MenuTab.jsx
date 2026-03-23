@@ -485,13 +485,17 @@ const MenuTab = () => {
                   <button
                     onClick={handleUpdateItem}
                     disabled={
-                      !editingItem.Name ||
-                      !editingItem.CategoryId ||
-                      !editingItem.SubCategoryId ||
-                      !editingItem.Sizes.some((size) => {
-                        const price = parseFloat(size.Price);
-                        return size.Size.trim() && !isNaN(price) && price > 0;
-                      })
+                      // Keep original validation, but allow update when an image file
+                      // has been selected (so user can update only the image).
+                      !(imageFile || (
+                        editingItem.Name &&
+                        editingItem.CategoryId &&
+                        editingItem.SubCategoryId &&
+                        editingItem.Sizes.some((size) => {
+                          const price = parseFloat(size.Price);
+                          return size.Size.trim() && !isNaN(price) && price > 0;
+                        })
+                      ))
                     }
                     className="px-4 py-2.5 text-sm font-medium text-white bg-[#18749b] border border-transparent rounded-lg hover:bg-[#2c5a97] focus:ring-2 focus:ring-[#18749b] focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
