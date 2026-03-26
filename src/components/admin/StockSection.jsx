@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, Edit, Package } from "lucide-react";
+import { Trash2, Plus, Package } from "lucide-react";
 import { toast } from 'react-toastify';
 import StockModal from "./StockModal";
 import recipeService from "../../services/recipeService";
@@ -263,9 +263,9 @@ const StockSection = ({ initialItems = [] }) => {
                         <button
                           onClick={() => editItem(item)}
                           className="text-blue-700 hover:text-blue-900 transition-colors p-1"
-                          aria-label="Edit item"
+                          aria-label="Add stock"
                         >
-                          <Edit size={18} />
+                          <Plus size={18} />
                         </button>
                         <button
                           onClick={() => removeItem(item.id)}
