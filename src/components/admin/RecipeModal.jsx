@@ -224,7 +224,8 @@ const RecipeModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, ingredi
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-      <div className="absolute inset-0" onClick={onClose}></div>
+      {/* Backdrop does not close modal on click to avoid accidental data loss */}
+      <div className="absolute inset-0" aria-hidden="true"></div>
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">{form.id ? 'Edit Recipe' : 'Add Recipe'}</h3>
 
