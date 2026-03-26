@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash2, ChefHat, UtensilsCrossed, Hash, BookOpen } from "lucide-react";
+import { Edit, ChefHat, UtensilsCrossed, Hash, BookOpen } from "lucide-react";
 import RecipeModal from "./RecipeModal";
 import recipeService from "../../services/recipeService";
 
@@ -79,20 +79,7 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
     setShowForm(true);
   };
 
-  const deleteRecipe = async (id) => {
-    const ok = window.confirm('Are you sure?');
-    if (!ok) return;
-    setSaving(true);
-    try {
-      await recipeService.updateRecipeStatus(id, 'I');
-      setRecipes(prev => prev.filter(r => r.id !== id));
-    } catch (e) {
-      console.error('Failed to update recipe status', e);
-      window.alert('Failed to update recipe status');
-    } finally {
-      setSaving(false);
-    }
-  };
+  
 
   useEffect(() => {
     let mounted = true;
@@ -259,13 +246,6 @@ const RecipesSection = ({ rows, updateRow, removeRow, addRow, ingredientsList })
                           aria-label="Edit recipe"
                         >
                           <Edit size={15} />
-                        </button>
-                        <button
-                          onClick={() => deleteRecipe(r.id)}
-                          className="text-gray-400 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 transition-all"
-                          aria-label="Delete recipe"
-                        >
-                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
