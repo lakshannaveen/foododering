@@ -38,7 +38,7 @@ const StockModal = ({ isOpen, onClose, form, setForm, onSave, onCancel, saving =
       {/* Backdrop no longer closes modal on click to prevent accidental data loss */}
       <div className="absolute inset-0" aria-hidden="true"></div>
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 z-10">
-        <h3 className="text-lg font-semibold mb-4">{isEditing ? 'Edit Stock Item' : 'Add Stock Item'}</h3>
+        <h3 className="text-lg font-semibold mb-4">Add Stock Items</h3>
 
         <div className="grid grid-cols-12 gap-3 items-center">
           <div className="col-span-4 font-semibold text-sm text-gray-600">Item</div>
